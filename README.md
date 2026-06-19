@@ -46,20 +46,31 @@ GitHub PR 全功能管理器 — 在终端中列出、查看、克隆、分析 G
 
 ## 安装
 
-### 方式一：通过 GitHub 安装
+### 方式一：Marketplace 安装（推荐）
 
 ```bash
-claude plugins install Minecraft269/skills
+# 1. 注册 marketplace
+claude plugins marketplace add Minecraft269/skills
+
+# 2. 安装插件
+claude plugins install minecraft269-skills
 ```
+
+安装完成后重启 Claude Code 即可。
 
 ### 方式二：手动安装
 
+适合离线环境或希望直接管理的用户。
+
 ```bash
+# 1. 克隆仓库
 git clone https://github.com/Minecraft269/skills.git
-cp -r skills ~/.claude/skills/
+
+# 2. 复制到 Claude Code plugins 目录
+cp -r skills ~/.claude/plugins/minecraft269-skills
 ```
 
-然后在 Claude Code 中运行 `/reload-skills`。
+然后重启 Claude Code，插件即会自动加载。
 
 ---
 
