@@ -5,6 +5,8 @@ category: meta
 risk: safe
 source: community
 tags: "[discovery, recommendation, skills, plugins, commands, mcp-tools, slash-commands, project-analysis, onboarding, productivity]"
+capabilities: ["skill-discovery", "capability-scanning", "project-analysis"]
+integrates_with: ["plugin-installation", "pr-management"]
 ---
 
 # proactive-skill-discovery
@@ -22,11 +24,27 @@ This skill should be invoked when:
 - 用户输入 `/discover` 或明确要求推荐技能/插件
 - 检测到项目类型发生显著变化（如从前端切换到后端子项目）
 - 用户询问"有哪些可用的技能/插件"或类似问题
+- 其他 minecraft269-skills 包内技能完成主要操作后触发联动（如 PR 克隆完成、项目初始化完成、插件安装完成）
 
 Do NOT invoke this skill when:
 - 用户已经明确指定了要使用的具体技能
 - 对话仅为简单问答，不涉及项目开发任务
 - 用户明确表示不需要推荐
+
+## 包联动
+
+本技能是 minecraft269-skills 插件包的核心发现引擎。执行以下检测：
+
+1. Glob 搜索 `~/.claude/plugins/minecraft269-skills/.claude-plugin/plugin.json`
+2. 若找到 → `PACKAGE_MODE = true`，可发现并联动兄弟技能
+3. 若未找到 → `PACKAGE_MODE = false`，跳过所有跨技能逻辑（静默降级）
+
+当 `PACKAGE_MODE = true` 时：
+- 扫描兄弟 SKILL.md 的 `capabilities` 字段，匹配本技能的 `integrates_with` 标签
+- `integrates_with: plugin-installation` → 发现推荐列表中缺失的插件时，提示使用快速安装器
+- `integrates_with: pr-management` → 检测 GitHub remote 时，提示使用 PR 管理器
+
+详见 `_shared/package-context.md`。
 
 ## Core Capabilities
 
@@ -74,6 +92,13 @@ Analyze the current project to build a technology profile.
 3. If `pom.xml` found, use `Grep` for `<artifactId>` and `<parent>` to detect Spring Boot, Quarkus, etc.
 
 **Output:** Build a project fingerprint as comma-separated tags (e.g., `java, spring-boot, maven, postgresql`).
+
+**联动钩子（仅 PACKAGE_MODE = true 时执行）：**
+
+完成项目识别后，额外检测：
+- 检查 `.git/config` 中是否有 GitHub remote URL
+- 若有 GitHub remote → 扫描兄弟技能的 `capabilities`，匹配 `integrates_with: pr-management`
+- 匹配成功 → 提示用户："💡 检测到 GitHub 项目。推荐使用 **GitHub PR 管理器** 来管理此仓库的 Pull Request。"
 
 ### Step 2: Capability Inventory — Skills AND Plugins
 
@@ -215,6 +240,12 @@ Display results using this template:
 - **跳过，本次不启用** — 记录选择，本次会话不再重复推荐
 - **了解更多** — 展开某个技能/插件/深度资源的详细说明（用户指定名称）
 - **加载未加载资源** — 对深度探索发现的 SOUL/RULES/AGENTS 等文件，询问是否需要手动加载/激活
+
+**联动钩子（仅 PACKAGE_MODE = true 时执行）：**
+
+在推荐列表中，对尚未安装的插件和技能标记 🆕。用户选择后，扫描兄弟技能的 `capabilities`，匹配 `integrates_with: plugin-installation`：
+- 若用户选择了未安装的能力 → 提示："💡 检测到你尚未安装 [name]。是否需要使用 **快速插件安装器** 来安装它？"
+- 匹配成功且用户确认 → 引导至快速安装流程
 
 ### Step 5: Command Discovery — AFTER User Selection
 

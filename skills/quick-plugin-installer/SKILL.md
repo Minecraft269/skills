@@ -4,6 +4,8 @@ description: >
   快速安装插件（MCP Server 与 SKILL 插件）— 统一入口，自动识别类型，完成注册、安装、自动升级配置、
   MCP 接入验证。当你需要安装任何 Claude Code 插件、MCP Server、SKILL 技能、或 Marketplace 来源
   的扩展时使用此技能。支持 GitHub repo、Marketplace 名称、本地路径、MCP Registry 等多种来源。
+capabilities: ["plugin-installation", "mcp-setup"]
+integrates_with: ["skill-discovery"]
 metadata:
   compatibility: "需要 gh (GitHub CLI)、jq、claude CLI"
   risk: safe
@@ -12,6 +14,21 @@ metadata:
 # 快速安装插件
 
 一键完成 Claude Code 插件（MCP Server 和 SKILL 插件）的发现、注册、安装、自动升级配置。
+
+## 包联动
+
+本技能支持与 minecraft269-skills 插件包内其他技能自动联动。执行以下检测：
+
+1. Glob 搜索 `~/.claude/plugins/minecraft269-skills/.claude-plugin/plugin.json`
+2. 若找到 → `PACKAGE_MODE = true`，可发现并联动兄弟技能
+3. 若未找到 → `PACKAGE_MODE = false`，跳过所有跨技能逻辑（静默降级）
+
+当 `PACKAGE_MODE = true` 时：
+- 安装完成后可联动 `integrates_with: skill-discovery`（技能发现）
+- 扫描兄弟 SKILL.md 的 `capabilities` 字段，匹配本技能的 `integrates_with` 标签
+- 仅在匹配成功时显示联动提示
+
+详见 `_shared/package-context.md`。
 
 ## 核心工作流
 
@@ -203,6 +220,12 @@ claude plugins install <插件名>
 | ⚠️ 注意事项 | {环境变量 / 认证 / 兼容性提醒} |
 | 📝 下一步 | {重启 Claude Code / 运行验证命令 / 配置 API Key} |
 ```
+
+**联动钩子（仅 PACKAGE_MODE = true 时执行）：**
+
+安装完成后，扫描兄弟技能的 `capabilities`，匹配 `integrates_with: skill-discovery`：
+- 匹配成功 → 提示用户："💡 安装完成。是否需要运行 **主动技能发现** 来扫描当前项目，查看新安装的能力如何匹配你的技术栈？"
+- 用户同意 → 触发技能发现流程
 
 ### 6. 常见 MCP Server 快速安装模板
 

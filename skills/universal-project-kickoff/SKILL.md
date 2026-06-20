@@ -10,6 +10,8 @@ description: >
   本技能执行六步强制流程（为什么-是什么-边界-风险-里程碑-固化CLAUDE.md）+ 代码风格确认，
   最后调用 /init 生成项目的 CLAUDE.md 将思考成果永久固化。
   即使用户没有明确说"启动检查"，只要涉及从零规划任何项目，就应触发。
+capabilities: ["project-setup", "risk-assessment", "mvp-planning"]
+integrates_with: ["skill-discovery", "plugin-installation"]
 metadata:
   category: workflow
   tags: [project-startup, planning, checklist, mvp-definition, risk-assessment, init, code-style]
@@ -29,6 +31,22 @@ metadata:
 - **`references/project-checklist.md`**（来源：1.md）：通用项目启动检查清单完整版。当用户对某一步骤要求更详细的解释、希望看到完整开工 Checklist 原文、或需要确认是否遗漏检查项时加载。
 - **`references/ai-agent-checklist.md`**（来源：2.md）：AI Agent 项目专项检查清单。当用户确认项目类型为 AI Agent、询问 Agent 特有的风险或注意事项、或需要设计 Agent 的"大脑"架构时加载。
 
+## 包联动
+
+本技能支持与 minecraft269-skills 插件包内其他技能自动联动。执行以下检测：
+
+1. Glob 搜索 `~/.claude/plugins/minecraft269-skills/.claude-plugin/plugin.json`
+2. 若找到 → `PACKAGE_MODE = true`，可发现并联动兄弟技能
+3. 若未找到 → `PACKAGE_MODE = false`，跳过所有跨技能逻辑（静默降级）
+
+当 `PACKAGE_MODE = true` 时：
+- 识别项目技术栈后可联动 `integrates_with: plugin-installation`（快速安装插件）
+- CLAUDE.md 生成后可联动 `integrates_with: skill-discovery`（技能发现）
+- 扫描兄弟 SKILL.md 的 `capabilities` 字段，匹配本技能的 `integrates_with` 标签
+- 仅在匹配成功时显示联动提示
+
+详见 `_shared/package-context.md`。
+
 ## 使用流程（强制六步）
 
 ### 第一步：澄清"为什么"与"是什么"
@@ -47,6 +65,11 @@ metadata:
 - 明确三重约束（时间、成本/资源、质量/范围），并指出"最多只能同时保两个"。
 - 如果是 Agent 项目，额外列出**禁飞区**（例如：不能删除生产数据、不能对外转账、不能发送未审核内容）。
 - 边界讨论遇到困难时，加载 `references/project-checklist.md` 第二章。
+
+**联动钩子（仅 PACKAGE_MODE = true 时执行）：**
+
+确认项目技术栈后，扫描兄弟技能的 `capabilities`，匹配 `integrates_with: plugin-installation`：
+- 匹配成功 → 提示用户："💡 检测到你的项目使用 [技术栈]。是否需要安装相关的 MCP Server（如 GitHub MCP、Playwright、Context7）来增强开发体验？"
 
 ### 第三步：快速风险摸底
 让用户回答：
@@ -84,7 +107,11 @@ metadata:
 #### 6b. 检测已有 CLAUDE.md
 检查项目根目录是否已存在 `CLAUDE.md` 文件：
 - **若不存在**：直接执行 `/init` 命令。`/init` 是 Claude Code 的内置项目初始化命令，会引导生成标准的 CLAUDE.md 文件。技能已收集的五步检查信息都在对话上下文中，/init 可直接利用。
-- **若已存在**：读取现有 CLAUDE.md，向用户询问："检测到项目已有 CLAUDE.md，是覆盖更新还是合并补充？" 建议策略：将五步检查结果与现有内容对比，补充缺失部分（如风险预案、风格约定通常不会出现在初始 CLAUDE.md 中）。
+- **若已存在**：读取现有 CLAUDE.md，执行逐段对比合并：
+  1. 提取现有 CLAUDE.md 中的自定义命令、构建步骤、测试框架配置 → **保留不动**
+  2. 对比五步检查结果，识别缺失章节（项目定义、MVP 范围、风险预案、风格约定）
+  3. 仅补充缺失部分，不覆盖已有内容
+  4. 向用户展示合并差异摘要，确认后写入
 
 #### 6c. 验证生成结果
 在 `/init` 执行完毕后：
@@ -92,6 +119,12 @@ metadata:
 - 如果生成成功，向用户展示摘要：
   > "✅ CLAUDE.md 已生成。你的项目现在有了一个包含项目定义、MVP 范围、里程碑、风险预案和代码风格约定的标准入口文件。每次 Claude 进入这个项目时都会自动加载这些上下文。"
 - 如果 `/init` 因任何原因未完成（如用户中途退出），使用下面的"输出模板"手动输出一份启动摘要，并告知用户随时可再次运行 `/init`。
+
+**联动钩子（仅 PACKAGE_MODE = true 时执行，在 6c 成功后）：**
+
+CLAUDE.md 生成成功后，扫描兄弟技能的 `capabilities`，匹配 `integrates_with: skill-discovery`：
+- 匹配成功 → 提示用户："💡 项目初始化完成。是否需要运行 **主动技能发现** 来扫描项目技术栈，为你推荐匹配的技能和插件？"
+- 用户同意 → 触发技能发现流程
 
 #### 6d. 后备方案
 如果用户选择不执行 `/init`，输出完整的启动摘要（见下方模板），并告知：
@@ -185,7 +218,12 @@ metadata:
 - 不强制走完六步，但总要提及"如果需要完整启动检查，随时可以说"
 
 ### 项目范围极小
-如果项目仅是一段脚本或单文件工具（如"写一个批量重命名脚本"），可以简化为一轮快速问答（问题定义 + 代码风格），跳过正式的里程碑和利益相关者分析。
+如果项目仅是一段脚本或单文件工具（如"写一个批量重命名脚本"），启用极简模式：
+- **执行**：问题定义（一句话）+ 代码风格确认
+- **跳过**：MVP 边界圈定（第二步）、利益相关者分析（第四步）、里程碑路线图（第五步）
+- **仍执行**：快速风险摸底（第三步，简化为"最可能出错的一件事"）
+- **仍执行**：第六步 CLAUDE.md 生成（若项目目录存在）
+- 完成后提示："这是一个极简项目。如需完整启动检查流程，随时可以说。"
 
 ---
 

@@ -30,3 +30,13 @@ GitHub PR 全功能管理器 — 在终端中列出、查看、克隆、分析 G
 | `batch view <n1>,<n2>` | 批量查看 |
 | `r` | 刷新 PR 列表 |
 | `repo <owner/repo>` | 切换仓库 |
+
+## 相关技能
+
+本技能属于 [minecraft269-skills](https://github.com/Minecraft269/skills) 插件包。当完整安装插件包时，本技能可与其他包内技能自动联动：
+
+- 克隆 PR 后自动提示项目启动流程和技能发现
+- 被主动技能发现引擎自动推荐给 GitHub 项目
+
+独立安装本技能时，上述联动功能静默关闭，不影响核心 PR 管理功能。
+

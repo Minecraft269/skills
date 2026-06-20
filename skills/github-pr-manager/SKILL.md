@@ -6,6 +6,8 @@ description: >
   和批量操作。当你需要管理 GitHub 拉取请求、克隆 PR、查看代码审查、检查 PR 提交、
   批量处理多个 PR、或者任何与 GitHub pull request 相关的操作时使用此技能 — 即使用户
   没有明确说"PR 管理"，只要涉及 GitHub 仓库的拉取请求就应触发。
+capabilities: ["pr-management", "ci-analysis", "code-cloning"]
+integrates_with: ["project-setup", "skill-discovery"]
 metadata:
   compatibility: "需要 gh (GitHub CLI ≥ 2.0.0), git, jq"
 ---
@@ -23,6 +25,21 @@ metadata:
 
 - `gh` (GitHub CLI ≥ 2.0.0)：`gh auth status` 确认已登录
 - `git`、`jq`（用于 JSON 格式化，缺失时回退到原始输出）
+
+## 包联动
+
+本技能支持与 minecraft269-skills 插件包内其他技能自动联动。执行以下检测：
+
+1. Glob 搜索 `~/.claude/plugins/minecraft269-skills/.claude-plugin/plugin.json`
+2. 若找到 → `PACKAGE_MODE = true`，可发现并联动兄弟技能
+3. 若未找到 → `PACKAGE_MODE = false`，跳过所有跨技能逻辑（静默降级，不报错）
+
+当 `PACKAGE_MODE = true` 时：
+- 克隆 PR 后可联动 `integrates_with: project-setup`（项目启动流程）和 `integrates_with: skill-discovery`（技能发现）
+- 扫描兄弟 SKILL.md 的 `capabilities` 字段，匹配本技能的 `integrates_with` 标签
+- 仅在匹配成功时显示联动提示
+
+详见 `_shared/package-context.md`。
 
 ## 核心工作流
 
@@ -114,6 +131,12 @@ gh pr view <编号> --repo <repo> --json commits --jq '.commits[] | "\(.oid[:7])
    - **Python** (`requirements.txt`/`pyproject.toml`) → 询问是否创建 venv
    - **Rust** (`Cargo.toml`) → 询问是否 `cargo build`
    - **其他** → 提示手动初始化
+
+**联动钩子（仅 PACKAGE_MODE = true 时执行）：**
+
+克隆完成后，扫描兄弟技能的 `capabilities` 与本技能的 `integrates_with` 做交集匹配：
+- 匹配到 `project-setup` → 提示用户："💡 首次接触此项目？可使用 **通用项目启动** 快速理解项目结构和约定。"
+- 匹配到 `skill-discovery` → 提示用户："💡 检测到新的项目类型 [技术栈]。是否需要运行 **主动技能发现** 为该项目推荐匹配的技能和插件？"
 
 ### 5. 批量操作
 
