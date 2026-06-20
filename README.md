@@ -1,15 +1,15 @@
 # Minecraft269 Skills
 
-Minecraft269 的 Claude Code 技能合集，包含三个实用技能，提升 Claude Code 在日常开发中的工作效率。
+Minecraft269 的 Claude Code 技能合集，想到什么就创建什么，也欢迎社区贡献。
 
 ## 技能列表
 
-| 技能 | 简介 | 文档 |
-|------|------|------|
-| `github-pr-manager` | GitHub PR 全功能管理器：列出、查看、克隆、分析 PR | [→](docs/github-pr-manager.md) |
-| `proactive-skill-discovery` | 主动技能发现引擎：扫描项目、推荐匹配的技能和插件 | [→](docs/proactive-skill-discovery.md) |
-| `universal-project-kickoff` | 通用项目快速启动：六步流程帮你 15 分钟完成关键决策 | [→](docs/universal-project-kickoff.md) |
-| `quick-plugin-installer` | 快速安装插件：MCP Server 和 SKILL 的统一安装入口 | [→](docs/quick-plugin-installer.md) |
+| 技能 | 简介 |
+|------|------|
+| [`github-pr-manager`](docs/github-pr-manager.md) | GitHub PR 全功能管理器：列出、查看、克隆、分析 PR |
+| [`proactive-skill-discovery`](docs/proactive-skill-discovery.md) | 主动技能发现引擎：扫描项目、推荐匹配的技能和插件 |
+| [`universal-project-kickoff`](docs/universal-project-kickoff.md) | 通用项目快速启动：六步流程帮你 15 分钟完成关键决策 |
+| [`quick-plugin-installer`](docs/quick-plugin-installer.md) | 快速安装插件：MCP Server 和 SKILL 的统一安装入口 |
 
 ---
 
