@@ -4,43 +4,12 @@ Minecraft269 的 Claude Code 技能合集，包含三个实用技能，提升 Cl
 
 ## 技能列表
 
-### 1. github-pr-manager
-
-GitHub PR 全功能管理器 — 在终端中列出、查看、克隆、分析 GitHub Pull Request。
-
-**核心功能：**
-- 列出仓库所有开放 PR（表格展示，支持翻页）
-- 查看 PR 完整信息：详情、diff、评论、审查状态、提交历史
-- 克隆 PR 到本地并自动检测项目类型（Node/Python/Rust/Go/Java）初始化环境
-- CI 状态查看和失败原因分析
-- 多仓库切换和批量操作
-
-**前置依赖：** `gh` (GitHub CLI ≥ 2.0.0)、`git`、`jq`
-
-### 2. proactive-skill-discovery
-
-主动技能发现引擎 — 在项目启动、复杂任务等关键节点自动扫描并推荐匹配的 Skills、Plugins 和 Commands。
-
-**核心功能：**
-- 自动检测项目语言、框架、构建工具
-- 并行扫描已安装的技能和插件并评分匹配
-- 交互式推荐（优先推荐 + 技能 + 插件 + 深度资源）
-- 指令发现（MCP 工具和 Slash 命令）
-- 支持全量能力导出（技能/插件/指令清单）
-
-### 3. universal-project-kickoff
-
-通用项目快速启动规则 — 适用于任何类型项目的启动阶段，执行六步强制流程。
-
-**核心流程：**
-- 澄清项目"为什么"与"是什么"
-- 圈定边界，明确"不做什么"
-- 快速风险摸底
-- 利益相关者与期望对齐
-- 绘制粗糙路线图（3-5 个里程碑）
-- 调用 /init 将思考成果固化到 CLAUDE.md
-
-**适用场景：** 新项目启动、功能规划、AI Agent 设计、项目计划审查
+| 技能 | 简介 | 文档 |
+|------|------|------|
+| `github-pr-manager` | GitHub PR 全功能管理器：列出、查看、克隆、分析 PR | [→](docs/github-pr-manager.md) |
+| `proactive-skill-discovery` | 主动技能发现引擎：扫描项目、推荐匹配的技能和插件 | [→](docs/proactive-skill-discovery.md) |
+| `universal-project-kickoff` | 通用项目快速启动：六步流程帮你 15 分钟完成关键决策 | [→](docs/universal-project-kickoff.md) |
+| `quick-plugin-installer` | 快速安装插件：MCP Server 和 SKILL 的统一安装入口 | [→](docs/quick-plugin-installer.md) |
 
 ---
 
