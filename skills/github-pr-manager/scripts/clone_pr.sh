@@ -269,7 +269,7 @@ BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
 # 优先用 gh API 获取 base 分支
 BASE_BRANCH=$(gh pr view "$PR_NUMBER" --json baseRefName --jq '.baseRefName' 2>/dev/null)
 if [ -z "$BASE_BRANCH" ]; then
-    BASE_BRANCH=$(git rev-parse --abbrev-ref HEAD@{upstream} 2>/dev/null | sed 's|^[^/]*/||')
+    BASE_BRANCH=$(git rev-parse --abbrev-ref 'HEAD@{upstream}' 2>/dev/null | sed 's|^[^/]*/||')
 fi
 [ -z "$BASE_BRANCH" ] && BASE_BRANCH="unknown"
 
@@ -315,7 +315,7 @@ if [ -f "pom.xml" ] || [ -f "build.gradle" ] || [ -f "build.gradle.kts" ]; then
     DETECTED_TYPES+=("java")
 fi
 
-DETECTED_TYPES=($(printf '%s\n' "${DETECTED_TYPES[@]}" | sort -u))
+readarray -t DETECTED_TYPES < <(printf '%s\n' "${DETECTED_TYPES[@]}" | sort -u)
 
 debug "检测到项目类型: ${DETECTED_TYPES[*]:-无}"
 

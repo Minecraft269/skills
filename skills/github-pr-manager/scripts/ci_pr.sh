@@ -59,8 +59,8 @@ debug() { [ "$VERBOSE" = true ] && printf '%s\n' "[DEBUG] $*" >&2; }
 # 仓库推断
 infer_repo() {
   for remote in origin upstream; do
-    local url=$(git remote get-url "$remote" 2>/dev/null) || continue
-    local repo=$(echo "$url" | sed -E '
+    local url; url=$(git remote get-url "$remote" 2>/dev/null) || continue
+    local repo; repo=$(echo "$url" | sed -E '
       s|^https?://[^/]+/||; s|^git@[^:]+:||;
       s|\.git$||; s|/$||; s|^.*[:/]([^/]+/[^/]+)$|\1|
     ')
@@ -124,12 +124,12 @@ printf '%s\n' "$CHECKS_TXT"; echo ""
 get_failed_runs() {
   jq -c ".[] | $JQ_FAILED | {link: (.link // \"\"), name: .name}" <<< "$CHECKS_JSON" \
   | while IFS= read -r line; do
-      local link=$(jq -r '.link // ""' <<< "$line")
-      local name=$(jq -r '.name' <<< "$line")
+      local link; link=$(jq -r '.link // ""' <<< "$line")
+      local name; name=$(jq -r '.name' <<< "$line")
       if [ -z "$link" ]; then
         printf '%s\n' "⚠️  「$name」无关联 workflow run，跳过" >&2; continue
       fi
-      local rid=$(echo "$link" | grep -Eo 'runs/[0-9]+' | cut -d/ -f2 || echo "")
+      local rid; rid=$(echo "$link" | grep -Eo 'runs/[0-9]+' | cut -d/ -f2 || echo "")
       if [ -z "$rid" ]; then
         printf '%s\n' "⚠️  「$name」无法解析 run ID" >&2; continue
       fi
