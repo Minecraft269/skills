@@ -22,6 +22,8 @@ if [ "$REPO" = "." ]; then
     [ -z "$REPO" ] && { echo "❌ 无法推断仓库"; exit 1; }
     echo "📁 $REPO"
 fi
+# 验证仓库格式 owner/repo（防范参数注入）
+[[ "$REPO" =~ ^[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+$ ]] || { echo "❌ 仓库格式必须为 owner/repo"; exit 1; }
 command -v gh &>/dev/null || { echo "❌ 需要 gh"; exit 1; }
 command -v jq &>/dev/null || { echo "❌ 需要 jq"; exit 1; }
 gh auth status &>/dev/null || { echo "❌ 请 gh auth login"; exit 1; }

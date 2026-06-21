@@ -43,9 +43,11 @@ check_npm_update() {
   local pkg="$1"
   local latest
 
+  # 验证包名格式（仅允许 npm 合法字符）
+  [[ "$pkg" =~ ^@?[a-zA-Z0-9_.-]+(/[a-zA-Z0-9_.-]+)?$ ]] || { echo "  ⚠️  包名格式异常，跳过"; return; }
   # 尝试获取本地已安装版本
   local current
-  current=$(npm list -g "$pkg" --depth=0 2>/dev/null | grep "$pkg@" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo "unknown")
+  current=$(npm list -g -- "$pkg" --depth=0 2>/dev/null | grep "$pkg@" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo "unknown")
 
   # 查询 npm registry 最新版本
   latest=$(safe_timeout 10 npm view "$pkg" version 2>/dev/null || echo "")

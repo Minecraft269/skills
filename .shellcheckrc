@@ -1,0 +1,6 @@
+enable=all
+source-path=SCRIPTS
+# SC1091: Can't follow sourced file (跨环境差异，非真实错误)
+# SC2034: Variable appears unused (脚本间传递变量)
+# SC2154: Variable referenced but not assigned (环境变量)
+disable=SC1091,SC2034,SC2154

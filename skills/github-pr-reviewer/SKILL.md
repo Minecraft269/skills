@@ -144,131 +144,12 @@ pull_request_read(method="get_reviews", owner, repo, pullNumber)
 
 #### 2b. 展示完整审查预览（必须向用户展示并获得确认）
 
-**在调用任何 GitHub API 之前**，必须将每条审查发现以完整的格式化预览展示给用户。**禁止以 MCP 工具调用参数格式展示**——用户需要看到的是最终会出现在 PR 上的完整评论内容。
+**在调用任何 GitHub API 之前**，必须将每条审查发现以完整的格式化预览展示给用户。完整的预览格式模板见 `references/review-preview-template.md`。
 
-审查预览格式如下：
-
-```
-## 🔍 PR 审查预览
-
-**审查仓库：** owner/repo
-**审查 PR：** #[N] — PR 标题
-**审查模型：** <当前模型名称>  ← 从系统提示中提取实际模型名
-**审查时间：** <当前时间>
-
----
-
-### 发现 #1 — 🔒 安全 · critical
-
-**文件：** `src/auth/login.ts`
-**diff 行号：** 第 42 行（RIGHT 侧 — 新增代码）
-**类别：** security
-**严重程度：** critical
-
----
-
-📝 **将发布的 inline 评论内容：**
-
-当前代码在 `password` 为 `null` 或 `undefined` 时会直接传递给 `hashPassword()`，
-可能导致运行时异常或不安全的哈希结果。
-
-**建议修复：**
-```typescript
-if (!password) {
-  throw new BadRequestError('密码不能为空');
-}
-const hashed = await hashPassword(password);
-```
-
-📋 **相关 diff 上下文：**
-```diff
-@@ -38,6 +38,8 @@ export async function login(username: string, password: string) {
-   // 验证用户名
-   const user = await db.findUser(username);
--  const hashed = await hashPassword(password);
--  return { id: user.id, token: generateToken(user) };
-+  if (!password) {
-+    throw new BadRequestError('密码不能为空');
-+  }
-+  const hashed = await hashPassword(password);
-+  return { id: user.id, token: generateToken(user), hashed };
- }
-```
-
----
-
-### 发现 #2 — 🐛 Bug · critical
-
-**文件：** `src/api/handler.ts`
-**diff 行号：** 第 108 行（RIGHT 侧 — 新增代码）
-**类别：** bug
-**严重程度：** critical
-
----
-
-📝 **将发布的 inline 评论内容：**
-
-`processData()` 在 `result.data` 为空数组时返回 `undefined`，
-而调用方未处理此情况，导致后续 `.map()` 抛出 TypeError。
-
-**建议修复：**
-```typescript
-const data = processData(input) ?? [];
-return data.map(item => transform(item));
-```
-
-📋 **相关 diff 上下文：**
-```diff
-@@ -105,3 +105,6 @@ async function handleRequest(input: RequestInput) {
-   const result = await fetchData(input.query);
--  return result.data.map(item => transform(item));
-+  const data = processData(input) ?? [];
-+  return data.map(item => transform(item));
- }
-```
-
----
-
-### 发现 #3 — ⚡ 性能 · warning
-
-...（每条发现完整展开）
-
----
-
-## 📊 审查统计
-
-| 严重程度 | 数量 |
-|---------|------|
-| 🔴 critical | X 条 |
-| 🟡 warning | Y 条 |
-| 🔵 suggestion | Z 条 |
-| 🟢 praise | P 条 |
-| **合计** | **N 条** |
-
-- **覆盖文件：** F 个
-- **审查模型：** <模型名>
-- **默认发布：** P0-P2（共 X 条）→ 回复 `--all` 可发布全部 N 条
-
----
-
-## ⏳ 等待确认
-
-以上评论将以 **inline 评论** 形式逐条发布到 GitHub PR 的对应代码行。
-
-你可以：
-- 回复「**确认**」或「**发布**」→ 按默认范围（P0-P2）开始发布
-- 回复 `--all` → 发布所有发现（含 P3-P5）
-- 回复 `--select 1,3,5` → 仅发布指定编号
-- 回复 `--skip 2` → 跳过指定发现
-- 回复「**修改 #N**」→ 编辑第 N 条发现的评论文本
-```
-
-**重要规则：**
-- 每条发现必须 **完整展开** 评论文本（问题描述 + 建议修复 + 代码示例）——用户看到的预览就是 PR 上会出现的最终内容
-- 每条发现必须附带 **相关 diff 上下文**（`📋 相关 diff 上下文`），展示被评论代码的周围 diff 行（含 `@@` hunk 头部），让用户看到代码全貌
-- **审查模型名称**必须从系统提示上下文中获取实际值（如 `Claude Opus 4.8`、`Claude Sonnet 4.6`），不可编造
-- **必须等待用户确认**后才能进入阶段 2c
-- 如果用户要求修改某条发现，修改后重新展示该条，直到用户满意
+核心规则：
+- 每条发现必须完整展开评论文本、建议修复、代码示例和 diff 上下文
+- 审查模型名称必须从系统提示上下文中获取实际值，不可编造
+- 必须等待用户确认后才能进入阶段 2c
 
 #### 2c. 创建 pending review
 
@@ -288,53 +169,11 @@ pull_request_review_write(
 
 #### 2d. 逐条添加 inline 评论
 
-对每条审查发现，调用：
+对每条审查发现，调用 `add_comment_to_pending_review`（owner, repo, pullNumber, path, body, line, side, subjectType="LINE"）。
 
-```
-add_comment_to_pending_review(
-  owner, repo, pullNumber,
-  path=<文件路径>,
-  body=<评论正文>,
-  line=<diff 行号>,
-  side=<"LEFT"|"RIGHT">,
-  subjectType="LINE"
-)
-```
+评论正文模板和类别图标映射见 `references/comment-templates.md`。
 
-**评论正文模板：**
-
-```
-**🔒 [安全] 密码验证缺少空值检查**
-
-当前代码在 `password` 为 `null` 或 `undefined` 时会直接传递给 `hashPassword()`，
-可能导致运行时异常或不安全的哈希结果。
-
-**建议修复：**
-```typescript
-if (!password) {
-  throw new BadRequestError('密码不能为空');
-}
-const hashed = await hashPassword(password);
-```
-```
-
-**类别图标映射：**
-
-| 类别 | 图标 |
-|------|------|
-| bug | 🐛 |
-| security | 🔒 |
-| performance | ⚡ |
-| design | 🏗️ |
-| best-practice | 📐 |
-| nitpick | 💭 |
-| praise | 👍 |
-
-**添加策略：**
-- 按严重程度排序添加：critical → warning → suggestion → praise
-- 每条之间轻微间隔，避免触发 GitHub API rate limit
-- 如果某条添加失败（如行号无效），记录失败条目，继续添加下一条
-- 对于已存在评论的位置，跳过（避免重复）
+添加策略：按严重程度排序（critical → warning → suggestion → praise），适当间隔避免 API rate limit，添加失败时记录并继续，已有评论位置跳过。
 
 ### 阶段 3：提交审查结论
 
@@ -444,5 +283,7 @@ gh pr review <NUMBER> --repo <owner/repo> --approve/--request-changes/--comment 
 
 ## 参考文档
 
-- `references/review-checklist.md` — 代码审查检查清单，按 P0-P5 优先级分层。审查时对照此清单逐项检查。
-- `references/diff-line-mapping.md` — Unified diff 格式解析与行号映射技术指南。解释 PR diff 行号与源文件行号的区别，以及如何正确计算 inline 评论所需的 diff 行号。
+- `references/review-checklist.md` — 代码审查检查清单，按 P0-P5 优先级分层
+- `references/diff-line-mapping.md` — Unified diff 格式解析与行号映射技术指南
+- `references/review-preview-template.md` — 审查预览格式模板和重要规则
+- `references/comment-templates.md` — inline 评论正文模板、类别图标映射和添加策略

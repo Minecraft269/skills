@@ -221,6 +221,13 @@ claude plugins install <插件名>
 | 📝 下一步 | {重启 Claude Code / 运行验证命令 / 配置 API Key} |
 ```
 
+安装完成后建议用户运行以下命令验证：
+
+```bash
+claude plugins list    # 确认插件在列表中
+/discover              # 运行技能发现（如已安装 proactive-skill-discovery）
+```
+
 **联动钩子（仅 PACKAGE_MODE = true 时执行）：**
 
 安装完成后，扫描兄弟技能的 `capabilities`，匹配 `integrates_with: skill-discovery`：

@@ -1,0 +1,98 @@
+name: Skill Health Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate SKILL.md frontmatter format
+        run: |
+          echo "=== 检查 SKILL.md frontmatter 格式 ==="
+          FAILED=0
+          for f in skills/*/SKILL.md; do
+            echo "检查: $f"
+            head -1 "$f" | grep -q '^---$' || {
+              echo "  ❌ 缺少 frontmatter 起始标记 ---"
+              FAILED=1
+              continue
+            }
+            awk 'NR>1 && /^---$/ {found=1; exit} END {exit found ? 0 : 1}' "$f" || {
+              echo "  ❌ 缺少 frontmatter 闭合标记 ---"
+              FAILED=1
+              continue
+            }
+            FM=$(sed -n '2,/^---$/p' "$f" | head -n -1)
+            echo "$FM" | grep -q 'name:' || { echo "  ⚠️  缺少 name 字段"; }
+            echo "$FM" | grep -q 'description:' || { echo "  ⚠️  缺少 description 字段"; }
+            echo "  ✅ 格式正确"
+          done
+          exit $FAILED
+
+      - name: Validate CONTRIBUTING.md capability tags registry
+        run: |
+          echo "=== 检查能力标签一致性 ==="
+          USED_TAGS=$(grep -ohP '(capabilities|integrates_with):\s*\[.*?\]' skills/*/SKILL.md | \
+            grep -oP '"[a-z][a-z-]+"' | tr -d '"' | sort -u)
+          echo "已使用标签: $(echo $USED_TAGS | tr '\n' ' ')"
+          echo ""
+          MISSING=0
+          for tag in $USED_TAGS; do
+            if ! grep -q "\`$tag\`" CONTRIBUTING.md; then
+              echo "  ❌ 标签 '$tag' 已使用但未在 CONTRIBUTING.md 中注册"
+              MISSING=1
+            fi
+          done
+          if [ $MISSING -eq 0 ]; then
+            echo "  ✅ 所有使用的标签均在 CONTRIBUTING.md 中注册"
+          fi
+
+      - name: Verify docs links in README
+        run: |
+          echo "=== 检查 README 中的文档链接 ==="
+          FAILED=0
+          grep -oP 'docs/[^)]+' README.md | sed 's/)$//' | while IFS= read -r doc; do
+            if [ -f "$doc" ]; then
+              echo "  ✅ $doc"
+            else
+              echo "  ❌ 缺失: $doc"
+              FAILED=1
+            fi
+          done
+          for doc in docs/*.md; do
+            BASENAME=$(basename "$doc")
+            if ! grep -q "$BASENAME" README.md; then
+              echo "  ⚠️  $BASENAME 存在但未在 README 中引用"
+            fi
+          done
+
+      - name: Shell syntax check
+        run: |
+          echo "=== Shell 脚本语法检查 ==="
+          FAILED=0
+          for f in $(find skills -name '*.sh' -type f); do
+            echo "检查: $f"
+            bash -n "$f" && echo "  ✅ 语法正确" || {
+              echo "  ❌ 语法错误"
+              FAILED=1
+            }
+          done
+          exit $FAILED
+
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          severity: warning
+          scandir: './skills'
+          format: tty

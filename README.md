@@ -42,6 +42,13 @@ claude plugins install minecraft269-skills
 
 安装完成后重启 Claude Code 即可。
 
+重启后，输入以下命令确认安装成功：
+
+```bash
+claude plugins list                 # 确认 minecraft269-skills 在列表中
+/discover                            # 运行技能发现（自动扫描项目并推荐匹配技能）
+```
+
 ### 方式二：手动安装
 
 适合离线环境或希望直接管理的用户。

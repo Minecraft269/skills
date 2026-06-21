@@ -52,6 +52,8 @@ REPO="${REPO_ARG:-${GH_REPO:-}}"; PR="${PR_ARG:-}"
 [ -z "$REPO" ] && { echo "❌ 缺少仓库参数"; exit 1; }
 [ -z "$PR" ]   && { echo "❌ 缺少 PR 编号"; exit 1; }
 [[ "$PR" =~ ^[0-9]+$ ]] || { echo "❌ PR 编号必须为数字"; exit 1; }
+# 验证仓库格式（跳过 . 推断）
+[[ "$REPO" = "." || "$REPO" =~ ^[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+$ ]] || { echo "❌ 仓库格式必须为 owner/repo"; exit 1; }
 debug() { [ "$VERBOSE" = true ] && printf '%s\n' "[DEBUG] $*" >&2; }
 
 # 仓库推断
