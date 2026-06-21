@@ -10,16 +10,18 @@ Minecraft269 的 Claude Code 技能合集，想到什么就创建什么，也欢
 | [`proactive-skill-discovery`](docs/proactive-skill-discovery.md) | 主动技能发现引擎：扫描项目、推荐匹配的技能和插件 |
 | [`universal-project-kickoff`](docs/universal-project-kickoff.md) | 通用项目快速启动：六步流程帮你 15 分钟完成关键决策 |
 | [`quick-plugin-installer`](docs/quick-plugin-installer.md) | 快速安装插件：MCP Server 和 SKILL 的统一安装入口 |
+| [`github-pr-reviewer`](docs/github-pr-reviewer.md) | GitHub PR 代码审查器：逐行 inline 评论，完整 pending review 工作流 |
 
 ---
 
 ## 技能联动
 
-完整安装本插件包后，四个技能会自动发现彼此并在关键工作流节点联动：
+完整安装本插件包后，五个技能会自动发现彼此并在关键工作流节点联动：
 
 - **项目启动** — 识别技术栈后提示安装相关 MCP Server，生成 CLAUDE.md 后触发技能发现
 - **技能发现** — 检测 GitHub 项目时推荐 PR 管理器，发现缺失插件时引导安装
 - **PR 管理器** — 克隆 PR 后提醒新贡献者使用项目启动流程，检测新项目类型时触发技能发现
+- **PR 审查器** — 与 PR 管理器共享上下文，审查完成后提示相关操作
 - **插件安装器** — 安装完成后自动提示运行技能发现
 
 > 💡 如果你单独安装了某个技能（而非完整插件包），联动功能会自动静默关闭，核心功能不受影响。

@@ -18,7 +18,8 @@ skills/                          # 所有技能（每个子目录一个技能）
 ├── github-pr-manager/           # GitHub PR 全功能管理器
 ├── proactive-skill-discovery/   # 主动技能发现引擎
 ├── universal-project-kickoff/   # 通用项目快速启动规则
-└── quick-plugin-installer/      # 快速安装插件（MCP + SKILL）
+├── quick-plugin-installer/      # 快速安装插件（MCP + SKILL）
+└── github-pr-reviewer/          # GitHub PR 审查器（逐行 inline 评论）
 CONTRIBUTING.md                  # 贡献指南
 ```
 

@@ -104,6 +104,9 @@ integrates_with: ["<需求标签>", ...]  # 本技能需要配合的能力类型
 | `project-setup` | 项目启动的六步决策流程 | universal-project-kickoff |
 | `risk-assessment` | 项目风险识别与预案 | universal-project-kickoff |
 | `mvp-planning` | MVP 范围圈定与路线图 | universal-project-kickoff |
+| `pr-review` | PR 代码审查与 inline 评论工作流 | github-pr-reviewer |
+| `code-review` | 代码质量审查（通用） | github-pr-reviewer |
+| `inline-comments` | 逐行 inline PR 评论发布 | github-pr-reviewer |
 
 #### 共享资源
 
