@@ -19,8 +19,9 @@ skills/                          # 所有技能（每个子目录一个技能）
 ├── proactive-skill-discovery/   # 主动技能发现引擎
 ├── universal-project-kickoff/   # 通用项目快速启动规则
 ├── quick-plugin-installer/      # 快速安装插件（MCP + SKILL）
-└── github-pr-reviewer/          # GitHub PR 审查器（逐行 inline 评论）
-CONTRIBUTING.md                  # 贡献指南
+├── github-pr-reviewer/          # GitHub PR 审查器（逐行 inline 评论）
+└── git-commit-helper/           # Git 提交规范化助手（Conventional Commits）
+CONTRIBUTING.md                  # 贡献指南（含能力标签注册表）
 ```
 
 ## 创建新技能
@@ -71,3 +72,26 @@ git push
 安装此插件的用户需要：
 - Claude Code CLI
 - 各技能声明的前置工具（如 `gh`、`git`、`jq`）
+
+## 开发注意事项
+
+- `.git/info/exclude` — 个人本地目录（`.omc/`、`.remember/`、`.impeccable/`）放这里，不提交到 `.gitignore`
+- worktree 提交 — 如 `EnterWorktree` 创建的 worktree 中 git 命令不可用（`not a git repository`），使用 `GIT_DIR=../.git GIT_WORK_TREE=<path> git ...` 变通
+- 推送后本地同步 — 通过 worktree 提交推送后，主仓库工作树会脱节，执行 `git restore .` 同步
+- 不写 `Co-Authored-By` 尾部
+
+## 新技能注册清单
+
+创建新技能需同步修改 4 处：
+
+1. `skills/<name>/SKILL.md` — 技能定义（~150 行，含 frontmatter + 包联动 + 核心工作流 + 错误处理）
+2. `CONTRIBUTING.md` — 在「能力标签注册表」表格末尾注册新能力标签
+3. `README.md` — 在末尾「技能列表」表格（许可证前面）添加一行
+4. `docs/<name>.md` — 精简文档（~40 行，简介 + 前置条件 + 触发方式 + 工作流 + 交互选项）
+
+纯 AI 驱动技能无需 `scripts/` 目录和 `references/` 目录。
+
+## CI 注意事项
+
+- `ludeeus/action-shellcheck@master` 遇 warning 即失败，所有 `*.sh` 必须 `bash -n` + ShellCheck 零 warning
+- CI 会验证 CONTRIBUTING.md 标签注册表与所有 `skills/*/SKILL.md` 的 `capabilities` 字段一致性
