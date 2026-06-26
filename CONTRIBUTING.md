@@ -107,6 +107,7 @@ integrates_with: ["<需求标签>", ...]  # 本技能需要配合的能力类型
 | `pr-review` | PR 代码审查与 inline 评论工作流 | github-pr-reviewer |
 | `code-review` | 代码质量审查（通用） | github-pr-reviewer |
 | `inline-comments` | 逐行 inline PR 评论发布 | github-pr-reviewer |
+| `git-commit` | Git 提交规范化与 commit message 生成 | git-commit-helper |
 
 #### 共享资源
 

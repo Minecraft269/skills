@@ -11,6 +11,7 @@ Minecraft269 的 Claude Code 技能合集，想到什么就创建什么，也欢
 | [`universal-project-kickoff`](docs/universal-project-kickoff.md) | 通用项目快速启动：六步流程帮你 15 分钟完成关键决策 |
 | [`quick-plugin-installer`](docs/quick-plugin-installer.md) | 快速安装插件：MCP Server 和 SKILL 的统一安装入口 |
 | [`github-pr-reviewer`](docs/github-pr-reviewer.md) | GitHub PR 代码审查器：逐行 inline 评论，完整 pending review 工作流 |
+| [`git-commit-helper`](docs/git-commit-helper.md) | Git 提交规范化助手：基于 staged diff 自动生成 Conventional Commits 消息 |
 
 ---
 
@@ -18,6 +19,7 @@ Minecraft269 的 Claude Code 技能合集，想到什么就创建什么，也欢
 
 完整安装本插件包后，五个技能会自动发现彼此并在关键工作流节点联动：
 
+- **Git 提交助手** — 提交完成后有 GitHub remote 时提示 PR 管理，涉及代码时提示审查
 - **项目启动** — 识别技术栈后提示安装相关 MCP Server，生成 CLAUDE.md 后触发技能发现
 - **技能发现** — 检测 GitHub 项目时推荐 PR 管理器，发现缺失插件时引导安装
 - **PR 管理器** — 克隆 PR 后提醒新贡献者使用项目启动流程，检测新项目类型时触发技能发现
