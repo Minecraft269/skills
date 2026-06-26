@@ -64,6 +64,7 @@ cp -r skills ~/.claude/plugins/minecraft269-skills
 | [`quick-plugin-installer`](docs/quick-plugin-installer.md) | 快速安装插件：MCP Server 和 SKILL 的统一安装入口 |
 | [`github-pr-reviewer`](docs/github-pr-reviewer.md) | GitHub PR 代码审查器：逐行 inline 评论，完整 pending review 工作流 |
 | [`git-commit-helper`](docs/git-commit-helper.md) | Git 提交规范化助手：基于 staged diff 自动生成 Conventional Commits 消息 |
+| [`env-health-check`](docs/env-health-check.md) | 跨平台环境自检：检测 git/gh/jq/claude 可用性，输出健康报告 |
 
 ---
 
