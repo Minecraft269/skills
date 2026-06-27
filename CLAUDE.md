@@ -20,7 +20,8 @@ skills/                          # 所有技能（每个子目录一个技能）
 ├── universal-project-kickoff/   # 通用项目快速启动规则
 ├── quick-plugin-installer/      # 快速安装插件（MCP + SKILL）
 ├── github-pr-reviewer/          # GitHub PR 审查器（逐行 inline 评论）
-└── git-commit-helper/           # Git 提交规范化助手（Conventional Commits）
+├── git-commit-helper/           # Git 提交规范化助手（Conventional Commits）
+└── env-health-check/            # 跨平台环境自检
 CONTRIBUTING.md                  # 贡献指南（含能力标签注册表）
 ```
 
