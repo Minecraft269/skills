@@ -20,6 +20,7 @@ skills/                          # 所有技能（每个子目录一个技能）
 ├── quick-plugin-installer/      # 快速安装插件（MCP + SKILL）
 ├── github-pr-reviewer/          # GitHub PR 审查器（逐行 inline 评论）
 ├── git-commit-helper/           # Git 提交规范化助手（Conventional Commits）
+├── proactive-skill-discovery/   # ⚠️ 已废弃（迁移 stub，见该目录 SKILL.md）
 └── env-health-check/            # 跨平台环境自检
 CONTRIBUTING.md                  # 贡献指南（含能力标签注册表）
 ```
@@ -56,6 +57,20 @@ CONTRIBUTING.md                  # 贡献指南（含能力标签注册表）
 | M1 — Marketplace 可用 | ✅ 完成 | 3 个技能可安装可触发 |
 | M2 — 扩展强化 | ✅ 完成 | +quick-plugin-installer、CONTRIBUTING.md、docs/ |
 | M3 — 技能联动 | ✅ 完成 | 通用联动框架（capabilities/integrates_with）、包级检测门控、技能间动态发现 |
+| M4 — 能力合并 | ✅ 完成 | proactive-skill-discovery 合并入 universal-project-kickoff（统一入口，技能数 7→6） |
+
+## 本地验证
+
+提交前运行以下命令确保通过 CI：
+
+```bash
+# Shell 语法检查
+find skills/ -name "*.sh" -exec bash -n {} \;
+
+# 手动验证标签一致性（CI 自动执行）
+grep -oP 'capabilities:\s*\[\K[^\]]+' skills/*/SKILL.md | tr '"' '\n' | sort -u
+# 对比 CONTRIBUTING.md 中的标签注册表
+```
 
 ## 发布流程
 
