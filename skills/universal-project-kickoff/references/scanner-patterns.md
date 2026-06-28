@@ -82,6 +82,20 @@ Complete mapping of project files to technology tags, organized by ecosystem:
 | `CMakeLists.txt` | `c`/`cpp`, `cmake` |
 | `Makefile` | `make`, (supplemental) |
 
+### Mobile Ecosystem
+
+| Detection File(s) | Tags |
+|-------------------|------|
+| `pubspec.yaml` with `flutter` dep | `flutter`, `dart`, `mobile`, `cross-platform` |
+| `react-native.config.js` | `react-native`, `mobile`, `javascript`/`typescript` |
+| `metro.config.js` | `react-native`, `mobile` |
+| `app.json` with `expo` key | `expo`, `react-native`, `mobile`, `typescript` |
+| `package.json` with `react-native` dep | `react-native`, `mobile`, `javascript`/`typescript` |
+| `ionic.config.json` | `ionic`, `mobile`, `cross-platform`, `angular`/`react`/`vue` |
+| `Podfile` | `ios`, `cocoapods`, `mobile` |
+| `android/` directory (top-level) | `android`, `mobile` |
+| `ios/` directory (top-level) | `ios`, `mobile` |
+
 ### DevOps / Infrastructure
 
 | Detection File(s) | Tags |
@@ -93,6 +107,26 @@ Complete mapping of project files to technology tags, organized by ecosystem:
 | `terraform/*.tf` | `terraform`, `infra` |
 | `.env.example` / `.env.template` | (supplemental) |
 
+### Language Version Detection
+
+When a language is detected, extract the version for more precise recommendations (a Java 8 project should not get Java 21 tooling recommendations). Version information is read from these files and appended as a versioned tag (e.g., `java-8`, `python-3.12`, `node-22`):
+
+| Version Source | Language | Format Example |
+|---------------|----------|---------------|
+| `pom.xml` `<java.version>` or `<maven.compiler.source>` | Java | `java-8`, `java-17`, `java-21` |
+| `build.gradle(.kts)` `sourceCompatibility` | Java/Kotlin | `java-17`, `kotlin-1.9` |
+| `package.json` `engines.node` | Node.js | `node-18`, `node-22` |
+| `pyproject.toml` `requires-python` | Python | `python-3.9`, `python-3.12` |
+| `go.mod` `go` directive | Go | `go-1.21`, `go-1.23` |
+| `Cargo.toml` `[package] edition` | Rust | `rust-2021`, `rust-2024` |
+| `.java-version` | Java | `java-17` |
+| `.node-version` | Node.js | `node-20` |
+| `.python-version` | Python | `python-3.11` |
+| `.ruby-version` | Ruby | `ruby-3.2` |
+| `rust-toolchain.toml` or `rust-toolchain` | Rust | `rust-1.76` |
+
+**Usage:** Version tags supplement the base language tags for scoring. A skill tagged `java-17` gets a +3 bonus on a Java 17 project but only +1 on a Java 8 project (partial match via base `java` tag). Skills with only `java` (no version) match all Java versions with +3.
+
 ## Skill-to-Project Matching Algorithm
 
 ### Scoring Formula
@@ -101,13 +135,15 @@ Complete mapping of project files to technology tags, organized by ecosystem:
 total_score = Σ(tag_match_score) + framework_match_score + category_bonus + always_bonus - never_penalty
 ```
 
-Where:
+Weights are configurable via `~/.claude/skills/.discovery-rules.json` → `scoring_weights`. Built-in defaults (used when no rules file exists):
 
-- **tag_match_score**: For each skill tag that matches a project fingerprint tag, add 3 points
-- **framework_match_score**: If skill name or description contains a detected framework name, add 3 points
-- **category_bonus**: If skill category aligns with project domain, add 1 point
-- **always_bonus**: If skill name is in `always_recommend` list, add 10 points (forces top placement)
-- **never_penalty**: If skill name is in `never_recommend` list, score = -999 (excluded)
+| Weight | Default | Description |
+|--------|---------|-------------|
+| tag_match | 3 | Per matching technology tag |
+| framework_match | 3 | Framework name match |
+| category_bonus | 1 | Category aligns with project domain |
+| always_bonus | 10 | Skill/plugin in always_recommend list |
+| never_penalty | -999 | Skill/plugin in never_recommend list |
 
 ### Category Alignment Table
 
@@ -198,10 +234,23 @@ Where:
 
 ## Filter Rules
 
+### Built-in Defaults
+
+When no `~/.claude/skills/.discovery-rules.json` exists, the engine uses these built-in defaults:
+
+| List | Default Entries | Rationale |
+|------|----------------|-----------|
+| `always_recommend` | `universal-project-kickoff`, `github-pr-manager` | Hub skill for all projects + broadly useful PR management |
+| `never_recommend` | (empty) | No hard exclusions by default |
+| `always_recommend_plugins` | `github`, `context7` | Version control (universal) + documentation lookup (universal) |
+| `never_recommend_plugins` | (empty) | No hard exclusions by default |
+
+Users can override any default by creating their own rules file. The `discovery-rules.example.json` in this skill's references directory provides a ready-to-copy template.
+
 ### How Filters Work
 
-1. Load `~/.claude/skills/.discovery-rules.json` if it exists
-2. Merge with built-in defaults (category weights, max recommendations)
+1. Load `~/.claude/skills/.discovery-rules.json` if it exists; if not, use built-in defaults above
+2. Merge user overrides with built-in defaults (user values take precedence)
 3. Apply `never_recommend` / `never_recommend_plugins` as hard exclusions (removed before scoring)
 4. After scoring, prepend `always_recommend` / `always_recommend_plugins` entries at the top
 5. Truncate to `max_recommendations` count

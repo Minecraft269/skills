@@ -225,13 +225,13 @@ claude plugins install <插件名>
 
 ```bash
 claude plugins list    # 确认插件在列表中
-/discover              # 运行技能发现（如已安装 proactive-skill-discovery）
+/discover              # 运行技能发现（已合并至 universal-project-kickoff）
 ```
 
 **联动钩子（仅 PACKAGE_MODE = true 时执行）：**
 
 安装完成后，扫描兄弟技能的 `capabilities`，匹配 `integrates_with: skill-discovery`：
-- 匹配成功 → 提示用户："💡 安装完成。是否需要运行 **主动技能发现** 来扫描当前项目，查看新安装的能力如何匹配你的技术栈？"
+- 匹配成功 → 提示用户："💡 安装完成。是否需要运行 **项目启动与能力发现** 来扫描当前项目，查看新安装的能力如何匹配你的技术栈？"
 - 用户同意 → 触发技能发现流程
 
 ### 6. 常见 MCP Server 快速安装模板

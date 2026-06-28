@@ -1,0 +1,24 @@
+{
+  "always_recommend": ["universal-project-kickoff", "github-pr-manager"],
+  "never_recommend": [],
+  "always_recommend_plugins": ["github", "context7"],
+  "never_recommend_plugins": [],
+  "scoring_weights": {
+    "tag_match": 3,
+    "framework_match": 3,
+    "category_bonus": 1,
+    "always_bonus": 10,
+    "never_penalty": -999
+  },
+  "category_weights": {
+    "dev": 3,
+    "ops": 1,
+    "meta": 0
+  },
+  "export_defaults": {
+    "language": "zh",
+    "format": "markdown"
+  },
+  "max_recommendations": 10,
+  "cache_ttl_hours": 24
+}

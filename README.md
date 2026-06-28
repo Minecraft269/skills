@@ -35,7 +35,7 @@ claude plugins install minecraft269-skills
 
 ```bash
 claude plugins list                 # 确认 minecraft269-skills 在列表中
-/discover                            # 运行技能发现（自动扫描项目并推荐匹配技能）
+/discover                            # 运行技能发现（已合并至 universal-project-kickoff，自动扫描项目并推荐匹配技能）
 ```
 
 ### 方式二：手动安装

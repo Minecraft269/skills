@@ -37,7 +37,7 @@ skills/
 ### SKILL.md 格式
 
 - 使用 YAML frontmatter（`---` 包裹），包含 `name`、`description` 字段
-- 可选字段：`capabilities`（本技能提供的能力标签）、`integrates_with`（本技能需要配合的能力标签）
+- 可选字段：`version`（技能版本号，推荐使用 SemVer）、`capabilities`（本技能提供的能力标签）、`integrates_with`（本技能需要配合的能力标签）
 - 正文使用 Markdown，中文为主
 - 代码块标注语言类型
 - 缩进使用 2 空格
@@ -91,6 +91,21 @@ integrates_with: ["<需求标签>", ...]  # 本技能需要配合的能力类型
 
 新技能应优先使用已有标签。如需新标签，请在此注册并说明语义。
 
+**新标签创建决策树：**
+
+```
+需要声明新能力？
+  ├─ 搜索已有标签是否覆盖该语义 → 是 → 直接复用已有标签
+  ├─ 已有标签相近但不完全匹配 → 优先使用已有标签，在 description 中说明
+  └─ 语义完全不重叠 → 创建新标签，在本表末尾注册
+```
+
+**新标签注册要求：**
+1. 标签名使用 `kebab-case`（如 `mobile-development`）
+2. 提供明确的语义说明（一句话）
+3. 至少有一个已有技能或即将创建的技能使用该标签
+4. 同步更新 CI 验证规则（`.github/workflows/skill-health.yml` 中的标签列表）
+
 | 标签 | 语义 | 已有使用者 |
 |------|------|-----------|
 | `pr-management` | PR 的查看/克隆/审查/CI 管理 | github-pr-manager |
@@ -109,6 +124,10 @@ integrates_with: ["<需求标签>", ...]  # 本技能需要配合的能力类型
 | `inline-comments` | 逐行 inline PR 评论发布 | github-pr-reviewer |
 | `git-commit` | Git 提交规范化与 commit message 生成 | git-commit-helper |
 | `env-check` | 跨平台环境自检与依赖可用性诊断 | env-health-check |
+| `testing` | 测试策略、测试框架、E2E 测试（预留） | — |
+| `mobile-development` | 移动端开发（React Native/Flutter/Swift/Kotlin）（预留） | — |
+| `security-audit` | 安全审查与漏洞检测（预留） | — |
+| `debugging` | 调试、根因分析与错误追踪（预留） | — |
 
 #### 共享资源
 

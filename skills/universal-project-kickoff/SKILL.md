@@ -14,6 +14,7 @@ description: >
   + 代码风格确认 + 能力推荐，最后调用 /init 生成项目的 CLAUDE.md 将思考成果永久固化。
   其他意图则根据技术栈推荐匹配的技能和插件。
   即使用户没有明确说"启动检查"，只要涉及从零规划任何项目或需要工具推荐，就应触发。
+version: "2.0.0"
 capabilities: ["project-setup", "risk-assessment", "mvp-planning", "skill-discovery", "capability-scanning", "project-analysis"]
 integrates_with: ["plugin-installation", "pr-management"]
 metadata:
@@ -33,12 +34,14 @@ metadata:
 
 ## 参考文件
 
-本技能附带四份参考文档，在技能执行过程中按以下规则加载：
+本技能附带六份参考文档，在技能执行过程中按以下规则加载：
 
 - **`references/project-checklist.md`**：通用项目启动检查清单完整版。当用户对某一步骤要求更详细的解释、希望看到完整开工 Checklist 原文、或需要确认是否遗漏检查项时加载。
 - **`references/ai-agent-checklist.md`**：AI Agent 项目专项检查清单。当用户确认项目类型为 AI Agent、询问 Agent 特有的风险或注意事项、或需要设计 Agent 的"大脑"架构时加载。
 - **`references/scanner-patterns.md`**：项目指纹检测矩阵、评分算法公式、插件映射表和命令发现参考。执行技术栈确认和能力匹配时参考。
 - **`references/language-guide.md`**：编程语言优劣势参考表。当用户不确定用什么语言时加载。
+- **`references/hook-config.md`**：可选的 Claude Code hook 配置指南。当用户希望在新会话启动或检测到新项目时自动触发本技能，参考此文档配置 SessionStart/PostToolUse hook。
+- **`references/validation-scenarios.md`**：验证场景集合。执行完技能后进行 LLM 自检时参考，确保推荐结果与预期一致。覆盖 8 种典型项目类型和 7 种边界情况。
 
 ## 包联动
 
@@ -50,7 +53,7 @@ metadata:
 
 当 `PACKAGE_MODE = true` 时：
 - 识别项目技术栈后可联动 `integrates_with: plugin-installation`（快速安装插件）
-- CLAUDE.md 生成后可联动 `integrates_with: skill-discovery`（技能发现 — 本技能自身已包含）
+- CLAUDE.md 生成后可提示用户运行能力扫描（本技能已内置，无需跨技能联动）
 - 扫描兄弟 SKILL.md 的 `capabilities` 字段，匹配本技能的 `integrates_with` 标签
 - 仅在匹配成功时显示联动提示
 
@@ -70,8 +73,8 @@ metadata:
 |------|------|---------|
 | 🚀 **启动新项目** | 从零开始一个项目 | → 追问语言/框架 → Step 0b 语言确认 → 进入强制六步流程 |
 | 💻 **开发新功能** | 在现有项目中添加功能 | → 进入 Step 0c 技术栈确认 + 能力推荐 |
-| 🔍 **审查代码** | Review PR 或代码变更 | → 进入 Step 0c 技术栈确认 + 审查工具推荐 |
-| 🐛 **修复 Bug** | 排查和修复问题 | → 进入 Step 0c 技术栈确认 + 调试工具推荐 |
+| 🔍 **审查代码** | Review PR 或代码变更 | → Step 0a 目标确认 → Step 0c 技术栈确认 + 审查工具推荐 |
+| 🐛 **修复 Bug** | 排查和修复问题 | → Step 0a 目标确认 → Step 0c 技术栈确认 + 调试工具推荐 |
 | 🔧 **探索工具** | 看看有什么可用的技能/插件/命令 | → 进入 Step 0c 完整能力扫描 |
 | 📋 **其他** | 用户自由输入 | → 根据输入内容智能匹配分流 |
 
@@ -112,7 +115,43 @@ metadata:
 
 用户确认语言后，进入强制六步流程。
 
-#### Step 0c：技术栈确认 + 能力推荐（「启动新项目」以外的所有意图）
+#### Step 0a：目标确认（仅「审查代码」/「修复 Bug」时执行）
+
+「审查代码」和「修复 Bug」意图需要先确认操作目标——目标项目可能尚未 clone 到本地，直接扫描当前工作区会得到错误的技术栈和技能推荐。
+
+**1. 追问目标：**
+
+- **审查代码**：使用 `AskUserQuestion` 询问：
+  > "你要审查哪个项目的 PR？请提供 PR URL（如 `https://github.com/owner/repo/pull/123`）或 `owner/repo#number`"
+
+- **修复 Bug**：使用 `AskUserQuestion` 询问：
+  > "你要在哪个项目中修 Bug？是当前工作区的项目，还是其他项目？"
+
+**2. 检查本地状态：**
+
+- 从用户提供的 PR URL 或 `owner/repo#number` 中解析出 `owner` 和 `repo`
+- 对比当前工作区的 git remote：
+  ```bash
+  git remote get-url origin 2>/dev/null || echo "NOT_A_GIT_REPO"
+  ```
+- 若当前工作区 remote 与目标 repo 不匹配，或当前目录不是 git 仓库 → 提示用户目标项目不在本地
+
+**3. 引导 clone（如需）：**
+
+> "目标项目 `owner/repo` 尚未 clone 到本地。需要我帮你 clone 吗？"
+
+- 用户同意 → 使用 `gh repo clone owner/repo` 或 `git clone` 将项目 clone 到合适位置
+- 若已安装 `github-pr-manager` 技能（PACKAGE_MODE = true 时检测），可联动其 `code-cloning` 能力
+- Clone 完成后切换到目标项目目录
+
+**4. 进入 Step 0c：**
+
+- 在正确的项目目录中执行技术栈扫描
+- 推荐技能时优先匹配：
+  - 「审查代码」→ 优先推荐 `pr-review`、`code-review` 能力（如 `github-pr-reviewer`）
+  - 「修复 Bug」→ 优先推荐调试工具 + 通用代码分析技能
+
+#### Step 0c：技术栈确认 + 能力推荐（所有意图）
 
 **对已有项目：** 执行项目指纹扫描。使用 `Glob` 检查以下文件：
 
@@ -171,6 +210,10 @@ metadata:
 | 探索工具 | 不做过滤，展示全部匹配结果 | — |
 
 4. **交互式推荐**：展示推荐结果，使用 `AskUserQuestion` 询问用户是否启用。
+5. **导出结果**：推荐完成后，提示用户可将扫描结果导出为文件：
+   > "💾 需要将扫描结果导出吗？支持 markdown（默认）、JSON、纯文本格式。"
+   - 导出文件命名：`{project-name}-skills-plugins-export.{format}`（详见 `references/scanner-patterns.md` 导出规范）
+   - 若用户不需要导出，跳过此步骤
 
 **联动钩子（仅 PACKAGE_MODE = true 时执行）：**
 
@@ -258,8 +301,10 @@ metadata:
 
 **联动钩子（仅 PACKAGE_MODE = true 时执行，在 6c 成功后）：**
 
-CLAUDE.md 生成成功后，扫描兄弟技能的 `capabilities`，匹配 `integrates_with: skill-discovery`：
-- 由于本技能自身已包含 skill-discovery 能力，直接提示用户是否需要扫描技术栈推荐匹配的技能和插件
+CLAUDE.md 生成成功后，本技能已内置完整的技能发现能力（Step 0c），可直接提示用户：
+> "✅ CLAUDE.md 已生成。是否需要扫描当前项目技术栈，推荐匹配的技能和插件？"
+
+（无需通过 `integrates_with: skill-discovery` 跨技能联动——此能力内置于本技能中。）
 - 同时检查其他兄弟技能的 `integrates_with`，如发现匹配则一并提示
 
 #### 6d. 后备方案
