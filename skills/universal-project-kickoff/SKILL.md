@@ -1,35 +1,44 @@
 ---
 name: universal-project-kickoff
 description: >
-  通用型项目快速启动规则。适用于任何类型的项目（传统软件开发、AI Agent、研究探索等）的启动阶段。
+  通用型项目启动与能力发现规则。合并了原 proactive-skill-discovery 的工具发现能力。
   当用户说以下任何话时，**必须**触发此技能：
   "我要开始一个新项目"、"帮我规划一个新功能"、"想启动一个 AI Agent"、
   "如何着手做 X"、"不知道从哪开始"、"帮我搭个架子"、"项目初始化"、
   "检查一下我的项目计划"、"帮我理一理思路"、"新项目怎么开始"、
-  "打算搞个 side project"、"帮我做项目风险排查"。
-  本技能执行六步强制流程（为什么-是什么-边界-风险-里程碑-固化CLAUDE.md）+ 代码风格确认，
-  最后调用 /init 生成项目的 CLAUDE.md 将思考成果永久固化。
-  即使用户没有明确说"启动检查"，只要涉及从零规划任何项目，就应触发。
-capabilities: ["project-setup", "risk-assessment", "mvp-planning"]
-integrates_with: ["skill-discovery", "plugin-installation"]
+  "打算搞个 side project"、"帮我做项目风险排查"、
+  "有哪些可用的技能/插件"、"推荐什么工具"、"/discover"、
+  "帮我审查代码"、"帮我修 Bug"、"我要开发一个新功能"。
+  本技能先探测用户意图（启动项目/开发功能/审查代码/修复Bug/探索工具），
+  再分流到对应子流程。启动新项目时执行六步强制流程（为什么-是什么-边界-风险-利益-里程碑-固化CLAUDE.md）
+  + 代码风格确认 + 能力推荐，最后调用 /init 生成项目的 CLAUDE.md 将思考成果永久固化。
+  其他意图则根据技术栈推荐匹配的技能和插件。
+  即使用户没有明确说"启动检查"，只要涉及从零规划任何项目或需要工具推荐，就应触发。
+capabilities: ["project-setup", "risk-assessment", "mvp-planning", "skill-discovery", "capability-scanning", "project-analysis"]
+integrates_with: ["plugin-installation", "pr-management"]
 metadata:
   category: workflow
-  tags: [project-startup, planning, checklist, mvp-definition, risk-assessment, init, code-style]
+  tags: [project-startup, planning, checklist, mvp-definition, risk-assessment, init, code-style, discovery, recommendation, skills, plugins, commands]
   compatibility: 需要 /init 命令（Claude Code 内置），无其他外部依赖
 ---
 
-# 通用型编写规则：快速开始一个项目
+# 通用型项目启动与能力发现
 
 ## 核心原则
+
 **先开枪，后瞄准，但开枪前得知道靶子大概在哪个方向。**  
 本技能帮助你在 15 分钟内完成启动前的关键决策，避免"热情直冲"带来的返工。同时，**全程保留项目的代码风格（包括注释、命名、格式等）** —— 这意味着在生成任何代码示例、项目结构或脚手架时，都要主动询问或推断用户既有的风格规范，并严格遵循。
 
+本技能已合并原 `proactive-skill-discovery` 的工具发现能力。在开始前，会先探测你的意图——是启动新项目、开发功能、审查代码、修复 Bug 还是探索工具——然后推荐最匹配的技能和插件。
+
 ## 参考文件
 
-本技能附带两份参考文档，提供更详尽的检查清单。在技能执行过程中，按以下规则加载：
+本技能附带四份参考文档，在技能执行过程中按以下规则加载：
 
-- **`references/project-checklist.md`**（来源：1.md）：通用项目启动检查清单完整版。当用户对某一步骤要求更详细的解释、希望看到完整开工 Checklist 原文、或需要确认是否遗漏检查项时加载。
-- **`references/ai-agent-checklist.md`**（来源：2.md）：AI Agent 项目专项检查清单。当用户确认项目类型为 AI Agent、询问 Agent 特有的风险或注意事项、或需要设计 Agent 的"大脑"架构时加载。
+- **`references/project-checklist.md`**：通用项目启动检查清单完整版。当用户对某一步骤要求更详细的解释、希望看到完整开工 Checklist 原文、或需要确认是否遗漏检查项时加载。
+- **`references/ai-agent-checklist.md`**：AI Agent 项目专项检查清单。当用户确认项目类型为 AI Agent、询问 Agent 特有的风险或注意事项、或需要设计 Agent 的"大脑"架构时加载。
+- **`references/scanner-patterns.md`**：项目指纹检测矩阵、评分算法公式、插件映射表和命令发现参考。执行技术栈确认和能力匹配时参考。
+- **`references/language-guide.md`**：编程语言优劣势参考表。当用户不确定用什么语言时加载。
 
 ## 包联动
 
@@ -41,13 +50,140 @@ metadata:
 
 当 `PACKAGE_MODE = true` 时：
 - 识别项目技术栈后可联动 `integrates_with: plugin-installation`（快速安装插件）
-- CLAUDE.md 生成后可联动 `integrates_with: skill-discovery`（技能发现）
+- CLAUDE.md 生成后可联动 `integrates_with: skill-discovery`（技能发现 — 本技能自身已包含）
 - 扫描兄弟 SKILL.md 的 `capabilities` 字段，匹配本技能的 `integrates_with` 标签
 - 仅在匹配成功时显示联动提示
 
-详见 `_shared/package-context.md`。
+详见 `_shared/package-context.md`。**任何检测失败都默认 PACKAGE_MODE = false，不得报错或中断。**
 
-## 使用流程（强制六步）
+---
+
+## 使用流程
+
+### Step 0：意图探测（必须先问）
+
+使用 `AskUserQuestion`，先问用户想干什么，再根据回答分流。
+
+> "你想要做什么？"
+
+| 选项 | 说明 | 后续分流 |
+|------|------|---------|
+| 🚀 **启动新项目** | 从零开始一个项目 | → 追问语言/框架 → Step 0b 语言确认 → 进入强制六步流程 |
+| 💻 **开发新功能** | 在现有项目中添加功能 | → 进入 Step 0c 技术栈确认 + 能力推荐 |
+| 🔍 **审查代码** | Review PR 或代码变更 | → 进入 Step 0c 技术栈确认 + 审查工具推荐 |
+| 🐛 **修复 Bug** | 排查和修复问题 | → 进入 Step 0c 技术栈确认 + 调试工具推荐 |
+| 🔧 **探索工具** | 看看有什么可用的技能/插件/命令 | → 进入 Step 0c 完整能力扫描 |
+| 📋 **其他** | 用户自由输入 | → 根据输入内容智能匹配分流 |
+
+#### Step 0b：语言/框架确认（仅「启动新项目」时追问）
+
+> "你想用什么编程语言/框架？"
+
+| 选项 | 说明 |
+|------|------|
+| 🟢 **Python** | AI/ML、数据分析、Web 后端、脚本自动化 |
+| 🟡 **JavaScript/TypeScript** | Web 全栈、前端、跨平台 |
+| 🔵 **Java/Kotlin** | 企业级后端、Android |
+| 🟣 **Rust** | 系统编程、高性能场景 |
+| ⚪ **Go** | 云原生、微服务、CLI 工具 |
+| 🟠 **C# (.NET)** | Windows 桌面、游戏、企业应用 |
+| 🔴 **Swift** | Apple 生态 (iOS/macOS) |
+| 🤔 **我不确定，帮我推荐** | → 追问项目类型 → 加载 `references/language-guide.md` → 列出优劣势 + 推荐 |
+
+**「我不确定」分支的推荐逻辑：**
+
+1. 追问项目类型：Web 应用 / 移动 App / 桌面应用 / CLI 工具 / AI/ML / 游戏 / 嵌入式
+2. 追问关注点：开发速度 / 运行性能 / 生态丰富度 / 学习曲线
+3. 加载 `references/language-guide.md`，输出推荐表：
+
+```
+## 语言推荐
+
+根据你的需求（[项目类型] + [关注点]），推荐以下语言：
+
+| 语言 | 适合度 | 优势 | 劣势 |
+|------|--------|------|------|
+| [语言A] | ⭐⭐⭐⭐⭐ | [优势] | [劣势] |
+| [语言B] | ⭐⭐⭐⭐ | [优势] | [劣势] |
+| [语言C] | ⭐⭐⭐ | [优势] | [劣势] |
+
+**推荐首选：[语言]** — [一句话理由]
+```
+
+用户确认语言后，进入强制六步流程。
+
+#### Step 0c：技术栈确认 + 能力推荐（「启动新项目」以外的所有意图）
+
+**对已有项目：** 执行项目指纹扫描。使用 `Glob` 检查以下文件：
+
+| 文件 | 推断结果 |
+|------|---------|
+| `pom.xml` | Java + Maven |
+| `build.gradle` / `build.gradle.kts` | Java/Kotlin + Gradle |
+| `package.json` | Node.js / JavaScript / TypeScript |
+| `tsconfig.json` | TypeScript |
+| `Cargo.toml` | Rust |
+| `go.mod` | Go |
+| `requirements.txt` / `pyproject.toml` / `setup.py` | Python |
+| `Gemfile` | Ruby |
+| `composer.json` | PHP |
+| `*.sln` / `*.csproj` | .NET / C# |
+| `CMakeLists.txt` | C/C++ |
+| `pubspec.yaml` | Flutter/Dart |
+| `Package.swift` / `*.xcodeproj` | Swift / Apple 生态 |
+| `docker-compose.yml` / `Dockerfile` | DevOps / Container |
+| `next.config.*` | Next.js |
+| `vite.config.*` | Vite |
+| `tailwind.config.*` | Tailwind CSS |
+| `astro.config.*` | Astro |
+| `nx.json` / `turbo.json` | Monorepo (Nx/Turborepo) |
+| `pnpm-lock.yaml` | pnpm |
+| `bun.lockb` | Bun |
+| `deno.json` | Deno |
+| `schema.prisma` | Prisma |
+| `schema.graphql` | GraphQL |
+
+详细检测矩阵和评分算法参见 `references/scanner-patterns.md`。
+
+- 如果 `package.json` 存在，`Read` 其 `dependencies` 和 `devDependencies` 提取框架关键词
+- 如果 `pom.xml` 存在，`Grep` 查找 `<artifactId>` 检测 Spring Boot、Quarkus 等
+
+**对全新项目：** 直接使用 Step 0b 选择的语言/框架。
+
+**输出：** 项目指纹（逗号分隔标签，如 `java, spring-boot, maven, postgresql`）。
+
+然后执行能力扫描与推荐：
+
+1. **并行能力扫描**：
+   - 技能扫描：Glob `~/.claude/skills/*/SKILL.md`，解析 frontmatter
+   - 插件扫描：读取 `~/.claude/settings.json` → `mcpServers` + Glob `~/.claude/plugins/*/plugin.json`
+   - 深度探索：对 ECC、superpowers、oh-my-claudecode 等优先级插件查找 SOUL.md、RULES.md、AGENTS.md、嵌套技能等未加载资源
+
+2. **匹配评分**：标签匹配 +3、框架匹配 +3、类别对齐 +1、通用 +0。优先级插件自动 +10 ⭐ 置顶。
+
+3. **按意图过滤**：
+
+| 意图 | 优先推荐 | 降权 |
+|------|---------|------|
+| 开发新功能 | 对应语言的开发技能、代码生成工具 | 审查/调试类 |
+| 审查代码 | 代码审查、PR 审查、lint 技能 | — |
+| 修复 Bug | 调试、错误追踪、测试技能 | — |
+| 探索工具 | 不做过滤，展示全部匹配结果 | — |
+
+4. **交互式推荐**：展示推荐结果，使用 `AskUserQuestion` 询问用户是否启用。
+
+**联动钩子（仅 PACKAGE_MODE = true 时执行）：**
+
+- 对推荐列表中未安装的插件标记 🆕，匹配 `integrates_with: plugin-installation`，提示安装
+- 检测 `.git/config` 中是否有 GitHub remote，若有则匹配 `integrates_with: pr-management`
+
+非「启动新项目」意图在此步骤结束，不进入强制六步流程。但能力扫描结果可作为后续工作的上下文。
+
+---
+
+### 强制六步流程（仅「启动新项目」时执行）
+
+以下六步是原 kickoff 的完整流程，**必须按顺序执行**。
 
 ### 第一步：澄清"为什么"与"是什么"
 向用户提问（至少覆盖以下 3 个问题）：
@@ -123,8 +259,8 @@ metadata:
 **联动钩子（仅 PACKAGE_MODE = true 时执行，在 6c 成功后）：**
 
 CLAUDE.md 生成成功后，扫描兄弟技能的 `capabilities`，匹配 `integrates_with: skill-discovery`：
-- 匹配成功 → 提示用户："💡 项目初始化完成。是否需要运行 **主动技能发现** 来扫描项目技术栈，为你推荐匹配的技能和插件？"
-- 用户同意 → 触发技能发现流程
+- 由于本技能自身已包含 skill-discovery 能力，直接提示用户是否需要扫描技术栈推荐匹配的技能和插件
+- 同时检查其他兄弟技能的 `integrates_with`，如发现匹配则一并提示
 
 #### 6d. 后备方案
 如果用户选择不执行 `/init`，输出完整的启动摘要（见下方模板），并告知：
@@ -224,6 +360,21 @@ CLAUDE.md 生成成功后，扫描兄弟技能的 `capabilities`，匹配 `integ
 - **仍执行**：快速风险摸底（第三步，简化为"最可能出错的一件事"）
 - **仍执行**：第六步 CLAUDE.md 生成（若项目目录存在）
 - 完成后提示："这是一个极简项目。如需完整启动检查流程，随时可以说。"
+
+---
+
+## 错误处理
+
+| 场景 | 处理方式 |
+|------|---------|
+| `~/.claude/skills/` 不存在或无法读取 | 跳过技能扫描，仅推荐插件和命令，不报错 |
+| SKILL.md frontmatter 格式错误 | 跳过该技能，记录名称到跳过列表，继续扫描其他技能 |
+| `settings.json` 无 `mcpServers` 字段 | 跳过 MCP 插件扫描，仅扫描本地插件目录 |
+| `.discovery-rules.json` JSON 解析失败 | 静默跳过，使用内置默认规则 |
+| Glob 操作超时（>5 秒） | 跳过深度探索，标注「部分插件未深度扫描」 |
+| 深度探索文件 > 50KB | 仅读前 5 行判断类型，不读取全文 |
+| PACKAGE_MODE 检测失败（任何原因） | 降级为 PACKAGE_MODE = false，静默运行 |
+| `/init` 执行失败 | 手动输出启动摘要，提示用户可随时重试 |
 
 ---
 

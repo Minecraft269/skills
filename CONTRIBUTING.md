@@ -96,9 +96,9 @@ integrates_with: ["<需求标签>", ...]  # 本技能需要配合的能力类型
 | `pr-management` | PR 的查看/克隆/审查/CI 管理 | github-pr-manager |
 | `ci-analysis` | CI 状态检查与失败分析 | github-pr-manager |
 | `code-cloning` | 将远程代码克隆到本地并初始化环境 | github-pr-manager |
-| `skill-discovery` | 扫描项目、发现并推荐匹配能力 | proactive-skill-discovery |
-| `capability-scanning` | 扫描已安装的技能/插件/MCP | proactive-skill-discovery |
-| `project-analysis` | 分析项目技术栈和结构 | proactive-skill-discovery |
+| `skill-discovery` | 扫描项目、发现并推荐匹配能力 | universal-project-kickoff |
+| `capability-scanning` | 扫描已安装的技能/插件/MCP | universal-project-kickoff |
+| `project-analysis` | 分析项目技术栈和结构 | universal-project-kickoff |
 | `plugin-installation` | 安装 MCP/SKILL 插件 | quick-plugin-installer |
 | `mcp-setup` | MCP Server 配置与验证 | quick-plugin-installer |
 | `project-setup` | 项目启动的六步决策流程 | universal-project-kickoff |
