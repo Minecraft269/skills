@@ -1,39 +1,14 @@
 # proactive-skill-discovery
 
-主动技能发现引擎 — 在项目启动、复杂任务等关键节点自动扫描并推荐匹配的 Skills、Plugins 和 Commands。
+> ⚠️ **已废弃** — 本技能已于 2026-06-27 合并至 [universal-project-kickoff](universal-project-kickoff.md)。请使用 `universal-project-kickoff` 代替。
 
-## 核心功能
+## 迁移说明
 
-- 自动检测项目语言、框架、构建工具
-- 并行扫描已安装的技能和插件并评分匹配
-- 交互式推荐（优先推荐 + 技能 + 插件 + 深度资源）
-- 指令发现（MCP 工具和 Slash 命令）
-- 支持全量能力导出（技能/插件/指令清单）
+`proactive-skill-discovery` 的全部能力（项目指纹扫描、能力扫描、匹配评分、交互推荐、命令发现、全量导出）已合并到 `universal-project-kickoff` 中。
 
-## 工作流（7 步）
+合并后的技能提供统一的入口：
+- 先探测你的意图（启动项目 / 开发功能 / 审查代码 / 修复 Bug / 探索工具）
+- 再根据意图和技术栈推荐匹配的技能和插件
+- 如果是启动新项目，还会执行完整的六步启动检查流程
 
-1. **项目识别** — 扫描 `package.json`、`pom.xml`、`Cargo.toml` 等生成技术指纹
-2. **能力扫描** — 并行扫描 Skills 和 Plugins
-3. **匹配评分** — 基于标签/关键词/框架名称评分
-4. **交互式推荐** — 展示推荐并询问用户是否启用
-5. **指令发现** — 展示已选工具的 MCP 工具和 Slash 命令
-6. **全量导出** — 按需导出到文件
-7. **上下文记忆** — 记录用户选择，避免重复推荐
-
-## 触发场景
-
-- 项目启动（session 启动时）
-- 复杂任务且未指定技能
-- 用户输入 `/discover`
-- 检测到项目类型显著变化
-
-## 相关技能
-
-本技能属于 [minecraft269-skills](https://github.com/Minecraft269/skills) 插件包。当完整安装插件包时，本技能可与其他包内技能自动联动：
-
-- 检测 GitHub 项目时自动推荐 PR 管理器
-- 发现缺失插件时引导至快速安装器
-- 被其他技能在关键节点触发（项目初始化后、PR 克隆后、插件安装后）
-
-独立安装本技能时，上述联动功能静默关闭，不影响核心发现功能。
-
+所有联动标签（`skill-discovery`、`capability-scanning`、`project-analysis`）已由合并技能继承，其他技能无需修改。原有 `integrates_with: skill-discovery` 的联动链不受影响。
