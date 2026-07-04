@@ -280,7 +280,11 @@ Examples:
 
 To keep the interactive experience responsive, always:
 1. Parallelize skill scanning and plugin scanning
-2. Cache scan results within a session (don't re-scan on repeated `/discover` calls)
+2. Cache scan results within a session (don't re-scan on repeated `/discover` calls):
+   - Store `_SCAN_CACHE = { timestamp, fingerprint, ttl_hours }` in session context after scan completes
+   - On subsequent calls, check if cache exists and `(now - timestamp) < ttl_hours` (default 24h, configurable via `.discovery-rules.json` → `cache_ttl_hours`)
+   - If cache is valid, skip 0c-1 and 0c-2 entirely, reuse cached results
+   - If cache expired or absent, perform full scan
 3. Limit initial display to top 5-10; lazy-load "show more" on request
 
 ---
@@ -398,7 +402,9 @@ Display MCP tools organized by parent plugin.
 
 Some plugins contain critical files that are NOT automatically loaded or indexed — they exist on disk but Claude Code won't discover them unless explicitly scanned during the capability inventory step.
 
-### Priority Plugins & Unindexed Resources
+**The plugin list below is the built-in default.** It can be overridden by setting `deep_explore_plugins` in `~/.claude/skills/.discovery-rules.json`. If the rules file exists and defines this field, its values replace the defaults below entirely.
+
+### Priority Plugins & Unindexed Resources (Defaults)
 
 | Plugin | Unindexed Key Files | Type |
 |--------|-------------------|------|
@@ -425,6 +431,8 @@ Each discovered resource is tagged with `source: deep-exploration` and `plugin: 
 ## Priority Boost System
 
 Certain plugins provide foundational capabilities that enhance ALL workflows. When detected during the capability inventory, they receive a **+10 priority boost** to guarantee top placement — regardless of project match score.
+
+**The plugin list below is the built-in default.** It can be overridden by setting `priority_boost_plugins` in `~/.claude/skills/.discovery-rules.json`. If the rules file exists and defines this field, its values replace the defaults below entirely.
 
 | Priority Plugin | Boost Reason |
 |----------------|-------------|
