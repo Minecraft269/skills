@@ -147,3 +147,80 @@
 1. 指纹检测是否正确识别了所有配置文件
 2. 标签匹配算法是否应用了正确的权重
 3. 是否有 always_recommend/never_recommend 规则干扰
+
+---
+
+## 完整走查示例
+
+### 示例 1: Java Spring Boot 项目
+
+**输入:** 用户打开包含 `pom.xml` 的项目，pom.xml 中有 `spring-boot-starter-parent`。
+
+**项目指纹:** `java, spring-boot, maven`
+
+**推荐技能 (top 5):**
+| # | 名称 | 描述 | 匹配理由 | 来源 |
+|---|------|------|---------|------|
+| 1 | `springboot-patterns` | Spring Boot 开发模式 | Spring Boot 框架直接匹配 | community |
+| 2 | `java-pro` | Java 专业开发 | Java 语言匹配 | community |
+| 3 | `springboot-tdd` | TDD 开发流程 | Spring Boot + 测试匹配 | community |
+| 4 | `springboot-security` | Spring Boot 安全 | Spring Boot 框架匹配 | community |
+| 5 | `git-workflow` | Git 工作流 | 通用开发技能 | community |
+
+**推荐插件:**
+| # | 名称 | 描述 | 匹配理由 | 类型 |
+|---|------|------|---------|------|
+| 1 | `plugin:github:github` | GitHub PR/Issue 管理 | 通用开发插件 | MCP |
+| 2 | `plugin:context7:context7` | 文档查询 | 查阅 Spring Boot 文档 | MCP |
+
+**用户选择 github 和 context7 后，指令发现展示:**
+MCP 工具: `mcp__github__create_pull_request`（创建 PR，提交代码后需要发起合并请求时）、`mcp__context7__query-docs`（查询文档，需要查阅 Spring Boot API 时）。Slash 命令: `/commit`（规范化提交）、`/code-review`（审查代码）、`/create-pr`（创建 Pull Request）。
+
+### 示例 2: React + Vite 前端项目
+
+**输入:** 用户打开包含 `package.json` (react, vite deps) 和 `vite.config.ts` 的项目。
+
+**项目指纹:** `javascript/typescript, react, vite, nodejs`
+
+**推荐技能 (top 5):**
+| # | 名称 | 描述 | 匹配理由 | 来源 |
+|---|------|------|---------|------|
+| 1 | `react-best-practices` | React 最佳实践 | React 框架直接匹配 | community |
+| 2 | `frontend-patterns` | 前端开发模式 | 前端领域匹配 | community |
+| 3 | `javascript-pro` | JS 专业开发 | JavaScript 语言匹配 | community |
+| 4 | `vite-patterns` | Vite 构建模式 | Vite 工具匹配 | community |
+| 5 | `ui-ux-designer` | UI/UX 设计 | 前端领域相关 | community |
+
+**推荐插件:**
+| # | 名称 | 描述 | 匹配理由 | 类型 |
+|---|------|------|---------|------|
+| 1 | `plugin:playwright:playwright` | 浏览器自动化测试 | 前端 E2E 测试 | MCP |
+| 2 | `plugin:github:github` | PR 管理 | 通用开发插件 | MCP |
+
+**用户选择后指令:** `mcp__github__search_code`（搜索代码）、`mcp__github__create_pull_request`（创建 PR）。Slash 命令: `/frontend-design`（前端设计）、`/code-review`（审查代码）、`/commit`（提交）。
+
+### 示例 3: 未知/空项目
+
+**输入:** 空目录或无任何已知配置文件的目录。
+
+**项目指纹:** （无 — 空目录或未检测到已知配置文件）
+
+**检测结果:** "🆕 未检测到已知项目类型。以下是通用推荐："
+
+**推荐技能 (通用):**
+| # | 名称 | 描述 | 匹配理由 | 来源 |
+|---|------|------|---------|------|
+| 1 | `git-workflow` | Git 工作流 | 通用开发技能 | community |
+| 2 | `code-review` | 代码审查 | 通用开发技能 | community |
+| 3 | `commit` | 规范化提交 | 通用开发技能 | community |
+| 4 | `file-organizer` | 文件整理 | 通用辅助技能 | community |
+
+**推荐插件 (通用):**
+| # | 名称 | 描述 | 匹配理由 | 类型 |
+|---|------|------|---------|------|
+| 1 | `plugin:github:github` | PR/Issue 管理 | 通用开发插件 | MCP |
+| 2 | `plugin:longhand:longhand` | 会话记忆 | 通用辅助插件 | MCP |
+
+**用户选择后指令:** `/commit`（提交代码时）、`/code-review`（审查代码时）、`/discover`（重新发现时）
+
+**行为:** 提示用户："如需查看所有已安装的能力，可以为你导出完整列表。"

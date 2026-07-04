@@ -3,6 +3,11 @@
   "never_recommend": [],
   "always_recommend_plugins": ["github", "context7"],
   "never_recommend_plugins": [],
+  "always_show_commands": [],
+  "never_show_commands": [],
+  "priority_boost_plugins": ["everything-claude-code", "superpowers", "andrej-karpathy-skills"],
+  "deep_explore_plugins": ["everything-claude-code", "superpowers", "andrej-karpathy-skills", "oh-my-claudecode"],
+  "deep_explore_patterns": ["SOUL.md", "RULES.md", "AGENTS.md", "CLAUDE.md", "COMMANDS-QUICK-REF.md", ".cursor/rules/*.mdc"],
   "scoring_weights": {
     "tag_match": 3,
     "framework_match": 3,

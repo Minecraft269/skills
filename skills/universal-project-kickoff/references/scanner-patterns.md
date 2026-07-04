@@ -227,6 +227,11 @@ Weights are configurable via `~/.claude/skills/.discovery-rules.json` → `scori
       "type": "number",
       "default": 10,
       "description": "Maximum number of recommendations to display"
+    },
+    "cache_ttl_hours": {
+      "type": "number",
+      "default": 24,
+      "description": "Hours before cached scan results expire and require a fresh scan"
     }
   }
 }
@@ -381,8 +386,112 @@ Display ALL slash commands organized by category.
 Display MCP tools organized by parent plugin.
 ```
 
-### Performance Notes
+### Command Discovery Performance
 
 - MCP tool discovery via system prompt scan: near-instant (text matching)
 - Slash command discovery via system prompt scan: near-instant (text matching)
 - Total command catalog construction: <100ms for typical session
+
+---
+
+## Deep Exploration Reference
+
+Some plugins contain critical files that are NOT automatically loaded or indexed — they exist on disk but Claude Code won't discover them unless explicitly scanned during the capability inventory step.
+
+### Priority Plugins & Unindexed Resources
+
+| Plugin | Unindexed Key Files | Type |
+|--------|-------------------|------|
+| `everything-claude-code` (ECC) | SOUL.md, RULES.md, AGENTS.md, CLAUDE.md, COMMANDS-QUICK-REF.md, WORKING-CONTEXT.md, the-security-guide.md, agent.yaml | Behavioral rules, security guides, agent configs |
+| `superpowers` | AGENTS.md, CLAUDE.md, GEMINI.md, hooks/hooks.json | Multi-platform agent behavior configs, hooks |
+| `andrej-karpathy-skills` | CLAUDE.md, CURSOR.md, .cursor/rules/karpathy-guidelines.mdc, skills/karpathy-guidelines/SKILL.md | Coding guidelines, nested skills, Cursor rules |
+| `oh-my-claudecode` | .agents/skills/\*/\*.md (数十个嵌套技能) | Plugin-internal skills (may not appear in `~/.claude/skills/`) |
+
+### How to Deep-Explore
+
+1. For each priority plugin in `~/.claude/plugins/`, list root-level `.md`, `.json`, `.yaml`, `.yml`, `.mdc` files (skip `node_modules`, `.git`, `package-lock.json`)
+2. Read the first 5-10 lines of each `.md` file to identify its purpose (SOUL/RULES/AGENTS/CLAUDE/etc.)
+3. For nested skills (`.agents/skills/*/SKILL.md`), read frontmatter same as normal skill scan (Step 2a)
+4. For `.mdc` (Cursor rules) files, extract rule name and description
+
+### Deep Resources Output Format
+
+Each discovered resource is tagged with `source: deep-exploration` and `plugin: <plugin-name>`. Each entry has: name, type (soul/rules/agents/claude-md/commands-ref/nested-skill), description, and path.
+
+**Parallelize with Steps 2a and 2b.** Run all three scans concurrently for responsive performance.
+
+---
+
+## Priority Boost System
+
+Certain plugins provide foundational capabilities that enhance ALL workflows. When detected during the capability inventory, they receive a **+10 priority boost** to guarantee top placement — regardless of project match score.
+
+| Priority Plugin | Boost Reason |
+|----------------|-------------|
+| `everything-claude-code` (ECC) | Claude Code's "OS-level" plugin — provides SOUL/RULES/AGENTS behavioral rules, nested skills, security guides |
+| `superpowers` | Core workflow skills (TDD/debugging/planning/code review) + multi-platform adaptation |
+| `andrej-karpathy-skills` | Karpathy coding guidelines — elevates all code output quality |
+| Any deep resource from Deep Exploration | Discovered unindexed resources (SOUL/RULES/nested skills) that enhance all workflows |
+
+**How the boost works:**
+1. After normal scoring (tag_match + framework_match + category_bonus + always_bonus - never_penalty), check if any of the above plugins/resources exist
+2. If found: their base score = max(normal_score, 10), placing them at or near the top
+3. Mark them with ⭐ in the recommendation display to indicate priority status
+
+**Output structure — three separate lists (always in this order):**
+1. ⭐ Priority Recommendations (boosted plugins/resources — always first)
+2. 📋 Recommended Skills (top 5-10, project-matched)
+3. 🔌 Recommended Plugins (top 3-5, project-matched)
+
+Store remaining unmatched items separately for the full export step.
+
+---
+
+## Discovery Rules — Extended Fields
+
+The following fields extend the base JSON schema (see Discovery Rules JSON Schema above) to control command visibility, priority boosting, and deep exploration:
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `always_show_commands` | string[] | `[]` | Slash commands that always appear in command discovery output |
+| `never_show_commands` | string[] | `[]` | Slash commands excluded from command discovery output |
+| `priority_boost_plugins` | string[] | `["everything-claude-code", "superpowers", "andrej-karpathy-skills"]` | Plugins that receive +10 priority boost |
+| `deep_explore_plugins` | string[] | `["everything-claude-code", "superpowers", "andrej-karpathy-skills", "oh-my-claudecode"]` | Plugins to deep-explore for unindexed resources |
+| `deep_explore_patterns` | string[] | `["SOUL.md", "RULES.md", "AGENTS.md", "CLAUDE.md", "COMMANDS-QUICK-REF.md", "WORKING-CONTEXT.md", "the-security-guide.md", "agent.yaml", ".cursor/rules/*.mdc"]` | File patterns to match during deep exploration |
+
+---
+
+## Export Field Definitions
+
+When generating a full export, use these field tables:
+
+**Per Skill:** 名称, 类别 (dev/meta/ops), 来源 (community/official/custom), 描述, 适用场景标签, 文件路径
+
+**Per Plugin:** 名称, 类型 (stdio/sse/http), 命令/可执行文件, 描述, 来源 (MCP配置/本地插件目录)
+
+**Per MCP Tool:** 工具名称, 所属插件, 作用, 适用场景
+
+**Per Slash Command:** 命令 (/name), 作用, 适用场景, 分类 (Git/审查/开发/调试/会话/设置)
+
+---
+
+## Future Skill & Plugin Sources
+
+The scanning logic in Step 2 is designed to be extensible. When new sources emerge (marketplace APIs, team-shared repositories, remote registries, OCI artifacts), extend the capability inventory by:
+1. Adding the new source URL/endpoint to scan targets
+2. Following the same metadata extraction pattern (name, description, tags, category, source)
+3. Appending discovered items to the combined recommendation pool
+
+---
+
+## Critical Execution Rules
+
+1. **Correct order** — Step 0c-1→2→3→4 (recommend, ask user) → Step 0c-5 (only after selection, show commands) → Step 0c-6 (export) → Step 0c-7 (persist)
+2. **Deep exploration is REQUIRED** — always deep-scan ECC/superpowers/andrej-karpathy/OMC for SOUL.md, RULES.md, AGENTS.md, nested skills, and other unindexed resources
+3. **Priority boost** — ECC, superpowers, andrej-karpathy-skills, and any deep resources always get ⭐ top placement
+4. **Step 0c-5 commands come AFTER selection** — never show MCP tools or slash commands in Step 0c-4's initial recommendation
+5. **Each command MUST include "作用" and "适用场景"** — describe what it does and when to use it
+6. **Step 0c-4 is MANDATORY** — always ask user after displaying recommendations
+7. **Step 0c-6 requires consent** — always ask before exporting
+8. **Respect "skip"** — don't re-recommend in the same session unless project context changes significantly
+9. **Be concise** — show top 5-10 matches; offer "show more" option; never dump 100+ entries at once

@@ -14,11 +14,13 @@ description: >
   + 代码风格确认 + 能力推荐，最后调用 /init 生成项目的 CLAUDE.md 将思考成果永久固化。
   其他意图则根据技术栈推荐匹配的技能和插件。
   即使用户没有明确说"启动检查"，只要涉及从零规划任何项目或需要工具推荐，就应触发。
-version: "2.0.0"
+version: "3.0.0"
+risk: safe
+source: community
 capabilities: ["project-setup", "risk-assessment", "mvp-planning", "skill-discovery", "capability-scanning", "project-analysis"]
 integrates_with: ["plugin-installation", "pr-management"]
 metadata:
-  category: workflow
+  category: meta
   tags: [project-startup, planning, checklist, mvp-definition, risk-assessment, init, code-style, discovery, recommendation, skills, plugins, commands]
   compatibility: 需要 /init 命令（Claude Code 内置），无其他外部依赖
 ---
@@ -31,6 +33,13 @@ metadata:
 本技能帮助你在 15 分钟内完成启动前的关键决策，避免"热情直冲"带来的返工。同时，**全程保留项目的代码风格（包括注释、命名、格式等）** —— 这意味着在生成任何代码示例、项目结构或脚手架时，都要主动询问或推断用户既有的风格规范，并严格遵循。
 
 本技能已合并原 `proactive-skill-discovery` 的工具发现能力。在开始前，会先探测你的意图——是启动新项目、开发功能、审查代码、修复 Bug 还是探索工具——然后推荐最匹配的技能和插件。
+
+## 不触发条件
+
+以下情况**不要**触发本技能：
+- 用户已明确指定要使用的具体技能（如 `/github-pr-reviewer`）
+- 对话仅为简单问答，不涉及项目开发任务
+- 用户在当前会话中已明确表示不需要推荐或启动检查
 
 ## 参考文件
 
@@ -78,6 +87,42 @@ metadata:
 | 🔧 **探索工具** | 看看有什么可用的技能/插件/命令 | → 进入 Step 0c 完整能力扫描 |
 | 📋 **其他** | 用户自由输入 | → 根据输入内容智能匹配分流 |
 
+#### Step 0a：目标确认（仅「审查代码」/「修复 Bug」时执行）
+
+「审查代码」和「修复 Bug」意图需要先确认操作目标——目标项目可能尚未 clone 到本地，直接扫描当前工作区会得到错误的技术栈和技能推荐。
+
+**1. 追问目标：**
+
+- **审查代码**：使用 `AskUserQuestion` 询问：
+  > "你要审查哪个项目的 PR？请提供 PR URL（如 `https://github.com/owner/repo/pull/123`）或 `owner/repo#number`"
+
+- **修复 Bug**：使用 `AskUserQuestion` 询问：
+  > "你要在哪个项目中修 Bug？是当前工作区的项目，还是其他项目？"
+
+**2. 检查本地状态：**
+
+- 从用户提供的 PR URL 或 `owner/repo#number` 中解析出 `owner` 和 `repo`
+- 对比当前工作区的 git remote：
+  ```bash
+  git remote get-url origin 2>/dev/null || echo "NOT_A_GIT_REPO"
+  ```
+- 若当前工作区 remote 与目标 repo 不匹配，或当前目录不是 git 仓库 → 提示用户目标项目不在本地
+
+**3. 引导 clone（如需）：**
+
+> "目标项目 `owner/repo` 尚未 clone 到本地。需要我帮你 clone 吗？"
+
+- 用户同意 → 使用 `gh repo clone owner/repo` 或 `git clone` 将项目 clone 到合适位置
+- 若已安装 `github-pr-manager` 技能（PACKAGE_MODE = true 时检测），可联动其 `code-cloning` 能力
+- Clone 完成后切换到目标项目目录
+
+**4. 进入 Step 0c：**
+
+- 在正确的项目目录中执行技术栈扫描
+- 推荐技能时优先匹配：
+  - 「审查代码」→ 优先推荐 `pr-review`、`code-review` 能力（如 `github-pr-reviewer`）
+  - 「修复 Bug」→ 优先推荐调试工具 + 通用代码分析技能
+
 #### Step 0b：语言/框架确认（仅「启动新项目」时追问）
 
 > "你想用什么编程语言/框架？"
@@ -115,45 +160,15 @@ metadata:
 
 用户确认语言后，进入强制六步流程。
 
-#### Step 0a：目标确认（仅「审查代码」/「修复 Bug」时执行）
+#### Step 0c：技术栈确认 + 能力发现（7 步子程序）
 
-「审查代码」和「修复 Bug」意图需要先确认操作目标——目标项目可能尚未 clone 到本地，直接扫描当前工作区会得到错误的技术栈和技能推荐。
+详细算法参见 `references/scanner-patterns.md`。
 
-**1. 追问目标：**
+---
 
-- **审查代码**：使用 `AskUserQuestion` 询问：
-  > "你要审查哪个项目的 PR？请提供 PR URL（如 `https://github.com/owner/repo/pull/123`）或 `owner/repo#number`"
+**0c-1. 项目指纹扫描**
 
-- **修复 Bug**：使用 `AskUserQuestion` 询问：
-  > "你要在哪个项目中修 Bug？是当前工作区的项目，还是其他项目？"
-
-**2. 检查本地状态：**
-
-- 从用户提供的 PR URL 或 `owner/repo#number` 中解析出 `owner` 和 `repo`
-- 对比当前工作区的 git remote：
-  ```bash
-  git remote get-url origin 2>/dev/null || echo "NOT_A_GIT_REPO"
-  ```
-- 若当前工作区 remote 与目标 repo 不匹配，或当前目录不是 git 仓库 → 提示用户目标项目不在本地
-
-**3. 引导 clone（如需）：**
-
-> "目标项目 `owner/repo` 尚未 clone 到本地。需要我帮你 clone 吗？"
-
-- 用户同意 → 使用 `gh repo clone owner/repo` 或 `git clone` 将项目 clone 到合适位置
-- 若已安装 `github-pr-manager` 技能（PACKAGE_MODE = true 时检测），可联动其 `code-cloning` 能力
-- Clone 完成后切换到目标项目目录
-
-**4. 进入 Step 0c：**
-
-- 在正确的项目目录中执行技术栈扫描
-- 推荐技能时优先匹配：
-  - 「审查代码」→ 优先推荐 `pr-review`、`code-review` 能力（如 `github-pr-reviewer`）
-  - 「修复 Bug」→ 优先推荐调试工具 + 通用代码分析技能
-
-#### Step 0c：技术栈确认 + 能力推荐（所有意图）
-
-**对已有项目：** 执行项目指纹扫描。使用 `Glob` 检查以下文件：
+对已有项目执行扫描。使用 `Glob` 检查以下文件（扩展的检测矩阵在 `references/scanner-patterns.md` §Fingerprint Detection Map）：
 
 | 文件 | 推断结果 |
 |------|---------|
@@ -182,25 +197,49 @@ metadata:
 | `schema.prisma` | Prisma |
 | `schema.graphql` | GraphQL |
 
-详细检测矩阵和评分算法参见 `references/scanner-patterns.md`。
-
 - 如果 `package.json` 存在，`Read` 其 `dependencies` 和 `devDependencies` 提取框架关键词
-- 如果 `pom.xml` 存在，`Grep` 查找 `<artifactId>` 检测 Spring Boot、Quarkus 等
+- 如果 `pom.xml` 存在，`Grep` 查找 `<artifactId>` 和 `<parent>` 检测 Spring Boot、Quarkus 等
+- 检测 `app/` 或 `src/` 子目录作为补充信号
 
 **对全新项目：** 直接使用 Step 0b 选择的语言/框架。
 
 **输出：** 项目指纹（逗号分隔标签，如 `java, spring-boot, maven, postgresql`）。
 
-然后执行能力扫描与推荐：
+**联动钩子（仅 PACKAGE_MODE = true）：** 检测 `.git/config` 中 GitHub remote，若存在则匹配 `integrates_with: pr-management`，提示 "💡 检测到 GitHub 项目。推荐使用 **GitHub PR 管理器** 来管理此仓库的 Pull Request。"
 
-1. **并行能力扫描**：
-   - 技能扫描：Glob `~/.claude/skills/*/SKILL.md`，解析 frontmatter
-   - 插件扫描：读取 `~/.claude/settings.json` → `mcpServers` + Glob `~/.claude/plugins/*/plugin.json`
-   - 深度探索：对 ECC、superpowers、oh-my-claudecode 等优先级插件查找 SOUL.md、RULES.md、AGENTS.md、嵌套技能等未加载资源
+---
 
-2. **匹配评分**：标签匹配 +3、框架匹配 +3、类别对齐 +1、通用 +0。优先级插件自动 +10 ⭐ 置顶。
+**0c-2. 能力清单扫描（并行执行）**
 
-3. **按意图过滤**：
+加载 `references/scanner-patterns.md` 进行并行三路扫描：
+
+**2a. 技能扫描：** Glob `~/.claude/skills/*/SKILL.md`，解析 frontmatter 提取 name、description、tags、category、source。
+
+**2b. 插件扫描：**
+- MCP 配置：读取 `~/.claude/settings.json` → `mcpServers`，提取 server name、type、command、description
+- 本地插件：Glob `~/.claude/plugins/*/plugin.json` 或 `package.json`
+
+**2c. 深度探索（必需，参见 scanner-patterns.md §Deep Exploration Reference）：**
+对 ECC、superpowers、andrej-karpathy-skills、oh-my-claudecode 四个优先级插件执行深度探索：
+- 列出根级 `.md`/`.json`/`.yaml`/`.yml`/`.mdc` 文件（跳过 node_modules、.git）
+- 读取每个 `.md` 文件前 5-10 行识别用途
+- 扫描嵌套技能（`.agents/skills/*/SKILL.md`）
+- 提取 `.mdc` 规则文件名和描述
+- 输出格式：tagged with `source: deep-exploration` and `plugin: <name>`，每项含 name、type (soul/rules/agents/claude-md/commands-ref/nested-skill)、description、path
+
+---
+
+**0c-3. 匹配与排序**
+
+加载 `references/scanner-patterns.md` §Skill-to-Project Matching Algorithm + §Priority Boost System。
+
+**技能评分：** 标签匹配 +3、框架匹配 +3、类别对齐 +1、通用 +0
+**插件评分：** 工具匹配 +3、领域匹配 +1、通用 +0
+
+**优先级加成系统（Priority Boost）：**
+检测到 ECC、superpowers、andrej-karpathy-skills、oh-my-claudecode 或深度资源时 → base score = max(normal_score, 10)，标记 ⭐ 置顶。
+
+**按意图过滤：**
 
 | 意图 | 优先推荐 | 降权 |
 |------|---------|------|
@@ -209,16 +248,169 @@ metadata:
 | 修复 Bug | 调试、错误追踪、测试技能 | — |
 | 探索工具 | 不做过滤，展示全部匹配结果 | — |
 
-4. **交互式推荐**：展示推荐结果，使用 `AskUserQuestion` 询问用户是否启用。
-5. **导出结果**：推荐完成后，提示用户可将扫描结果导出为文件：
-   > "💾 需要将扫描结果导出吗？支持 markdown（默认）、JSON、纯文本格式。"
-   - 导出文件命名：`{project-name}-skills-plugins-export.{format}`（详见 `references/scanner-patterns.md` 导出规范）
-   - 若用户不需要导出，跳过此步骤
+**输出三个独立列表（始终按此顺序）：**
+1. ⭐ 优先推荐（加成插件/深度资源 — 始终最先）
+2. 📋 推荐技能（top 5-10，项目匹配）
+3. 🔌 推荐插件（top 3-5，项目匹配）
 
-**联动钩子（仅 PACKAGE_MODE = true 时执行）：**
+未匹配项保留给 Step 0c-6 全量导出。
 
-- 对推荐列表中未安装的插件标记 🆕，匹配 `integrates_with: plugin-installation`，提示安装
-- 检测 `.git/config` 中是否有 GitHub remote，若有则匹配 `integrates_with: pr-management`
+---
+
+**0c-4. 交互式推荐（⚠️ 强制步骤）**
+
+展示推荐结果，使用以下模板：
+
+```markdown
+## 🔍 项目识别结果
+
+**项目:** [项目名或路径]
+**技术栈:** [语言] + [框架] + [构建工具]
+**检测依据:** [发现的配置文件列表]
+
+## ⭐ 优先推荐（核心能力增强）
+
+> 以下插件/资源提供基础能力增强，无论项目类型都强烈建议启用。
+
+| # | 名称 | 类型 | 描述 | 包含的未加载资源 |
+|---|------|------|------|----------------|
+| 1 | `everything-claude-code` | 插件 | AI 行为配置/安全指南 | SOUL.md, RULES.md, AGENTS.md, COMMANDS-QUICK-REF.md, WORKING-CONTEXT.md, the-security-guide.md, agent.yaml, 嵌套技能 |
+| 2 | `superpowers` | 插件 | 核心工作流技能 | AGENTS.md, hooks.json, GEMINI.md |
+| 3 | `andrej-karpathy-skills` | 插件 | Karpathy 编码准则 | CURSOR.md, karpathy-guidelines.mdc |
+| 4 | `oh-my-claudecode` | 插件 | 多 Agent 编排 | 数十个嵌套技能 (`.agents/skills/*/SKILL.md`) |
+
+## 📋 推荐技能（按匹配度排序）
+
+| # | 名称 | 描述 | 匹配理由 | 来源 |
+|---|------|------|---------|------|
+
+## 🔌 推荐插件（按匹配度排序）
+
+| # | 名称 | 描述 | 匹配理由 | 类型 |
+|---|------|------|---------|------|
+```
+
+> 💡 如插件列表为空，则显示："未检测到与当前项目强相关的插件。"
+
+**使用 `AskUserQuestion` 询问：**
+> "以上是根据当前项目为您推荐的技能、插件和未加载资源，请问您希望如何处理？"
+
+提供以下选项：
+- **一键启用所有推荐** — 在后续对话中主动使用所有推荐项
+- **逐项选择** — 由用户指定启用哪些（可输入编号）
+- **跳过，本次不启用** — 记录选择，本次会话不再重复推荐
+- **了解更多** — 展开某个技能/插件/深度资源的详细说明（用户指定名称）
+- **加载未加载资源** — 对深度探索发现的 SOUL/RULES/AGENTS 等文件，询问是否需要手动加载
+
+**联动钩子（仅 PACKAGE_MODE = true）：**
+
+对推荐列表中未安装的插件标记 🆕。用户选择后，匹配 `integrates_with: plugin-installation`：
+- 若用户选择了未安装的能力 → 提示："💡 检测到你尚未安装 [name]。是否需要使用 **快速插件安装器** 来安装它？"
+
+---
+
+**0c-5. 指令发现（仅在用户完成 0c-4 选择后执行）**
+
+⚠️ 若用户选择「跳过」→ 跳至 0c-6
+
+加载 `references/scanner-patterns.md` §Command Discovery Reference。
+
+**5a. MCP 工具发现（仅扫描用户已选择的插件）：**
+1. 使用 `ListMcpResourcesTool` 枚举 MCP 资源，或扫描系统提示中 `mcp__` 前缀工具
+2. 仅过滤属于用户**已选择**插件的工具
+3. 每个工具推断：作用（做什么）+ 适用场景（什么时候用）
+
+**5b. Slash 命令发现：**
+从系统提示中提取 `/` 命令，匹配所选技能类别/能力
+
+**5c. 展示模板：**
+
+```markdown
+## 🔧 所选工具的可用指令
+
+根据您选择的 [skill-names] 和 [plugin-names]，以下是可用的指令：
+
+### 🛠 MCP 工具指令
+
+#### [Selected Plugin Name]
+| 工具名称 | 作用 | 适用场景 |
+|---------|------|---------|
+| `mcp__*__tool_name` | [一句话描述] | [什么情况下使用] |
+
+### ⌨️ 相关 Slash 命令
+
+| 命令 | 作用 | 适用场景 |
+|------|------|---------|
+| `/command-name` | [功能描述] | [什么情况下使用] |
+```
+
+> 💡 如果选中的插件没有 MCP 工具或当前无 MCP 连接，显示："所选插件当前无可用的 MCP 工具指令。"
+> 💡 Slash 命令始终可用，至少列出与所选技能相关的通用命令。
+
+---
+
+**0c-6. 全量导出（⚠️ 先问后导）**
+
+必须获得用户同意后才导出。
+
+询问用户：
+> "是否需要将所有已安装的技能、插件和指令完整列表导出到文件？这样您可以离线浏览所有可用能力。"
+
+若用户同意，追问三个选项（使用 `AskUserQuestion`）：
+1. **目标导出目录** — 输入路径（如 `D:\docs\skills-list\`）
+2. **输出语言** — 自由输入任意语言（默认跟随当前对话语言）
+3. **输出格式** — `Markdown`（推荐）/ `JSON` / `纯文本`
+
+**导出内容结构：** 加载 `references/scanner-patterns.md` §Export Field Definitions。
+
+导出文件命名：`{project-name}-skills-plugins-export.{format}`
+
+```markdown
+# [标题 — 使用用户指定语言]
+
+> 导出时间: [timestamp]
+> 项目: [project path]
+> 总计: [N] 个技能, [M] 个插件, [K] 个指令
+> 语言: [用户指定的语言]
+
+## 📋 技能 (Skills) — 按分类
+
+### [Category]
+| 名称 | 描述 | 标签 | 来源 | 文件路径 |
+| ... | ... | ... | ... | ... |
+
+## 🔌 插件 (Plugins) — 按类型
+
+### [Type]
+| 名称 | 类型 | 命令 | 描述 | 来源 |
+| ... | ... | ... | ... | ... |
+
+## 🔧 指令 (Commands)
+
+### 🛠 MCP 工具指令 — 按插件分组
+
+#### [Plugin Name]
+| 工具名称 | 作用 | 适用场景 |
+|---------|------|---------|
+
+### ⌨️ Slash 命令 — 按分类
+
+#### [Category]
+| 命令 | 作用 | 适用场景 |
+|------|------|---------|
+```
+
+---
+
+**0c-7. 上下文持久化**
+
+- 用户选择「跳过」→ 记录到会话上下文，本次会话不再重复推荐（除非项目指纹显著变化）
+- 用户选择特定技能/插件 → 记录接受列表，供后续联动引用
+- 项目指纹显著变化时（新框架/新子项目/新 `package.json`）→ 重新触发发现
+- 检测到项目类型变化时（如从前端切换到后端子项目）→ 重新触发
+- 其他包内技能完成主要操作后 → 提示联动发现
+
+---
 
 非「启动新项目」意图在此步骤结束，不进入强制六步流程。但能力扫描结果可作为后续工作的上下文。
 
