@@ -72,9 +72,27 @@ metadata:
 
 ## 使用流程
 
-### Step 0：意图探测（必须先问）
+### Step 0：意图探测
 
-使用 `AskUserQuestion`，先问用户想干什么，再根据回答分流。
+**先推断，后询问。** 从用户的原始消息中提取关键词预判意图，只有无法确定时才弹出 `AskUserQuestion`。
+
+#### 0.1 意图预判（关键词匹配）
+
+从用户消息中匹配以下模式（大小写不敏感）：
+
+| 关键词组合 | 推断意图 | 直接分流 |
+|-----------|---------|---------|
+| "启动" / "开始" / "新建" / "创建" / "初始化" / "搭个" / "从零" **+** "项目" | 🚀 启动新项目 | → Step 0b 语言确认 → 强制六步流程 |
+| "开发" / "添加" / "实现" / "做" **+** "功能" / "feature" | 💻 开发新功能 | → Step 0c 技术栈确认 + 能力推荐 |
+| "审查" / "review" / "检查" **+** "代码" / "PR" / "pull request" | 🔍 审查代码 | → Step 0a 目标确认 |
+| "修复" / "修" / "改" / "fix" / "debug" **+** "bug" / "问题" / "报错" | 🐛 修复 Bug | → Step 0a 目标确认 |
+| "有什么" / "推荐" / "哪些" / "可用" / "discover" **+** "技能" / "插件" / "工具" / "能力" | 🔧 探索工具 | → Step 0c 完整能力扫描 |
+
+**匹配规则：**
+- 若匹配到**唯一意图** → 直接分流，跳过 AskUserQuestion，在分流前用一句话确认（如"识别到你想要[意图]，直接开始…"）
+- 若**多个意图匹配**或**无匹配** → 使用 `AskUserQuestion` 询问
+
+#### 0.2 交互式询问（仅在意图不明确时使用）
 
 > "你想要做什么？"
 
@@ -89,39 +107,67 @@ metadata:
 
 #### Step 0a：目标确认（仅「审查代码」/「修复 Bug」时执行）
 
-「审查代码」和「修复 Bug」意图需要先确认操作目标——目标项目可能尚未 clone 到本地，直接扫描当前工作区会得到错误的技术栈和技能推荐。
+##### 审查代码分支（4 层追问）
+
+「审查代码」意图需要先确认审查目标和方式，再决定是否执行技术栈扫描。
+
+**第 1 层 — 询问审查场景：**
+
+使用 `AskUserQuestion`：
+> "你要审查的是什么？"
+
+| 选项 | 说明 |
+|------|------|
+| 📁 **本地项目** | 审查当前工作区的代码变更（unstaged / 分支 diff / 最近 commit） |
+| ☁️ **远程 PR** | 审查 GitHub 上的 Pull Request |
+
+**第 2 层（仅远程 PR）— 询问目标 PR：**
+
+> "请提供 PR URL（如 `https://github.com/owner/repo/pull/123`）或 `owner/repo#number`"
+
+解析 PR URL → 提取 `owner`、`repo`、`pr_number`。
+
+**第 3 层（仅远程 PR）— 询问审查方式：**
+
+使用 `AskUserQuestion`：
+> "你想怎么审查这个 PR？"
+
+| 选项 | 说明 | 后续 |
+|------|------|------|
+| ⚡ **在线快速审查** | 直接通过 GitHub MCP 获取 PR diff/files/commits，在线审查，无需 clone | → 使用 `gh pr view/diff` 或 GitHub MCP 工具获取 PR 内容 → 审查完成后输出结论 → **不执行 Step 0c** |
+| 💻 **Clone 到本地详细审查** | clone 仓库到本地，执行完整技术栈扫描 + 深度审查 | → 对比本地 git remote：`git remote get-url origin 2>/dev/null \|\| echo "NOT_A_GIT_REPO"` → 不匹配则引导 clone（`gh repo clone owner/repo` 或 `git clone`）→ 执行 Step 0c |
+
+**第 4 层（仅本地项目）— 确认审查范围：**
+
+> "审查当前工作区的哪些变更？"
+
+| 选项 | 说明 |
+|------|------|
+| 📝 **Unstaged 变更** | 工作区中尚未 staged 的修改 |
+| 🌿 **分支对比** | 当前分支 vs 目标分支（如 `main`）的 diff |
+| 📦 **最近 commit** | 审查最近 N 个 commit 的变更 |
+
+确认范围后 → 执行 Step 0c 技术栈扫描 → 推荐技能时优先匹配 `pr-review`、`code-review` 能力。
+
+##### 修复 Bug 分支
+
+「修复 Bug」意图需要先确认目标项目。
 
 **1. 追问目标：**
 
-- **审查代码**：使用 `AskUserQuestion` 询问：
-  > "你要审查哪个项目的 PR？请提供 PR URL（如 `https://github.com/owner/repo/pull/123`）或 `owner/repo#number`"
-
-- **修复 Bug**：使用 `AskUserQuestion` 询问：
-  > "你要在哪个项目中修 Bug？是当前工作区的项目，还是其他项目？"
+使用 `AskUserQuestion` 询问：
+> "你要在哪个项目中修 Bug？是当前工作区的项目，还是其他项目？"
 
 **2. 检查本地状态：**
 
-- 从用户提供的 PR URL 或 `owner/repo#number` 中解析出 `owner` 和 `repo`
-- 对比当前工作区的 git remote：
-  ```bash
-  git remote get-url origin 2>/dev/null || echo "NOT_A_GIT_REPO"
-  ```
-- 若当前工作区 remote 与目标 repo 不匹配，或当前目录不是 git 仓库 → 提示用户目标项目不在本地
-
-**3. 引导 clone（如需）：**
-
-> "目标项目 `owner/repo` 尚未 clone 到本地。需要我帮你 clone 吗？"
-
-- 用户同意 → 使用 `gh repo clone owner/repo` 或 `git clone` 将项目 clone 到合适位置
-- 若已安装 `github-pr-manager` 技能（PACKAGE_MODE = true 时检测），可联动其 `code-cloning` 能力
+- 从用户提供的项目信息对比当前工作区的 git remote
+- 若目标项目不在本地 → 引导 clone
 - Clone 完成后切换到目标项目目录
 
-**4. 进入 Step 0c：**
+**3. 进入 Step 0c：**
 
 - 在正确的项目目录中执行技术栈扫描
-- 推荐技能时优先匹配：
-  - 「审查代码」→ 优先推荐 `pr-review`、`code-review` 能力（如 `github-pr-reviewer`）
-  - 「修复 Bug」→ 优先推荐调试工具 + 通用代码分析技能
+- 推荐技能时优先匹配调试工具 + 通用代码分析技能
 
 #### Step 0b：语言/框架确认（仅「启动新项目」时追问）
 
@@ -168,6 +214,15 @@ metadata:
 
 **0c-1. 项目指纹扫描**
 
+**扫描前 — 缓存检查：**
+
+1. 检查会话上下文中是否存在 `_SCAN_CACHE` 记录（包含 `timestamp` 和 `fingerprint`）
+2. 若存在缓存记录：
+   - 读取 `.discovery-rules.json` 中的 `cache_ttl_hours`（默认 24 小时）
+   - 若距上次扫描未超过 TTL → 复用缓存指纹和扫描结果，跳过 0c-1 和 0c-2，直接进入 0c-3
+   - 若已超过 TTL → 继续执行完整扫描
+3. 若不存在缓存记录（首次扫描）→ 继续执行完整扫描
+
 对已有项目执行扫描。使用 `Glob` 检查以下文件（扩展的检测矩阵在 `references/scanner-patterns.md` §Fingerprint Detection Map）：
 
 | 文件 | 推断结果 |
@@ -211,7 +266,16 @@ metadata:
 
 **0c-2. 能力清单扫描（并行执行）**
 
-加载 `references/scanner-patterns.md` 进行并行三路扫描：
+加载 `references/scanner-patterns.md` 进行并行三路扫描。
+
+**扫描前 — 读取深度探索配置：**
+
+1. 尝试读取 `~/.claude/skills/.discovery-rules.json`
+2. 若文件存在且定义了 `deep_explore_plugins`（字符串数组）→ 使用该列表作为深度探索目标
+3. 若文件存在且定义了 `priority_boost_plugins`（字符串数组）→ 使用该列表作为优先级加成插件
+4. 若文件不存在或字段缺失 → 使用内置默认值：
+   - `deep_explore_plugins`: `["everything-claude-code", "superpowers", "andrej-karpathy-skills", "oh-my-claudecode"]`
+   - `priority_boost_plugins`: `["everything-claude-code", "superpowers", "andrej-karpathy-skills"]`
 
 **2a. 技能扫描：** Glob `~/.claude/skills/*/SKILL.md`，解析 frontmatter 提取 name、description、tags、category、source。
 
@@ -220,7 +284,7 @@ metadata:
 - 本地插件：Glob `~/.claude/plugins/*/plugin.json` 或 `package.json`
 
 **2c. 深度探索（必需，参见 scanner-patterns.md §Deep Exploration Reference）：**
-对 ECC、superpowers、andrej-karpathy-skills、oh-my-claudecode 四个优先级插件执行深度探索：
+对上一步确定的深度探索目标插件列表执行深度探索：
 - 列出根级 `.md`/`.json`/`.yaml`/`.yml`/`.mdc` 文件（跳过 node_modules、.git）
 - 读取每个 `.md` 文件前 5-10 行识别用途
 - 扫描嵌套技能（`.agents/skills/*/SKILL.md`）
@@ -406,9 +470,14 @@ metadata:
 
 - 用户选择「跳过」→ 记录到会话上下文，本次会话不再重复推荐（除非项目指纹显著变化）
 - 用户选择特定技能/插件 → 记录接受列表，供后续联动引用
-- 项目指纹显著变化时（新框架/新子项目/新 `package.json`）→ 重新触发发现
-- 检测到项目类型变化时（如从前端切换到后端子项目）→ 重新触发
+- 项目指纹显著变化时重新触发发现。**显著变化定义为以下任一：**
+  - 新增了任意语言/框架配置文件（如新出现 `package.json`、`go.mod`、`Cargo.toml`、`pom.xml` 等）
+  - 新增了子目录且子目录包含独立的项目配置文件
+  - 用户通过 `git checkout` 切换到了不同技术栈的分支
+  - 工作目录切换到了同一 monorepo 的不同子项目
+- **仅文件内容修改（不改变技术栈）不触发重新发现**
 - 其他包内技能完成主要操作后 → 提示联动发现
+- **缓存记录**：扫描完成后，在会话上下文中记录 `_SCAN_CACHE = { timestamp: <当前时间>, fingerprint: <项目指纹标签>, ttl_hours: <从 rules 读取的 cache_ttl_hours，默认 24> }`，供后续调用复用
 
 ---
 
@@ -591,7 +660,16 @@ CLAUDE.md 生成成功后，本技能已内置完整的技能发现能力（Step
 - 不强制走完六步，但总要提及"如果需要完整启动检查，随时可以说"
 
 ### 项目范围极小
-如果项目仅是一段脚本或单文件工具（如"写一个批量重命名脚本"），启用极简模式：
+
+满足以下**任意 2 条**即启用极简模式：
+
+1. **任务描述为单文件级**：用户描述为「写一个脚本」「一个工具」「一个函数」「批量处理」等单文件级任务
+2. **源代码文件数量少**：项目目录中源代码文件 < 3 个（不含 `README.md`、`.gitignore`、`*.json`/`*.toml`/`*.yaml` 等配置文件）
+3. **用户明确要求简化**：用户明确表示「不需要完整流程」「简单弄一下就行」「快速过一遍」
+
+**仅满足 1 条时**，追问用户确认是否启用极简模式。
+
+极简模式内容：
 - **执行**：问题定义（一句话）+ 代码风格确认
 - **跳过**：MVP 边界圈定（第二步）、利益相关者分析（第四步）、里程碑路线图（第五步）
 - **仍执行**：快速风险摸底（第三步，简化为"最可能出错的一件事"）

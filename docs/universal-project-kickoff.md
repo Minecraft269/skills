@@ -7,13 +7,13 @@
 ## 核心流程
 
 ### Step 0：意图探测
-先问用户想做什么，根据回答分流：
+先通过关键词匹配预判用户意图（启动项目/开发功能/审查代码/修复Bug/探索工具），匹配到唯一意图时直接分流；意图不明确时才弹出 AskUserQuestion。分流：
 
 | 意图 | 行为 |
 |------|------|
 | 🚀 启动新项目 | Step 0b 语言/框架确认 → 强制六步流程 → 能力发现 |
 | 💻 开发新功能 | Step 0c 技术栈确认 → 开发工具推荐 |
-| 🔍 审查代码 | Step 0a 目标确认（含远程 clone）→ Step 0c 审查工具推荐 |
+| 🔍 审查代码 | Step 0a 4 层追问（本地/远程PR → 目标PR → 在线快速审查/clone本地 → 审查范围）→ Step 0c 审查工具推荐 |
 | 🐛 修复 Bug | Step 0a 目标确认 → Step 0c 调试工具推荐 |
 | 🔧 探索工具 | Step 0c 完整 7 步能力扫描 |
 
@@ -22,7 +22,7 @@
 | 子步骤 | 内容 |
 |--------|------|
 | 0c-1 | 项目指纹扫描（25+ 配置文件 + 语言版本检测 + 移动端框架） |
-| 0c-2 | 并行能力清单（Skills + Plugins + Deep Exploration 4 插件深度探索） |
+| 0c-2 | 并行能力清单（先读取 .discovery-rules.json 的 deep_explore_plugins/priority_boost_plugins 配置，再并行三路扫描 Skills + Plugins + Deep Exploration） |
 | 0c-3 | 匹配与排序（评分引擎 + Priority Boost 优先加成 + 按意图过滤） |
 | 0c-4 | 交互式推荐（5 选项 + 三列表展示 + 联动钩子） |
 | 0c-5 | 指令发现（MCP 工具 + Slash 命令，仅在用户选择后触发） |
