@@ -67,7 +67,8 @@ CONTRIBUTING.md                  # 贡献指南（含能力标签注册表 + 标
 | M3 — 技能联动 | ✅ 完成 | 通用联动框架（capabilities/integrates_with）、包级检测门控、技能间动态发现 |
 | M4 — 能力合并 | ✅ 完成 | proactive-skill-discovery 合并入 universal-project-kickoff（统一入口，技能数 7→6） |
 | M5 — 质量审查 | ✅ 完成 | universal-project-kickoff 12 项增强：迁移残留清理、配置系统、架构修复、检测扩展、质量体系 |
-| M6 — 逻辑修复 | ✅ 完成 | 6 项修复：意图预判前置、审查代码 4 层追问、Deep Exploration 动态配置、极简模式量化标准、会话级缓存、重新触发条件量化 |
+| M6 — 逻辑修复 | ✅ 完成 | 6 项修复：意图预判前置、审查代码 5 层追问、Deep Exploration 动态配置、极简模式量化标准、会话级缓存、重新触发条件量化 |
+| M7 — 审查增强 | ✅ 完成 | 审查代码新增第 5 层模型确认：展示默认模型 + 支持 tier alias 或具体 model ID 更换 |
 
 ## 本地验证
 
