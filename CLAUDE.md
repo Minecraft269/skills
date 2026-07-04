@@ -113,7 +113,7 @@ git push --force-with-lease origin <branch>
 
 - `.git/info/exclude` — 个人本地目录（`.omc/`、`.remember/`、`.impeccable/`）放这里，不提交到 `.gitignore`
 - worktree 提交 — 如 `EnterWorktree` 创建的 worktree 中 git 命令不可用（`not a git repository`），使用 `GIT_DIR=../.git GIT_WORK_TREE=<path> git ...` 变通
-- 推送后本地同步 — 通过 worktree 提交推送后，主仓库工作树会脱节，执行 `git restore .` 同步
+- 推送后本地同步 — 通过 worktree 提交推送后，主仓库工作树会脱节，执行 `git fetch && git reset --hard origin/main` 同步（`git restore .` 只恢复文件，不移动分支指针）
 - 不写 `Co-Authored-By` 尾部
 
 ## 新技能注册清单
