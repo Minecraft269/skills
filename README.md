@@ -11,7 +11,7 @@ Minecraft269 的 Claude Code 技能合集，想到什么就创建什么，也欢
 - **项目启动与发现** — 先探测用户意图（启动/开发/审查/修复/探索），再推荐匹配的技能和插件；新项目执行六步启动检查流程（MVP/风险/路线图/CLAUDE.md）；已合并原 proactive-skill-discovery 能力
 - **PR 管理器** — 克隆 PR 后提醒新贡献者使用项目启动流程，检测新项目类型时触发能力发现
 - **PR 审查器** — 与 PR 管理器共享上下文，审查完成后提示相关操作
-- **插件安装器** — 安装完成后自动提示运行能力发现
+- **插件安装器** — 安装完成后自动提示运行项目启动与能力发现
 
 > 💡 如果你单独安装了某个技能（而非完整插件包），联动功能会自动静默关闭，核心功能不受影响。
 
@@ -58,7 +58,7 @@ cp -r skills ~/.claude/plugins/minecraft269-skills
 
 | 技能 | 简介 |
 |------|------|
-| [`universal-project-kickoff`](docs/universal-project-kickoff.md) | 通用项目启动与能力发现：意图探测 + 六步启动流程 + 技能/插件推荐（已合并 proactive-skill-discovery） |
+| [`universal-project-kickoff`](docs/universal-project-kickoff.md) | 通用项目启动与能力发现：意图探测 + 目标确认 + 7 步能力发现（深度探索/优先推荐/指令发现/全量导出/持久化）+ 六步启动流程（100% 合并 proactive-skill-discovery） |
 | [`github-pr-manager`](docs/github-pr-manager.md) | GitHub PR 全功能管理器：列出、查看、克隆、分析 PR |
 | [`quick-plugin-installer`](docs/quick-plugin-installer.md) | 快速安装插件：MCP Server 和 SKILL 的统一安装入口 |
 | [`github-pr-reviewer`](docs/github-pr-reviewer.md) | GitHub PR 代码审查器：逐行 inline 评论，完整 pending review 工作流 |
