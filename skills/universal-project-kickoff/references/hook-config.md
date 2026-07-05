@@ -116,3 +116,4 @@
 如果你之前配置了 `proactive-skill-discovery` 的 hook（使用 `[MAGIC KEYWORD: discover]`），请更新为：
 - 关键词：`[MAGIC KEYWORD: discover]` → `[MAGIC KEYWORD: project-kickoff]`
 - 技能名称：所有引用 `proactive-skill-discovery` 的地方改为 `universal-project-kickoff`
+- ⚠️ `proactive-skill-discovery` 技能已于 v4.0.0 删除，请立即迁移你的 hook 配置。

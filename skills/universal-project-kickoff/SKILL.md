@@ -1,27 +1,30 @@
 ---
 name: universal-project-kickoff
 description: >
-  通用型项目启动与能力发现规则。合并了原 proactive-skill-discovery 的工具发现能力。
+  通用型项目启动与能力发现规则。已吸收原 proactive-skill-discovery 的全部能力（该技能已删除）。
+  新增 Fork 模式：参与开源贡献（fork → clone → 开发 → PR）。
   当用户说以下任何话时，**必须**触发此技能：
   "我要开始一个新项目"、"帮我规划一个新功能"、"想启动一个 AI Agent"、
   "如何着手做 X"、"不知道从哪开始"、"帮我搭个架子"、"项目初始化"、
   "检查一下我的项目计划"、"帮我理一理思路"、"新项目怎么开始"、
   "打算搞个 side project"、"帮我做项目风险排查"、
   "有哪些可用的技能/插件"、"推荐什么工具"、"/discover"、
-  "帮我审查代码"、"帮我修 Bug"、"我要开发一个新功能"。
-  本技能先探测用户意图（启动项目/开发功能/审查代码/修复Bug/探索工具），
+  "帮我审查代码"、"帮我修 Bug"、"我要开发一个新功能"、
+  "我想参与这个开源项目"、"帮我 fork 这个仓库"、"我想给这个项目提 PR"。
+  本技能先探测用户意图（启动项目/开发功能/审查代码/修复Bug/探索工具/Fork项目），
   再分流到对应子流程。启动新项目时执行六步强制流程（为什么-是什么-边界-风险-利益-里程碑-固化CLAUDE.md）
   + 代码风格确认 + 能力推荐，最后调用 /init 生成项目的 CLAUDE.md 将思考成果永久固化。
+  Fork 项目时执行五步子流程（获取仓库 → Fork → Clone → 项目分析 → 贡献工作流引导）。
   其他意图则根据技术栈推荐匹配的技能和插件。
   即使用户没有明确说"启动检查"，只要涉及从零规划任何项目或需要工具推荐，就应触发。
-version: "3.0.0"
+version: "4.0.0"
 risk: safe
 source: community
-capabilities: ["project-setup", "risk-assessment", "mvp-planning", "skill-discovery", "capability-scanning", "project-analysis"]
+capabilities: ["project-setup", "risk-assessment", "mvp-planning", "skill-discovery", "capability-scanning", "project-analysis", "fork-workflow"]
 integrates_with: ["plugin-installation", "pr-management"]
 metadata:
   category: meta
-  tags: [project-startup, planning, checklist, mvp-definition, risk-assessment, init, code-style, discovery, recommendation, skills, plugins, commands]
+  tags: [project-startup, planning, checklist, mvp-definition, risk-assessment, init, code-style, discovery, recommendation, skills, plugins, commands, fork, contribute, open-source]
   compatibility: 需要 /init 命令（Claude Code 内置），无其他外部依赖
 ---
 
@@ -32,7 +35,7 @@ metadata:
 **先开枪，后瞄准，但开枪前得知道靶子大概在哪个方向。**  
 本技能帮助你在 15 分钟内完成启动前的关键决策，避免"热情直冲"带来的返工。同时，**全程保留项目的代码风格（包括注释、命名、格式等）** —— 这意味着在生成任何代码示例、项目结构或脚手架时，都要主动询问或推断用户既有的风格规范，并严格遵循。
 
-本技能已合并原 `proactive-skill-discovery` 的工具发现能力。在开始前，会先探测你的意图——是启动新项目、开发功能、审查代码、修复 Bug 还是探索工具——然后推荐最匹配的技能和插件。
+本技能已吸收原 `proactive-skill-discovery` 的全部能力（该技能已删除）。在开始前，会先探测你的意图——是启动新项目、开发功能、审查代码、修复 Bug、探索工具还是参与开源（Fork）——然后推荐最匹配的技能和插件。
 
 ## 不触发条件
 
@@ -87,6 +90,7 @@ metadata:
 | "审查" / "review" / "检查" **+** "代码" / "PR" / "pull request" | 🔍 审查代码 | → Step 0a 目标确认 |
 | "修复" / "修" / "改" / "fix" / "debug" **+** "bug" / "问题" / "报错" | 🐛 修复 Bug | → Step 0a 目标确认 |
 | "有什么" / "推荐" / "哪些" / "可用" / "discover" **+** "技能" / "插件" / "工具" / "能力" | 🔧 探索工具 | → Step 0c 完整能力扫描 |
+| "fork" / "参与" / "贡献" / "提 PR" / "contribute" / "上游" **+** "项目" / "仓库" / "开源" / "代码" / "repo" | 🍴 Fork 项目 | → Step 0a Fork 分支 |
 
 **匹配规则：**
 - 若匹配到**唯一意图** → 直接分流，跳过 AskUserQuestion，在分流前用一句话确认（如"识别到你想要[意图]，直接开始…"）
@@ -103,6 +107,7 @@ metadata:
 | 🔍 **审查代码** | Review PR 或代码变更 | → Step 0a 目标确认 → Step 0c 技术栈确认 + 审查工具推荐 |
 | 🐛 **修复 Bug** | 排查和修复问题 | → Step 0a 目标确认 → Step 0c 技术栈确认 + 调试工具推荐 |
 | 🔧 **探索工具** | 看看有什么可用的技能/插件/命令 | → 进入 Step 0c 完整能力扫描 |
+| 🍴 **Fork 项目** | Fork 开源仓库，在本地开发并贡献 PR | → Step 0a Fork 分支 |
 | 📋 **其他** | 用户自由输入 | → 根据输入内容智能匹配分流 |
 
 #### Step 0a：目标确认（仅「审查代码」/「修复 Bug」时执行）
@@ -187,6 +192,104 @@ metadata:
 
 - 在正确的项目目录中执行技术栈扫描
 - 推荐技能时优先匹配调试工具 + 通用代码分析技能
+
+##### 🍴 Fork 项目分支（5 步子程序）
+
+「Fork 项目」意图需要依次执行获取仓库、Fork、Clone、项目分析、贡献工作流引导五个步骤。
+
+**Step 0a-fork-1：获取目标仓库**
+
+1. 从用户消息中提取 GitHub 仓库标识。支持的格式：
+   - 完整 URL：`https://github.com/owner/repo`
+   - 简写格式：`owner/repo`
+2. 正则提取：`(?:https?://)?github\.com/([a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+)` 或 `\b([a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+)\b`
+3. 若无法提取，使用 `AskUserQuestion`：
+   > "请提供你要参与的开源仓库地址（如 `https://github.com/facebook/react` 或 `facebook/react`）"
+4. 若用户提供非 GitHub URL，提示：
+   > "当前仅支持 GitHub 开源仓库的 Fork 参与。请确认仓库在 GitHub 上。"
+
+**Step 0a-fork-2：Fork 仓库**
+
+1. 先检查是否已存在 fork：
+   - 使用 `gh repo list <username> --json name --jq '.[].name'` 或 `mcp__plugin_github_github__list_commits` 检查
+2. 若不存在 → 执行 fork：
+   - 优先使用 `gh repo fork <owner/repo> --clone=false`（更可靠）
+   - 备用：GitHub MCP `mcp__plugin_github_github__fork_repository`
+3. 若已存在 → `AskUserQuestion`：
+   > "检测到你已 fork 过 `<owner/repo>`。是否使用已有 fork？"
+
+   | 选项 | 说明 |
+   |------|------|
+   | ✅ **使用已有 fork** | 直接使用现有的 fork 仓库 |
+   | 🔄 **重新 fork** | 删除已有 fork 并重新创建（`gh repo fork --force`） |
+   | ⬆️ **同步已有 fork** | 将上游仓库的最新变更同步到你的 fork（`gh repo sync`） |
+   | ❌ **取消** | 放弃 Fork 操作 |
+
+4. Fork 成功后记录变量：
+   - `_FORK_UPSTREAM = "owner/repo"`（上游仓库）
+   - `_FORK_REPO = "your-username/repo"`（你的 fork）
+
+**Step 0a-fork-3：Clone 到本地**
+
+1. 询问用户 clone 目标目录（默认当前工作区下的 `<repo-name>`）
+2. 检查本地是否已存在该目录：
+   - 不存在 → 执行 `gh repo clone <your-username/repo>` 或 `git clone https://github.com/<your-username/repo>.git`
+   - 已存在 → `AskUserQuestion`：
+     > "本地已存在同名目录。怎么处理？"
+     - ✅ 复用现有目录 / 🔄 重新 clone / ❌ 取消
+3. Clone 后设置 upstream：
+   ```bash
+   cd <repo-name>
+   git remote add upstream https://github.com/<owner/repo>.git  # 如尚未添加
+   git fetch upstream
+   ```
+4. 记录 `_FORK_LOCAL_PATH = "<clone-path>"`
+
+**Step 0a-fork-4：项目分析**
+
+1. 进入 clone 目录后，提示用户执行技术栈扫描：
+   > "已 clone [repo] 到本地。建议先扫描项目技术栈，帮助你快速理解项目结构。是否开始分析？"
+
+   | 选项 | 说明 |
+   |------|------|
+   | ✅ **开始分析** | 执行 Step 0c 技术栈确认 + 能力发现 |
+   | ⏭️ **跳过** | 跳过技术栈扫描，直接进入贡献工作流引导 |
+
+2. 若用户选择「开始分析」，执行完整的 Step 0c 流程（0c-1 至 0c-7）
+3. 额外检查：
+   - 读取上游 `CONTRIBUTING.md`（如存在）
+   - 检查 `.github/` 目录下的 PR 模板、Issue 模板
+   - 读取 `LICENSE` 文件
+4. 展示项目概览摘要（技术栈 + 贡献指南要点 + 许可证类型）
+
+**联动钩子（仅 PACKAGE_MODE = true 时执行）：**
+在项目分析完成后，匹配 `integrates_with: pr-management`：
+- 若检测到兄弟技能 `github-pr-manager` 可用 → 提示："💡 完成改动后，可以使用 **GitHub PR 管理器** 来创建和管理你的 Pull Request。"
+
+**Step 0a-fork-5：贡献工作流引导**
+
+1. 展示贡献流程概览：
+   ```
+   ## 🍴 Fork 贡献流程
+   
+   1. ✅ Fork 仓库 → [fork-url]
+   2. ✅ Clone 到本地 → [local-path]
+   3. ✅ 项目分析 → [tech-stack]
+   4. 📝 创建功能分支 → 待执行
+   5. 🔨 开发改动 → 待执行
+   6. 📤 推送并创建 PR → 待执行
+   ```
+
+2. 引导创建功能分支：
+   > "建议为你的改动创建一个功能分支。分支名称格式：`feat/<description>` 或 `fix/<description>`"
+   - 让用户输入分支名，或根据描述自动建议
+
+3. **联动钩子（仅 PACKAGE_MODE = true）**：
+   - 匹配 `integrates_with: pr-management` → 提示："💡 改动完成后，可使用 **GitHub PR 管理器** 创建和管理你的 Pull Request。"
+   - 匹配 `integrates_with: plugin-installation` 中的 `git-commit` → 提示："💡 提交代码时，可使用 **Git 提交助手** 自动生成 Conventional Commits 消息。"
+
+4. 总结下一步：
+   > "项目已就绪。接下来的流程：做改动 → `git add` + `git commit` → `git push origin <branch>` → 创建 PR。如需帮助，随时告诉我。"
 
 #### Step 0b：语言/框架确认（仅「启动新项目」时追问）
 
@@ -329,6 +432,7 @@ metadata:
 | 开发新功能 | 对应语言的开发技能、代码生成工具 | 审查/调试类 |
 | 审查代码 | 代码审查、PR 审查、lint 技能 | — |
 | 修复 Bug | 调试、错误追踪、测试技能 | — |
+| Fork 项目 | 项目分析、贡献指南、PR 管理、代码审查相关技能 | — |
 | 探索工具 | 不做过滤，展示全部匹配结果 | — |
 
 **输出三个独立列表（始终按此顺序）：**
@@ -709,6 +813,12 @@ CLAUDE.md 生成成功后，本技能已内置完整的技能发现能力（Step
 | 深度探索文件 > 50KB | 仅读前 5 行判断类型，不读取全文 |
 | PACKAGE_MODE 检测失败（任何原因） | 降级为 PACKAGE_MODE = false，静默运行 |
 | `/init` 执行失败 | 手动输出启动摘要，提示用户可随时重试 |
+| `gh repo fork` 失败（未登录/权限不足） | 提示用户先执行 `gh auth login`，或手动在 GitHub 网页 fork 后提供 clone URL |
+| 目标仓库不存在（Fork 模式） | 提示确认 URL，重新输入 owner/repo |
+| Fork 已存在且用户选择同步 | 执行 `git fetch upstream && git merge upstream/main` 同步上游变更 |
+| GitHub MCP 和 `gh` CLI 均不可用（Fork 模式） | 提示用户手动在浏览器中 Fork，引导用户提供 clone URL 继续 |
+| 用户指定的仓库非 GitHub（Fork 模式） | 提示仅支持 GitHub 仓库，询问是否继续或取消 |
+| Clone 目标目录冲突（Fork 模式） | 询问用户：复用现有目录 / 重新 clone / 选择其他目录 |
 
 ---
 
