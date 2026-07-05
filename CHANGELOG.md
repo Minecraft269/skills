@@ -21,3 +21,17 @@
 
 ### 变更
 - 无（初始版本）
+
+## [4.0.0] — 2026-07-05
+
+### 新增
+- `universal-project-kickoff` 新增 🍴 Fork 模式（5 步子程序：获取仓库 → Fork → Clone → 项目分析 → 贡献工作流引导）
+- 新增 `fork-workflow` 能力标签
+
+### 变更
+- `universal-project-kickoff` 版本 3.0.0 → 4.0.0
+- `plugin.json` / `marketplace.json` 描述更新
+
+### 移除
+- 删除已废弃的 `proactive-skill-discovery` 技能目录及文档
+- 清理所有残留引用（CLAUDE.md 项目结构树、scanner-patterns.md、hook-config.md）

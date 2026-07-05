@@ -128,6 +128,7 @@ integrates_with: ["<需求标签>", ...]  # 本技能需要配合的能力类型
 | `mobile-development` | 移动端开发（React Native/Flutter/Swift/Kotlin）（预留） | — |
 | `security-audit` | 安全审查与漏洞检测（预留） | — |
 | `debugging` | 调试、根因分析与错误追踪（预留） | — |
+| `fork-workflow` | Fork 开源仓库、本地开发、提交 PR 的完整贡献工作流 | universal-project-kickoff |
 
 #### 共享资源
 

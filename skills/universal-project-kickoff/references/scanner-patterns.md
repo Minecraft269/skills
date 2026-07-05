@@ -1,6 +1,6 @@
 # Scanner Patterns Reference
 
-Detailed reference for the universal-project-kickoff skill's scanning and matching engine (merged from proactive-skill-discovery).
+Detailed reference for the universal-project-kickoff skill's scanning and matching engine (proactive-skill-discovery capabilities merged here).
 
 ## Project Fingerprint Detection Map
 

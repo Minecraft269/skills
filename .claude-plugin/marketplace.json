@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "minecraft269-skills",
-      "description": "Minecraft269 的技能合集：GitHub PR 管理器、主动技能发现、通用项目启动工作流",
+      "description": "Minecraft269 的技能合集：GitHub PR 管理器、通用项目启动与能力发现（含 Fork 模式）、快速插件安装器、PR 代码审查器",
       "author": {
         "name": "Minecraft269"
       },

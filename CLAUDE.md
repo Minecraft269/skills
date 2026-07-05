@@ -18,14 +18,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 docs/                            # 技能详细文档（README 链接指向此处），每技能一份
 skills/                          # 所有技能（每个子目录一个技能）
 ├── _shared/                      # 包级共享资源（检测协议、通用模板）
-├── universal-project-kickoff/   # 通用项目启动与能力发现（已合并 proactive-skill-discovery）
+├── universal-project-kickoff/   # 通用项目启动与能力发现（已吸收原 proactive-skill-discovery，含 Fork 模式）
 │   └── references/               # 7 份参考文件
 ├── github-pr-manager/           # GitHub PR 全功能管理器
 ├── github-pr-reviewer/          # GitHub PR 审查器（逐行 inline 评论）
 ├── quick-plugin-installer/      # 快速安装插件（MCP + SKILL）
 ├── git-commit-helper/           # Git 提交规范化助手（Conventional Commits）
-├── env-health-check/            # 跨平台环境自检
-└── proactive-skill-discovery/   # ⚠️ 已废弃（仅 SKILL.md 存根，references 已清空）
+└── env-health-check/            # 跨平台环境自检
 CONTRIBUTING.md                  # 贡献指南（含能力标签注册表 + 标签决策树）
 ```
 
