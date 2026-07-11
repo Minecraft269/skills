@@ -2,7 +2,7 @@
   "name": "minecraft269-skills",
   "version": "1.0.0",
   "min_claude_version": "0.2.0",
-  "description": "Minecraft269 的技能合集：GitHub PR 管理器、通用项目启动与能力发现（含 Fork 模式）、快速插件安装器、PR 代码审查器",
+  "description": "Minecraft269's skill collection: GitHub PR Manager, Universal Project Kickoff & Capability Discovery (with Fork mode), Quick Plugin Installer, PR Code Reviewer",
   "author": {
     "name": "Minecraft269"
   }

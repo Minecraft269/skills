@@ -1,26 +1,26 @@
 # env-health-check
 
-跨平台检测 git、gh、jq、claude 等核心工具可用性，输出格式化健康报告。
+Cross-platform detection of core tool availability (git, gh, jq, claude, etc.), outputting a formatted health report.
 
-## 触发方式
+## Trigger
 
-说「检查环境」「环境自检」「我的工具链是否就绪」即可触发。
+Say "check environment", "env health check", or "is my toolchain ready" to trigger.
 
-## 检测范围
+## Detection Scope
 
-| 类别 | 检测项 |
-|------|--------|
-| 核心依赖 | git、gh、jq、claude、node、python |
-| 服务状态 | gh 认证、MCP Server 配置 |
-| 安装建议 | 缺失工具给出 Win/macOS/Linux 安装命令 |
+| Category | Items Checked |
+|----------|---------------|
+| Core Dependencies | git, gh, jq, claude, node, python |
+| Service Status | gh auth, MCP Server configuration |
+| Install Suggestions | Win/macOS/Linux install commands for missing tools |
 
-## 工作流
+## Workflow
 
-1. 并行运行 `command -v` + `--version` 检测所有工具
-2. 检查 `gh auth status` 和 MCP 配置
-3. 输出格式化健康报告（✅/⚠️/❌）
+1. Run `command -v` + `--version` for all tools in parallel
+2. Check `gh auth status` and MCP configuration
+3. Output formatted health report (✅/⚠️/❌)
 
-## 联动
+## Linkage
 
-- 缺失工具 → 提示 **插件安装器**
-- 环境就绪 → 提示 **技能发现**
+- Missing tools → suggest **Plugin Installer**
+- Environment ready → suggest **Skill Discovery**

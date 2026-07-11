@@ -1,67 +1,67 @@
 # universal-project-kickoff
 
-通用型项目启动与能力发现规则 — 适用于任何类型项目的启动阶段，执行意图探测 + 7 步能力发现 + 强制六步流程。
+Universal project kickoff and capability discovery rules — suitable for any project type's startup phase, executing intent detection + 7-step capability discovery + mandatory 6-step process.
 
-已吸收原 `proactive-skill-discovery` 的全部功能（该技能已删除）。新增 Fork 模式：参与开源贡献（fork → clone → 开发 → PR）。
+Has absorbed all functionality of the former `proactive-skill-discovery` (that skill has been deleted). New Fork mode: participate in open-source contributions (fork → clone → develop → PR).
 
-## 核心流程
+## Core Flow
 
-### Step 0：意图探测
-先通过关键词匹配预判用户意图（启动项目/开发功能/审查代码/修复Bug/探索工具），匹配到唯一意图时直接分流；意图不明确时才弹出 AskUserQuestion。分流：
+### Step 0: Intent Detection
+First pre-detect user intent via keyword matching (start project/develop feature/review code/fix bug/explore tools). If a unique intent matches, route directly; only show AskUserQuestion when intent is ambiguous. Routing:
 
-| 意图 | 行为 |
-|------|------|
-| 🚀 启动新项目 | Step 0b 语言/框架确认 → 强制六步流程 → 能力发现 |
-| 💻 开发新功能 | Step 0c 技术栈确认 → 开发工具推荐 |
-| 🔍 审查代码 | Step 0a 5 层追问（本地/远程PR → 目标PR → 在线快速审查/clone本地 → 审查范围 → 模型确认）→ Step 0c 审查工具推荐 |
-| 🐛 修复 Bug | Step 0a 目标确认 → Step 0c 调试工具推荐 |
-| 🍴 Fork 项目 | Step 0a-fork 5 步子程序（获取仓库 → Fork → Clone → 项目分析 → 贡献引导） |
-| 🔧 探索工具 | Step 0c 完整 7 步能力扫描 |
+| Intent | Behavior |
+|--------|----------|
+| 🚀 Start New Project | Step 0b language/framework confirmation → mandatory 6-step process → capability discovery |
+| 💻 Develop Feature | Step 0c tech stack confirmation → dev tool recommendations |
+| 🔍 Review Code | Step 0a 5-layer follow-up → Step 0c review tool recommendations |
+| 🐛 Fix Bug | Step 0a target confirmation → Step 0c debugging tool recommendations |
+| 🍴 Fork Project | Step 0a-fork 5 sub-steps (get repo → fork → clone → project analysis → contribution guidance) |
+| 🔧 Explore Tools | Step 0c full 7-step capability scan |
 
-### Step 0c：7 步能力发现
+### Step 0c: 7-Step Capability Discovery
 
-| 子步骤 | 内容 |
-|--------|------|
-| 0c-1 | 项目指纹扫描（25+ 配置文件 + 语言版本检测 + 移动端框架） |
-| 0c-2 | 并行能力清单（先读取 .discovery-rules.json 的 deep_explore_plugins/priority_boost_plugins 配置，再并行三路扫描 Skills + Plugins + Deep Exploration） |
-| 0c-3 | 匹配与排序（评分引擎 + Priority Boost 优先加成 + 按意图过滤） |
-| 0c-4 | 交互式推荐（5 选项 + 三列表展示 + 联动钩子） |
-| 0c-5 | 指令发现（MCP 工具 + Slash 命令，仅在用户选择后触发） |
-| 0c-6 | 全量导出（目录/语言/格式 3 询问，Markdown/JSON/纯文本） |
-| 0c-7 | 上下文持久化（跳过记录 + 指纹变化重新发现） |
+| Sub-step | Content |
+|----------|---------|
+| 0c-1 | Project fingerprint scan (25+ config files + language version detection + mobile frameworks) |
+| 0c-2 | Parallel capability inventory (read .discovery-rules.json config, then 3-way parallel scan: Skills + Plugins + Deep Exploration) |
+| 0c-3 | Match and rank (scoring engine + Priority Boost bonus + intent-based filtering) |
+| 0c-4 | Interactive recommendation (5 options + 3-column display + linkage hooks) |
+| 0c-5 | Command discovery (MCP tools + Slash commands, triggered only on user selection) |
+| 0c-6 | Full export (3 questions: directory/language/format, Markdown/JSON/plain text) |
+| 0c-7 | Context persistence (skip recording + fingerprint-change re-discovery) |
 
-### 强制六步流程（启动新项目）
+### Mandatory 6-Step Process (Starting New Projects)
 
-| 步骤 | 内容 | 产出 |
-|------|------|------|
-| 1 | 澄清"为什么"与"是什么" | 项目一句话定义 + 成功标准 |
-| 2 | 圈定边界 | MVP 范围、三重约束 |
-| 3 | 快速风险摸底 | Top 3 风险 + B 计划 |
-| 4 | 利益相关者对齐 | 核心圈/影响圈/外围圈 |
-| 5 | 绘制路线图 | 3-5 个里程碑 + 验收标准 |
-| 6 | 生成 CLAUDE.md | 调用 /init 固化成果 |
+| Step | Content | Output |
+|------|---------|--------|
+| 1 | Clarify "why" and "what" | One-sentence project definition + success criteria |
+| 2 | Define boundaries | MVP scope, triple constraint |
+| 3 | Quick risk assessment | Top 3 risks + Plan B |
+| 4 | Stakeholder alignment | Core circle / influence circle / periphery circle |
+| 5 | Draw roadmap | 3-5 milestones + acceptance criteria |
+| 6 | Generate CLAUDE.md | Call /init to persist outcomes |
 
-## 适用场景
+## Use Cases
 
-- 新项目启动
-- 功能规划
-- AI Agent 设计
-- 项目计划审查
-- 代码审查工具推荐
-- 调试工具推荐
-- 技能/插件/命令探索
-- Fork 开源项目并贡献 PR
+- New project startup
+- Feature planning
+- AI Agent design
+- Project plan review
+- Code review tool recommendations
+- Debugging tool recommendations
+- Skill/plugin/command exploration
+- Fork open-source projects and contribute PRs
 
-## 核心原则
+## Core Principle
 
-**先开枪，后瞄准，但开枪前得知道靶子大概在哪个方向。** 15 分钟内完成关键决策，避免返工。
+**Fire first, aim later — but before you fire, at least know which direction the target is in.** Complete critical decisions within 15 minutes to avoid rework.
 
-## 相关技能
+## Related Skills
 
-本技能属于 [minecraft269-skills](https://github.com/Minecraft269/skills) 插件包。当完整安装插件包时，本技能可与其他包内技能自动联动：
+This skill is part of the [minecraft269-skills](https://github.com/Minecraft269/skills) plugin package. When the full package is installed, this skill can auto-link with other package skills:
 
-- 识别技术栈后提示安装相关 MCP Server
-- CLAUDE.md 生成后提示扫描技术栈推荐匹配技能
-- 被 PR 管理器在克隆陌生项目后触发，帮助新贡献者快速理解项目
+- After identifying tech stack, suggests installing relevant MCP Servers
+- After CLAUDE.md generation, suggests scanning tech stack for matching skill recommendations
+- Triggered by PR Manager after cloning unfamiliar projects, helping new contributors quickly understand the project
 
-独立安装本技能时，上述联动功能静默关闭，不影响核心流程。
+When installed standalone, the above linkage features are silently disabled, with no impact on core flow.

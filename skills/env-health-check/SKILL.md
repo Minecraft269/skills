@@ -1,119 +1,120 @@
 ---
 name: env-health-check
 description: >
-  跨平台环境自检工具 — 检测 git、gh、jq、claude 等核心依赖的可用性、版本和认证状态，
-  扫描 MCP Server 配置完整性。当你首次安装插件包后、遇到"命令不可用"错误、
-  或想确认开发环境是否就绪时使用此技能。
+  Cross-platform environment health check tool — detects the availability, version, and auth status
+  of core dependencies such as git, gh, jq, and claude, and scans MCP Server configuration integrity.
+  Use this skill after first installing the plugin package, when encountering "command not available" errors,
+  or when you want to confirm whether the development environment is ready.
 capabilities: ["env-check"]
 integrates_with: ["skill-discovery", "plugin-installation"]
 metadata:
-  compatibility: "跨平台（Windows/macOS/Linux）"
+  compatibility: "Cross-platform (Windows/macOS/Linux)"
 ---
 
-# 环境健康自检
+# Environment Health Check
 
-跨平台检测 Claude Code 及常用工具链的可用性，输出格式化健康报告。纯 AI 驱动，无需额外依赖。
+Cross-platform detection of Claude Code and common toolchain availability, outputting a formatted health report. Purely AI-driven, no additional dependencies required.
 
-## 包联动
+## Package Linking
 
-1. Glob 搜索 `~/.claude/plugins/minecraft269-skills/.claude-plugin/plugin.json`
-2. 若找到 → `PACKAGE_MODE = true`，可联动兄弟技能
-3. 若未找到 → `PACKAGE_MODE = false`，静默降级
+1. Glob search for `~/.claude/plugins/minecraft269-skills/.claude-plugin/plugin.json`
+2. If found → `PACKAGE_MODE = true`, can link with sibling skills
+3. If not found → `PACKAGE_MODE = false`, silent degradation
 
-当 `PACKAGE_MODE = true` 时：
-- 发现问题 → 联动 `integrates_with: plugin-installation`（安装缺失工具）
-- 环境就绪 → 联动 `integrates_with: skill-discovery`（扫描项目推荐技能）
+When `PACKAGE_MODE = true`:
+- Problems found → link to `integrates_with: plugin-installation` (install missing tools)
+- Environment ready → link to `integrates_with: skill-discovery` (scan project and recommend skills)
 
-详见 `_shared/package-context.md`。
+See `_shared/package-context.md` for details.
 
-## 核心工作流
+## Core Workflow
 
-### 1. 并行检测核心依赖
+### 1. Detect Core Dependencies in Parallel
 
-对以下工具并行运行检测命令：
+Run detection commands for the following tools in parallel:
 
-| 工具 | 检测命令 | 必需 |
-|------|---------|------|
-| git | `command -v git && git --version` | ✅ |
-| gh | `command -v gh && gh --version` | 推荐 |
-| jq | `command -v jq && jq --version` | 推荐 |
-| claude | `command -v claude && claude --version` | ✅ |
-| node | `command -v node && node --version` | 推荐 |
-| python | `command -v python3 \|\| command -v python` | 可选 |
+| Tool | Detection Command | Required |
+|------|-------------------|----------|
+| git | `command -v git && git --version` | Yes |
+| gh | `command -v gh && gh --version` | Recommended |
+| jq | `command -v jq && jq --version` | Recommended |
+| claude | `command -v claude && claude --version` | Yes |
+| node | `command -v node && node --version` | Recommended |
+| python | `command -v python3 \|\| command -v python` | Optional |
 
-### 2. 检测服务状态
+### 2. Check Service Status
 
-如果关键工具可用，进一步检查：
+If critical tools are available, perform further checks:
 
 ```bash
-# gh 认证状态
+# gh auth status
 gh auth status 2>&1
 
-# claude CLI 可用性
+# claude CLI availability
 claude --version 2>&1
 
-# MCP Server 配置（如 settings.json 存在）
+# MCP Server configuration (if settings.json exists)
 jq -r '.mcpServers // {} | keys[]' ~/.claude/settings.json 2>/dev/null
 ```
 
-### 3. 输出健康报告
+### 3. Output Health Report
 
-以格式化表格展示，每项给出状态和操作建议：
+Display as a formatted table, with status and action suggestions for each item:
 
 ```markdown
-## 🔍 环境健康报告
+## 🔍 Environment Health Report
 
-### 核心依赖
+### Core Dependencies
 
-| 工具 | 状态 | 版本 | 位置 |
-|------|------|------|------|
+| Tool | Status | Version | Location |
+|------|--------|---------|----------|
 | git | ✅ | 2.45.0 | /usr/bin/git |
 | gh | ✅ | 2.55.0 | /usr/bin/gh |
 | jq | ✅ | 1.7.1 | /usr/bin/jq |
 | claude | ✅ | 0.14.0 | ~/.local/bin/claude |
-| node | ⚠️ | — | 未安装 |
+| node | ⚠️ | — | Not installed |
 | python | ✅ | 3.12.3 | /usr/bin/python3 |
 
-### 服务状态
+### Service Status
 
-| 服务 | 状态 | 详情 |
-|------|------|------|
-| gh auth | ✅ | 已登录 |
-| MCP Server | — | 未配置任何 MCP Server |
+| Service | Status | Details |
+|---------|--------|---------|
+| gh auth | ✅ | Logged in |
+| MCP Server | — | No MCP Servers configured |
 
-### 建议
+### Suggestions
 
-- ⚠️ **node** 未安装 — 部分 MCP Server 需要 Node.js
-  - 安装: `winget install OpenJS.NodeJS` (Windows) / `brew install node` (macOS)
+- ⚠️ **node** not installed — some MCP Servers require Node.js
+  - Install: `winget install OpenJS.NodeJS` (Windows) / `brew install node` (macOS)
 
 ```
 
-**状态图标规则：**
-- ✅ 已安装且可用
-- ⚠️ 未安装或不推荐版本（给出安装命令）
-- ❌ 必需工具缺失（阻塞性）
-- `—` 不适用或未配置
+**Status icon rules:**
+- ✅ Installed and available
+- ⚠️ Not installed or unrecommended version (provide install command)
+- ❌ Required tool missing (blocking)
+- `—` Not applicable or not configured
 
-**对缺失工具给出的安装命令尽量覆盖三大平台：**
+**Install commands for missing tools should cover all three major platforms:**
 
-| 工具 | Windows | macOS | Linux |
+| Tool | Windows | macOS | Linux |
 |------|---------|-------|-------|
-| git | `winget install Git.Git` | 内置 | `apt install git` |
+| git | `winget install Git.Git` | Built-in | `apt install git` |
 | gh | `winget install GitHub.cli` | `brew install gh` | `apt install gh` |
 | jq | `winget install jqlang.jq` | `brew install jq` | `apt install jq` |
 | node | `winget install OpenJS.NodeJS` | `brew install node` | `apt install nodejs` |
 
-## 联动（仅 PACKAGE_MODE = true）
+## Linkage (PACKAGE_MODE = true only)
 
-输出报告后：
+After outputting the report:
 
-- 如有 **缺失工具** → 提示：「💡 是否需要我帮你安装缺失的工具？」（匹配 `plugin-installation`）
-- 如 **环境已就绪** → 提示：「✅ 环境就绪。是否需要扫描当前项目，推荐匹配的技能？」（匹配 `skill-discovery`）
+- If **tools are missing** → prompt: "💡 Would you like me to install the missing tools?" (matches `plugin-installation`)
+- If **environment is ready** → prompt: "✅ Environment ready. Would you like to scan the current project for matching skill recommendations?" (matches `skill-discovery`)
 
-## 错误处理
+## Error Handling
 
-| 场景 | 处理方式 |
-|------|---------|
-| 不在终端环境 | 跳过 `command -v`，提示用户手动检查 |
-| settings.json 不存在 | 标注"未配置"，不报错 |
-| 检测超时 | 单工具超时 5s，标记为 ⚠️ 并继续下一个 |
+| Scenario | Handling |
+|----------|----------|
+| Not in terminal environment | Skip `command -v`, prompt user to check manually |
+| settings.json does not exist | Mark as "Not configured", do not error |
+| Detection timeout | Per-tool timeout 5s, mark as ⚠️ and continue to next |

@@ -1,184 +1,186 @@
 ---
 name: github-pr-manager
 description: >
-  GitHub PR 全功能管理器 — 指定仓库、列出 PR、查看详情和 diff、查看评论和审查状态、
-  查看提交历史、克隆 PR 代码到本地 owner/repo-pr-N 目录并自动初始化开发环境，支持多仓库切换
-  和批量操作。当你需要管理 GitHub 拉取请求、克隆 PR、查看代码审查、检查 PR 提交、
-  批量处理多个 PR、或者任何与 GitHub pull request 相关的操作时使用此技能 — 即使用户
-  没有明确说"PR 管理"，只要涉及 GitHub 仓库的拉取请求就应触发。
+  GitHub PR full-featured manager — specify a repo, list PRs, view details and diff,
+  view comments and review status, view commit history, clone PR code locally to
+  owner/repo-pr-N directory with automatic dev environment initialization, supports
+  multi-repo switching and batch operations. Use this skill when you need to manage
+  GitHub pull requests, clone PRs, view code reviews, inspect PR commits, batch-process
+  multiple PRs, or any operation related to GitHub pull requests — trigger even if
+  the user doesn't explicitly say "PR management" as long as GitHub repository pull
+  requests are involved.
 capabilities: ["pr-management", "ci-analysis", "code-cloning"]
 integrates_with: ["project-setup", "skill-discovery"]
 metadata:
   compatibility: "需要 gh (GitHub CLI ≥ 2.0.0), git, jq"
 ---
 
-# GitHub PR 管理器
+# GitHub PR Manager
 
-管理任意 GitHub 仓库的 Pull Request：列出、查看详情/diff/评论/提交、克隆到本地、批量操作。
+Manage Pull Requests for any GitHub repository: list, view details/diff/comments/commits, clone locally, batch operations.
 
-## 核心理念
+## Core Philosophy
 
-本技能让你像操作本地 git 分支一样操作远程 PR。每个 PR 被克隆到独立目录 `<owner>-<repo>-pr-<编号>`，
-互不干扰，多仓库并行管理时目录不会混淆。
+This skill lets you operate remote PRs as if they were local git branches. Each PR is cloned to an independent directory `<owner>-<repo>-pr-<number>`, directories never interfere, and multi-repo parallel management stays clean.
 
-## 前置条件
+## Prerequisites
 
-- `gh` (GitHub CLI ≥ 2.0.0)：`gh auth status` 确认已登录
-- `git`、`jq`（用于 JSON 格式化，缺失时回退到原始输出）
+- `gh` (GitHub CLI >= 2.0.0): `gh auth status` to confirm login
+- `git`, `jq` (for JSON formatting, falls back to raw output if missing)
 
-## 包联动
+## Package Linking
 
-本技能支持与 minecraft269-skills 插件包内其他技能自动联动。执行以下检测：
+This skill supports automatic linking with other skills in the minecraft269-skills plugin package. The following detection is performed:
 
-1. Glob 搜索 `~/.claude/plugins/minecraft269-skills/.claude-plugin/plugin.json`
-2. 若找到 → `PACKAGE_MODE = true`，可发现并联动兄弟技能
-3. 若未找到 → `PACKAGE_MODE = false`，跳过所有跨技能逻辑（静默降级，不报错）
+1. Glob search for `~/.claude/plugins/minecraft269-skills/.claude-plugin/plugin.json`
+2. If found -> `PACKAGE_MODE = true`, can discover and link sibling skills
+3. If not found -> `PACKAGE_MODE = false`, skip all cross-skill logic (silent degradation, no error)
 
-当 `PACKAGE_MODE = true` 时：
-- 克隆 PR 后可联动 `integrates_with: project-setup`（项目启动流程）和 `integrates_with: skill-discovery`（技能发现）
-- 扫描兄弟 SKILL.md 的 `capabilities` 字段，匹配本技能的 `integrates_with` 标签
-- 仅在匹配成功时显示联动提示
+When `PACKAGE_MODE = true`:
+- After cloning a PR, can link with `integrates_with: project-setup` (project initialization flow) and `integrates_with: skill-discovery` (skill discovery)
+- Scan the `capabilities` field of sibling SKILL.md files, match against this skill's `integrates_with` tags
+- Only show linking hints when a match succeeds
 
-详见 `_shared/package-context.md`。
+See `_shared/package-context.md` for details.
 
-## 核心工作流
+## Core Workflow
 
-### 1. 设定仓库
+### 1. Set Repository
 
-用户必须以 `owner/repo` 格式指定仓库。如果用户没有提供，主动询问：
+The user must specify a repository in `owner/repo` format. If the user does not provide one, proactively ask:
 
-> "请提供 GitHub 仓库（格式：owner/repo，例如 facebook/react）"
+> "Please provide a GitHub repository (format: owner/repo, e.g. facebook/react)"
 
-支持 `/set-repo owner/repo` 切换仓库。多仓库场景下，记住最近使用过的仓库列表。
+Supports `/set-repo owner/repo` to switch repositories. In multi-repo scenarios, remember the most recently used repository list.
 
-设定仓库后，**自动执行 `/list-pr` 展示当前所有开放 PR。**
+After setting the repository, **automatically execute `/list-pr` to show all open PRs.**
 
-### 2. 列出 PR
+### 2. List PRs
 
 ```bash
 gh pr list --repo <repo> --state open --json number,title,author,headRefName,createdAt,labels --limit 50
 ```
 
-展示为清晰的表格：
+Display as a clear table:
 
 ```
-📋 仓库: owner/repo | 开放 PR 列表
+📋 Repo: owner/repo | Open PR List
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  #1234  feat: add new button component    @john_doe   🏷 enhancement  2天前
-  #1235  fix: resolve memory leak          @jane_dev   🐛 bug         5小时前
-  #1236  docs: update API reference        @dev_sam    📖 docs        1周前
+  #1234  feat: add new button component    @john_doe   🏷 enhancement  2d ago
+  #1235  fix: resolve memory leak          @jane_dev   🐛 bug         5h ago
+  #1236  docs: update API reference        @dev_sam    📖 docs        1w ago
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-共 3 个开放 PR
+3 open PRs
 ```
 
-**用户可选操作（对话式，无需记忆命令）：**
-- 输入 PR 编号（如 `1234`）→ 查看该 PR 完整信息（详情 + diff + 评论 + 提交）
-- `c <编号>` → 克隆 PR 并初始化开发环境
-- `d <编号>` → 仅查看 PR 详情
-- `diff <编号>` → 查看 PR 代码变更摘要
-- `comments <编号>` → 查看 PR 评论和审查状态
-- `commits <编号>` → 查看 PR 提交历史
-- `batch clone <编号1>,<编号2>,...` → 批量克隆多个 PR
-- `r` → 刷新列表
-- `repo <owner/repo>` → 切换仓库
+**User options (conversational, no need to memorize commands):**
+- Enter a PR number (e.g. `1234`) -> View full PR info (details + diff + comments + commits)
+- `c <number>` -> Clone PR and initialize dev environment
+- `d <number>` -> View PR details only
+- `diff <number>` -> View PR code change summary
+- `comments <number>` -> View PR comments and review status
+- `commits <number>` -> View PR commit history
+- `batch clone <number1>,<number2>,...` -> Batch clone multiple PRs
+- `r` -> Refresh list
+- `repo <owner/repo>` -> Switch repository
 
-### 3. PR 完整信息（默认行为）
+### 3. PR Full Info (Default Behavior)
 
-当用户输入 PR 编号时，一次性展示：
+When the user enters a PR number, display all at once:
 
-#### 3a. 基本信息
+#### 3a. Basic Info
 
 ```bash
-gh pr view <编号> --repo <repo> --json title,body,author,state,mergeable,changedFiles,commits,url,headRefName,baseRefName,createdAt,labels
+gh pr view <number> --repo <repo> --json title,body,author,state,mergeable,changedFiles,commits,url,headRefName,baseRefName,createdAt,labels
 ```
 
-#### 3b. 代码变更 (diff)
+#### 3b. Code Changes (diff)
 
 ```bash
-gh pr diff <编号> --repo <repo> | head -200
+gh pr diff <number> --repo <repo> | head -200
 ```
 
-展示变更文件列表和关键差异（截断到 200 行，提示用户可查看完整 diff）。
+Show the list of changed files and key diffs (truncated to 200 lines, prompt the user they can view the full diff).
 
-#### 3c. 评论和审查
+#### 3c. Comments and Reviews
 
 ```bash
-gh pr view <编号> --repo <repo> --json reviews,comments
+gh pr view <number> --repo <repo> --json reviews,comments
 ```
 
-展示审查状态（APPROVED/CHANGES_REQUESTED/COMMENTED）和最新评论摘要。
+Show review status (APPROVED/CHANGES_REQUESTED/COMMENTED) and latest comment summary.
 
-#### 3d. 提交历史
+#### 3d. Commit History
 
 ```bash
-gh pr view <编号> --repo <repo> --json commits --jq '.commits[] | "\(.oid[:7]) \(.author.name) \(.messageHeadline)"'
+gh pr view <number> --repo <repo> --json commits --jq '.commits[] | "\(.oid[:7]) \(.author.name) \(.messageHeadline)"'
 ```
 
-展示提交者、简短 hash 和提交信息。
+Show author, short hash, and commit message.
 
-### 4. 克隆 PR 到本地
+### 4. Clone PR Locally
 
 ```bash
-# 参见 scripts/clone_pr.sh — 完整的克隆和初始化流程
+# See scripts/clone_pr.sh — full clone and initialization flow
 ```
 
-流程：
-1. 检查 `<owner>-<repo>-pr-<编号>` 是否已存在 → 存在则询问覆盖/跳过
-2. 执行 `gh pr checkout <编号> --repo <repo>` 或手动 fetch + checkout
-3. 展示克隆结果：路径、分支、大小
-4. 检测项目类型并引导初始化：
-   - **Node.js** (`package.json`) → 询问是否 `npm install`
-   - **Python** (`requirements.txt`/`pyproject.toml`) → 询问是否创建 venv
-   - **Rust** (`Cargo.toml`) → 询问是否 `cargo build`
-   - **其他** → 提示手动初始化
+Flow:
+1. Check if `<owner>-<repo>-pr-<number>` already exists -> prompt overwrite/skip
+2. Execute `gh pr checkout <number> --repo <repo>` or manual fetch + checkout
+3. Show clone result: path, branch, size
+4. Detect project type and guide initialization:
+   - **Node.js** (`package.json`) -> Ask whether to `npm install`
+   - **Python** (`requirements.txt`/`pyproject.toml`) -> Ask whether to create venv
+   - **Rust** (`Cargo.toml`) -> Ask whether to `cargo build`
+   - **Other** -> Prompt manual initialization
 
-**联动钩子（仅 PACKAGE_MODE = true 时执行）：**
+**Linking hooks (only when PACKAGE_MODE = true):**
 
-克隆完成后，扫描兄弟技能的 `capabilities` 与本技能的 `integrates_with` 做交集匹配：
-- 匹配到 `project-setup` → 提示用户："💡 首次接触此项目？可使用 **通用项目启动** 快速理解项目结构和约定。"
-- 匹配到 `skill-discovery` → 提示用户："💡 检测到新的项目类型 [技术栈]。是否需要运行 **主动技能发现** 为该项目推荐匹配的技能和插件？"
+After cloning completes, scan sibling skills' `capabilities` against this skill's `integrates_with` for intersection matching:
+- Match `project-setup` -> Prompt: "This is your first time with this project? Use **Universal Project Kickoff** to quickly understand the project structure and conventions."
+- Match `skill-discovery` -> Prompt: "A new project type [tech stack] has been detected. Would you like to run **Proactive Skill Discovery** to recommend matching skills and plugins for this project?"
 
-### 5. 批量操作
+### 5. Batch Operations
 
-**批量克隆：** `batch clone 1234,1235,1236`
+**Batch clone:** `batch clone 1234,1235,1236`
 
-对每个 PR 依次执行克隆流程，汇总展示结果：
+Execute the clone flow for each PR sequentially and summarize results:
 
 ```
-🚀 批量克隆 3 个 PR
+🚀 Batch clone 3 PRs
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ #1234 → ./facebook-react-pr-1234  (Node.js, 已 npm install)
-✅ #1235 → ./facebook-react-pr-1235  (Python, 已创建 venv)
-❌ #1236 → 目录已存在，跳过
+✅ #1234 -> ./facebook-react-pr-1234  (Node.js, npm install done)
+✅ #1235 -> ./facebook-react-pr-1235  (Python, venv created)
+❌ #1236 -> Directory already exists, skipped
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-**批量查看：** `batch view 1234,1235,1236` — 依次展示每个 PR 的摘要信息。
+**Batch view:** `batch view 1234,1235,1236` — Display summary info for each PR in sequence.
 
-## 命令速查
+## Command Quick Reference
 
-| 输入 | 说明 |
-|------|------|
-| `<编号>` | 查看 PR 完整信息（默认行为） |
-| `/set-repo <owner/repo>` | 设置/切换仓库 |
-| `c <编号>` | 克隆 PR 并初始化 |
-| `d <编号>` | 仅查看详情 |
-| `diff <编号>` | 查看代码变更 |
-| `comments <编号>` | 查看评论和审查 |
-| `commits <编号>` | 查看提交历史 |
-| `batch clone <n1>,<n2>` | 批量克隆 |
-| `batch view <n1>,<n2>` | 批量查看 |
-| `r` | 刷新 PR 列表 |
-| `repo <owner/repo>` | 切换仓库 |
+| Input | Description |
+|-------|-------------|
+| `<number>` | View PR full info (default behavior) |
+| `/set-repo <owner/repo>` | Set/switch repository |
+| `c <number>` | Clone PR and initialize |
+| `d <number>` | View details only |
+| `diff <number>` | View code changes |
+| `comments <number>` | View comments and reviews |
+| `commits <number>` | View commit history |
+| `batch clone <n1>,<n2>` | Batch clone |
+| `batch view <n1>,<n2>` | Batch view |
+| `r` | Refresh PR list |
+| `repo <owner/repo>` | Switch repository |
 
-## 脚本
+## Scripts
 
-- `scripts/list_prs.sh` — 列出仓库开放 PR（JSON → 格式化表格，支持 `-a` 翻页）
-- `scripts/view_pr.sh` — 获取 PR 完整信息（详情+diff+评论+提交，支持 `-d`/`-v`/`-a`）
-- `scripts/clone_pr.sh` — 克隆 PR 并检测项目类型，支持多语言自动初始化
-- `scripts/ci_pr.sh` — 查看 CI 状态，分析失败原因，重跑失败 Job（`--analyze`/`--rerun`/`--wait`）
+- `scripts/list_prs.sh` — List open PRs for a repository (JSON -> formatted table, supports `-a` pagination)
+- `scripts/view_pr.sh` — Get full PR info (details+diff+comments+commits, supports `-d`/`-v`/`-a`)
+- `scripts/clone_pr.sh` — Clone PR and detect project type, supports multi-language auto-initialization
+- `scripts/ci_pr.sh` — View CI status, analyze failures, rerun failed jobs (`--analyze`/`--rerun`/`--wait`)
 
-## 详细参考
+## Detailed References
 
-- `references/workflows.md` — 完整工作流细节、示例对话、多仓库管理
-- `references/error-handling.md` — 所有错误场景及处理方式
+- `references/workflows.md` — Full workflow details, example conversations, multi-repo management
+- `references/error-handling.md` — All error scenarios and handling approaches

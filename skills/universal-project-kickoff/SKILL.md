@@ -1,22 +1,22 @@
 ---
 name: universal-project-kickoff
 description: >
-  通用型项目启动与能力发现规则。已吸收原 proactive-skill-discovery 的全部能力（该技能已删除）。
-  新增 Fork 模式：参与开源贡献（fork → clone → 开发 → PR）。
-  当用户说以下任何话时，**必须**触发此技能：
-  "我要开始一个新项目"、"帮我规划一个新功能"、"想启动一个 AI Agent"、
-  "如何着手做 X"、"不知道从哪开始"、"帮我搭个架子"、"项目初始化"、
-  "检查一下我的项目计划"、"帮我理一理思路"、"新项目怎么开始"、
-  "打算搞个 side project"、"帮我做项目风险排查"、
-  "有哪些可用的技能/插件"、"推荐什么工具"、"/discover"、
-  "帮我审查代码"、"帮我修 Bug"、"我要开发一个新功能"、
-  "我想参与这个开源项目"、"帮我 fork 这个仓库"、"我想给这个项目提 PR"。
-  本技能先探测用户意图（启动项目/开发功能/审查代码/修复Bug/探索工具/Fork项目），
-  再分流到对应子流程。启动新项目时执行六步强制流程（为什么-是什么-边界-风险-利益-里程碑-固化CLAUDE.md）
-  + 代码风格确认 + 能力推荐，最后调用 /init 生成项目的 CLAUDE.md 将思考成果永久固化。
-  Fork 项目时执行五步子流程（获取仓库 → Fork → Clone → 项目分析 → 贡献工作流引导）。
-  其他意图则根据技术栈推荐匹配的技能和插件。
-  即使用户没有明确说"启动检查"，只要涉及从零规划任何项目或需要工具推荐，就应触发。
+  Universal project startup and capability discovery rules. Absorbs all capabilities from the former proactive-skill-discovery (which has been deleted).
+  Added Fork Mode: participate in open-source contributions (fork → clone → develop → PR).
+  This skill **must** trigger when the user says any of the following:
+  "I want to start a new project", "Help me plan a new feature", "I want to launch an AI Agent",
+  "How do I approach X", "Don't know where to start", "Help me scaffold something", "Project initialization",
+  "Check my project plan", "Help me organize my thoughts", "How to start a new project",
+  "Planning a side project", "Help me do project risk assessment",
+  "What skills/plugins are available", "Recommend some tools", "/discover",
+  "Help me review code", "Help me fix a bug", "I want to develop a new feature",
+  "I want to participate in this open-source project", "Help me fork this repo", "I want to submit a PR to this project".
+  This skill first detects user intent (start project / develop feature / review code / fix bug / explore tools / fork project),
+  then routes to the corresponding sub-flow. When starting a new project, execute the mandatory six-step process (Why-What-Boundary-Risk-Stakeholders-Milestones-CLAUDE.md)
+  + code style confirmation + capability recommendation, and finally call /init to generate the project's CLAUDE.md to permanently solidify the thinking.
+  When forking a project, execute the five-step sub-process (Get Repository → Fork → Clone → Project Analysis → Contribution Workflow Guide).
+  Other intents recommend matching skills and plugins based on the tech stack.
+  Even if the user does not explicitly say "startup check", this skill should trigger whenever planning any project from scratch or tool recommendations are needed.
 version: "4.0.0"
 risk: safe
 source: community
@@ -25,330 +25,330 @@ integrates_with: ["plugin-installation", "pr-management"]
 metadata:
   category: meta
   tags: [project-startup, planning, checklist, mvp-definition, risk-assessment, init, code-style, discovery, recommendation, skills, plugins, commands, fork, contribute, open-source]
-  compatibility: 需要 /init 命令（Claude Code 内置），无其他外部依赖
+  compatibility: Requires the /init command (built into Claude Code), no other external dependencies
 ---
 
-# 通用型项目启动与能力发现
+# Universal Project Startup & Capability Discovery
 
-## 核心原则
+## Core Principles
 
-**先开枪，后瞄准，但开枪前得知道靶子大概在哪个方向。**  
-本技能帮助你在 15 分钟内完成启动前的关键决策，避免"热情直冲"带来的返工。同时，**全程保留项目的代码风格（包括注释、命名、格式等）** —— 这意味着在生成任何代码示例、项目结构或脚手架时，都要主动询问或推断用户既有的风格规范，并严格遵循。
+**Fire first, aim later — but know roughly where the target is before pulling the trigger.**  
+This skill helps you make key decisions before startup within 15 minutes, avoiding rework caused by blind enthusiasm. At the same time, **preserve the project's code style throughout (including comments, naming, formatting, etc.)** — meaning whenever generating code examples, project structure, or scaffolding, proactively ask about or infer the user's existing style conventions and strictly follow them.
 
-本技能已吸收原 `proactive-skill-discovery` 的全部能力（该技能已删除）。在开始前，会先探测你的意图——是启动新项目、开发功能、审查代码、修复 Bug、探索工具还是参与开源（Fork）——然后推荐最匹配的技能和插件。
+This skill has absorbed all capabilities from the former `proactive-skill-discovery` (which has been deleted). Before starting, it first detects your intent — starting a new project, developing a feature, reviewing code, fixing a bug, exploring tools, or participating in open source (Fork) — and then recommends the best-matching skills and plugins.
 
-## 不触发条件
+## Non-Trigger Conditions
 
-以下情况**不要**触发本技能：
-- 用户已明确指定要使用的具体技能（如 `/github-pr-reviewer`）
-- 对话仅为简单问答，不涉及项目开发任务
-- 用户在当前会话中已明确表示不需要推荐或启动检查
+Do **not** trigger this skill in the following situations:
+- The user has explicitly specified a specific skill to use (e.g., `/github-pr-reviewer`)
+- The conversation is simply Q&A, not involving project development tasks
+- The user has explicitly stated in the current session that they do not need recommendations or startup checks
 
-## 参考文件
+## References
 
-本技能附带六份参考文档，在技能执行过程中按以下规则加载：
+This skill comes with six reference documents, loaded during execution according to the following rules:
 
-- **`references/project-checklist.md`**：通用项目启动检查清单完整版。当用户对某一步骤要求更详细的解释、希望看到完整开工 Checklist 原文、或需要确认是否遗漏检查项时加载。
-- **`references/ai-agent-checklist.md`**：AI Agent 项目专项检查清单。当用户确认项目类型为 AI Agent、询问 Agent 特有的风险或注意事项、或需要设计 Agent 的"大脑"架构时加载。
-- **`references/scanner-patterns.md`**：项目指纹检测矩阵、评分算法公式、插件映射表和命令发现参考。执行技术栈确认和能力匹配时参考。
-- **`references/language-guide.md`**：编程语言优劣势参考表。当用户不确定用什么语言时加载。
-- **`references/hook-config.md`**：可选的 Claude Code hook 配置指南。当用户希望在新会话启动或检测到新项目时自动触发本技能，参考此文档配置 SessionStart/PostToolUse hook。
-- **`references/validation-scenarios.md`**：验证场景集合。执行完技能后进行 LLM 自检时参考，确保推荐结果与预期一致。覆盖 8 种典型项目类型和 7 种边界情况。
+- **`references/project-checklist.md`**: Full version of the general project startup checklist. Load when the user requests a more detailed explanation of a step, wants to see the full startup checklist, or needs to confirm no checklist items are missed.
+- **`references/ai-agent-checklist.md`**: AI Agent project-specific checklist. Load when the user confirms the project type is an AI Agent, asks about Agent-specific risks or considerations, or needs to design the Agent's "brain" architecture.
+- **`references/scanner-patterns.md`**: Project fingerprint detection matrix, scoring algorithm formulas, plugin mapping table, and command discovery reference. Consult during tech stack confirmation and capability matching.
+- **`references/language-guide.md`**: Programming language pros/cons reference table. Load when the user is unsure which language to use.
+- **`references/hook-config.md`**: Optional Claude Code hook configuration guide. Load when the user wants this skill to trigger automatically on new session start or new project detection — refer to this document for configuring SessionStart/PostToolUse hooks.
+- **`references/validation-scenarios.md`**: Validation scenario collection. Load during LLM self-check after skill execution to verify recommendations match expectations. Covers 8 typical project types and 7 edge cases.
 
-## 包联动
+## Package Linking
 
-本技能支持与 minecraft269-skills 插件包内其他技能自动联动。执行以下检测：
+This skill supports automatic linkage with other skills in the minecraft269-skills plugin package. Perform the following detection:
 
-1. Glob 搜索 `~/.claude/plugins/minecraft269-skills/.claude-plugin/plugin.json`
-2. 若找到 → `PACKAGE_MODE = true`，可发现并联动兄弟技能
-3. 若未找到 → `PACKAGE_MODE = false`，跳过所有跨技能逻辑（静默降级）
+1. Glob search for `~/.claude/plugins/minecraft269-skills/.claude-plugin/plugin.json`
+2. If found → `PACKAGE_MODE = true`, sibling skills can be discovered and linked
+3. If not found → `PACKAGE_MODE = false`, skip all cross-skill logic (silent degradation)
 
-当 `PACKAGE_MODE = true` 时：
-- 识别项目技术栈后可联动 `integrates_with: plugin-installation`（快速安装插件）
-- CLAUDE.md 生成后可提示用户运行能力扫描（本技能已内置，无需跨技能联动）
-- 扫描兄弟 SKILL.md 的 `capabilities` 字段，匹配本技能的 `integrates_with` 标签
-- 仅在匹配成功时显示联动提示
+When `PACKAGE_MODE = true`:
+- After identifying the project tech stack, can link with `integrates_with: plugin-installation` (quick plugin installer)
+- After CLAUDE.md generation, can prompt the user to run capability scanning (this skill has it built-in, no cross-skill linkage needed)
+- Scan sibling SKILL.md `capabilities` fields, match against this skill's `integrates_with` tags
+- Only show linkage hints when matching succeeds
 
-详见 `_shared/package-context.md`。**任何检测失败都默认 PACKAGE_MODE = false，不得报错或中断。**
+See `_shared/package-context.md` for details. **Any detection failure defaults to PACKAGE_MODE = false; do not report errors or interrupt.**
 
 ---
 
-## 使用流程
+## Usage Flow
 
-### Step 0：意图探测
+### Step 0: Intent Detection
 
-**先推断，后询问。** 从用户的原始消息中提取关键词预判意图，只有无法确定时才弹出 `AskUserQuestion`。
+**Infer first, ask later.** Extract keywords from the user's raw message to pre-judge intent, only pop up `AskUserQuestion` when it cannot be determined.
 
-#### 0.1 意图预判（关键词匹配）
+#### 0.1 Intent Pre-Judgment (Keyword Matching)
 
-从用户消息中匹配以下模式（大小写不敏感）：
+Match the following patterns in the user's message (case-insensitive):
 
-| 关键词组合 | 推断意图 | 直接分流 |
-|-----------|---------|---------|
-| "启动" / "开始" / "新建" / "创建" / "初始化" / "搭个" / "从零" **+** "项目" | 🚀 启动新项目 | → Step 0b 语言确认 → 强制六步流程 |
-| "开发" / "添加" / "实现" / "做" **+** "功能" / "feature" | 💻 开发新功能 | → Step 0c 技术栈确认 + 能力推荐 |
-| "审查" / "review" / "检查" **+** "代码" / "PR" / "pull request" | 🔍 审查代码 | → Step 0a 目标确认 |
-| "修复" / "修" / "改" / "fix" / "debug" **+** "bug" / "问题" / "报错" | 🐛 修复 Bug | → Step 0a 目标确认 |
-| "有什么" / "推荐" / "哪些" / "可用" / "discover" **+** "技能" / "插件" / "工具" / "能力" | 🔧 探索工具 | → Step 0c 完整能力扫描 |
-| "fork" / "参与" / "贡献" / "提 PR" / "contribute" / "上游" **+** "项目" / "仓库" / "开源" / "代码" / "repo" | 🍴 Fork 项目 | → Step 0a Fork 分支 |
+| Keyword Combinations | Inferred Intent | Direct Routing |
+|---------------------|----------------|----------------|
+| "start" / "begin" / "new" / "create" / "initialize" / "scaffold" / "from scratch" **+** "project" | 🚀 Start New Project | → Step 0b Language Confirmation → Mandatory Six-Step Process |
+| "develop" / "add" / "implement" / "build" **+** "feature" / "functionality" | 💻 Develop New Feature | → Step 0c Tech Stack Confirmation + Capability Recommendation |
+| "review" / "check" / "examine" **+** "code" / "PR" / "pull request" | 🔍 Review Code | → Step 0a Target Confirmation |
+| "fix" / "repair" / "debug" **+** "bug" / "issue" / "error" | 🐛 Fix Bug | → Step 0a Target Confirmation |
+| "what" / "recommend" / "which" / "available" / "discover" **+** "skills" / "plugins" / "tools" / "capabilities" | 🔧 Explore Tools | → Step 0c Full Capability Scan |
+| "fork" / "participate" / "contribute" / "submit PR" / "upstream" **+** "project" / "repo" / "open source" / "code" / "repository" | 🍴 Fork Project | → Step 0a Fork Branch |
 
-**匹配规则：**
-- 若匹配到**唯一意图** → 直接分流，跳过 AskUserQuestion，在分流前用一句话确认（如"识别到你想要[意图]，直接开始…"）
-- 若**多个意图匹配**或**无匹配** → 使用 `AskUserQuestion` 询问
+**Matching Rules:**
+- If a **unique intent** matches → route directly, skip `AskUserQuestion`, confirm with one sentence before routing (e.g., "I see you want to [intent], let's get started…")
+- If **multiple intents match** or **no match** → use `AskUserQuestion`
 
-#### 0.2 交互式询问（仅在意图不明确时使用）
+#### 0.2 Interactive Prompt (Only When Intent Is Unclear)
 
-> "你想要做什么？"
+> "What would you like to do?"
 
-| 选项 | 说明 | 后续分流 |
-|------|------|---------|
-| 🚀 **启动新项目** | 从零开始一个项目 | → 追问语言/框架 → Step 0b 语言确认 → 进入强制六步流程 |
-| 💻 **开发新功能** | 在现有项目中添加功能 | → 进入 Step 0c 技术栈确认 + 能力推荐 |
-| 🔍 **审查代码** | Review PR 或代码变更 | → Step 0a 目标确认 → Step 0c 技术栈确认 + 审查工具推荐 |
-| 🐛 **修复 Bug** | 排查和修复问题 | → Step 0a 目标确认 → Step 0c 技术栈确认 + 调试工具推荐 |
-| 🔧 **探索工具** | 看看有什么可用的技能/插件/命令 | → 进入 Step 0c 完整能力扫描 |
-| 🍴 **Fork 项目** | Fork 开源仓库，在本地开发并贡献 PR | → Step 0a Fork 分支 |
-| 📋 **其他** | 用户自由输入 | → 根据输入内容智能匹配分流 |
+| Option | Description | Subsequent Routing |
+|--------|-------------|--------------------|
+| 🚀 **Start New Project** | Start a project from scratch | → Ask for language/framework → Step 0b Language Confirmation → Enter mandatory six-step process |
+| 💻 **Develop New Feature** | Add a feature to an existing project | → Enter Step 0c Tech Stack Confirmation + Capability Recommendation |
+| 🔍 **Review Code** | Review a PR or code changes | → Step 0a Target Confirmation → Step 0c Tech Stack Confirmation + Review Tool Recommendation |
+| 🐛 **Fix Bug** | Troubleshoot and fix issues | → Step 0a Target Confirmation → Step 0c Tech Stack Confirmation + Debugging Tool Recommendation |
+| 🔧 **Explore Tools** | See what skills/plugins/commands are available | → Enter Step 0c Full Capability Scan |
+| 🍴 **Fork Project** | Fork an open-source repo, develop locally, and contribute a PR | → Step 0a Fork Branch |
+| 📋 **Other** | User free-text input | → Smart match routing based on input content |
 
-#### Step 0a：目标确认（仅「审查代码」/「修复 Bug」时执行）
+#### Step 0a: Target Confirmation (Only for "Review Code" / "Fix Bug")
 
-##### 审查代码分支（4 层追问）
+##### Code Review Branch (4 Layers of Questions)
 
-「审查代码」意图需要先确认审查目标和方式，再决定是否执行技术栈扫描。
+The "Review Code" intent needs to first confirm the review target and method, then decide whether to execute tech stack scanning.
 
-**第 1 层 — 询问审查场景：**
+**Layer 1 — Ask about the review scenario:**
 
-使用 `AskUserQuestion`：
-> "你要审查的是什么？"
+Use `AskUserQuestion`:
+> "What are you reviewing?"
 
-| 选项 | 说明 |
-|------|------|
-| 📁 **本地项目** | 审查当前工作区的代码变更（unstaged / 分支 diff / 最近 commit） |
-| ☁️ **远程 PR** | 审查 GitHub 上的 Pull Request |
+| Option | Description |
+|--------|-------------|
+| 📁 **Local Project** | Review code changes in the current workspace (unstaged / branch diff / recent commit) |
+| ☁️ **Remote PR** | Review a Pull Request on GitHub |
 
-**第 2 层（仅远程 PR）— 询问目标 PR：**
+**Layer 2 (Remote PR only) — Ask about the target PR:**
 
-> "请提供 PR URL（如 `https://github.com/owner/repo/pull/123`）或 `owner/repo#number`"
+> "Please provide the PR URL (e.g., `https://github.com/owner/repo/pull/123`) or `owner/repo#number`"
 
-解析 PR URL → 提取 `owner`、`repo`、`pr_number`。
+Parse PR URL → Extract `owner`, `repo`, `pr_number`.
 
-**第 3 层（仅远程 PR）— 询问审查方式：**
+**Layer 3 (Remote PR only) — Ask about the review method:**
 
-使用 `AskUserQuestion`：
-> "你想怎么审查这个 PR？"
+Use `AskUserQuestion`:
+> "How would you like to review this PR?"
 
-| 选项 | 说明 | 后续 |
-|------|------|------|
-| ⚡ **在线快速审查** | 直接通过 GitHub MCP 获取 PR diff/files/commits，在线审查，无需 clone | → 使用 `gh pr view/diff` 或 GitHub MCP 工具获取 PR 内容 → 审查完成后输出结论 → **不执行 Step 0c** |
-| 💻 **Clone 到本地详细审查** | clone 仓库到本地，执行完整技术栈扫描 + 深度审查 | → 对比本地 git remote：`git remote get-url origin 2>/dev/null \|\| echo "NOT_A_GIT_REPO"` → 不匹配则引导 clone（`gh repo clone owner/repo` 或 `git clone`）→ 执行 Step 0c |
+| Option | Description | Next Steps |
+|--------|-------------|------------|
+| ⚡ **Quick Online Review** | Get PR diff/files/commits directly via GitHub MCP, review online, no clone needed | → Use `gh pr view/diff` or GitHub MCP tools to get PR content → Output review conclusion → **Do not execute Step 0c** |
+| 💻 **Clone to Local for Detailed Review** | Clone the repository locally, perform full tech stack scan + deep review | → Compare with local git remote: `git remote get-url origin 2>/dev/null \|\| echo "NOT_A_GIT_REPO"` → If no match, guide clone (`gh repo clone owner/repo` or `git clone`) → Execute Step 0c |
 
-**第 4 层（仅本地项目）— 确认审查范围：**
+**Layer 4 (Local project only) — Confirm review scope:**
 
-> "审查当前工作区的哪些变更？"
+> "Which changes in the current workspace would you like to review?"
 
-| 选项 | 说明 |
-|------|------|
-| 📝 **Unstaged 变更** | 工作区中尚未 staged 的修改 |
-| 🌿 **分支对比** | 当前分支 vs 目标分支（如 `main`）的 diff |
-| 📦 **最近 commit** | 审查最近 N 个 commit 的变更 |
+| Option | Description |
+|--------|-------------|
+| 📝 **Unstaged Changes** | Modifications in the workspace that have not yet been staged |
+| 🌿 **Branch Comparison** | Diff of current branch vs target branch (e.g., `main`) |
+| 📦 **Recent Commits** | Review changes from the last N commits |
 
-确认范围后 → 进入第 5 层。
+After scope confirmed → proceed to Layer 5.
 
-**第 5 层（所有审查路径）— 审查模型确认：**
+**Layer 5 (All review paths) — Review Model Confirmation:**
 
-在开始审查前，确认使用的 AI 模型。不同模型在审查深度、速度和成本上有差异。
+Before starting the review, confirm the AI model to use. Different models differ in review depth, speed, and cost.
 
-1. **获取当前默认模型**：从会话上下文中读取当前模型名称（如系统提示中的 model 信息）
-2. **展示并确认**：
-   > "当前默认审查模型为 **[模型名称]**。是否使用此模型进行审查？"
+1. **Get the current default model**: Read the current model name from session context (e.g., model info from system prompts)
+2. **Display and confirm**:
+   > "The current default review model is **[model name]**. Would you like to use this model for the review?"
 
-   | 选项 | 说明 |
-   |------|------|
-   | ✅ **使用当前模型** | 直接使用默认模型开始审查 |
-   | 🔄 **更换模型** | 让用户指定其他模型 |
+   | Option | Description |
+   |--------|-------------|
+   | ✅ **Use Current Model** | Start review directly with the default model |
+   | 🔄 **Switch Model** | Let the user specify a different model |
 
-3. **更换模型时**：
-   > "请输入你想使用的模型名称（如 `sonnet`、`opus`、`haiku`、`fable`，或具体模型 ID）"
-   - 用户输入后记录到审查上下文，后续 Agent 调用时使用该模型
+3. **When switching models**:
+   > "Please enter the model name you'd like to use (e.g., `sonnet`, `opus`, `haiku`, `fable`, or a specific model ID)"
+   - Record the user's choice in the review context; use that model for subsequent Agent calls
 
-4. **进入审查** → 执行 Step 0c 技术栈扫描 → 推荐技能时优先匹配 `pr-review`、`code-review` 能力。
+4. **Enter review** → Execute Step 0c tech stack scan → Prioritize matching `pr-review`, `code-review` capabilities when recommending skills.
 
-##### 修复 Bug 分支
+##### Fix Bug Branch
 
-「修复 Bug」意图需要先确认目标项目。
+The "Fix Bug" intent needs to first confirm the target project.
 
-**1. 追问目标：**
+**1. Ask for the target:**
 
-使用 `AskUserQuestion` 询问：
-> "你要在哪个项目中修 Bug？是当前工作区的项目，还是其他项目？"
+Use `AskUserQuestion`:
+> "Which project are you fixing a bug in? Is it the current workspace project, or another project?"
 
-**2. 检查本地状态：**
+**2. Check local status:**
 
-- 从用户提供的项目信息对比当前工作区的 git remote
-- 若目标项目不在本地 → 引导 clone
-- Clone 完成后切换到目标项目目录
+- Compare the user's project info against the current workspace git remote
+- If the target project is not local → guide cloning
+- After cloning, switch to the target project directory
 
-**3. 进入 Step 0c：**
+**3. Enter Step 0c:**
 
-- 在正确的项目目录中执行技术栈扫描
-- 推荐技能时优先匹配调试工具 + 通用代码分析技能
+- Execute tech stack scan in the correct project directory
+- Prioritize matching debugging tools + general code analysis skills when recommending
 
-##### 🍴 Fork 项目分支（5 步子程序）
+##### 🍴 Fork Project Branch (5-Step Sub-Process)
 
-「Fork 项目」意图需要依次执行获取仓库、Fork、Clone、项目分析、贡献工作流引导五个步骤。
+The "Fork Project" intent requires executing five steps in order: Get Repository, Fork, Clone, Project Analysis, Contribution Workflow Guide.
 
-**Step 0a-fork-1：获取目标仓库**
+**Step 0a-fork-1: Get Target Repository**
 
-1. 从用户消息中提取 GitHub 仓库标识。支持的格式：
-   - 完整 URL：`https://github.com/owner/repo`
-   - 简写格式：`owner/repo`
-2. 正则提取：`(?:https?://)?github\.com/([a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+)` 或 `\b([a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+)\b`
-3. 若无法提取，使用 `AskUserQuestion`：
-   > "请提供你要参与的开源仓库地址（如 `https://github.com/facebook/react` 或 `facebook/react`）"
-4. 若用户提供非 GitHub URL，提示：
-   > "当前仅支持 GitHub 开源仓库的 Fork 参与。请确认仓库在 GitHub 上。"
+1. Extract the GitHub repository identifier from the user's message. Supported formats:
+   - Full URL: `https://github.com/owner/repo`
+   - Shorthand: `owner/repo`
+2. Regex extraction: `(?:https?://)?github\.com/([a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+)` or `\b([a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+)\b`
+3. If extraction fails, use `AskUserQuestion`:
+   > "Please provide the open-source repository you'd like to contribute to (e.g., `https://github.com/facebook/react` or `facebook/react`)"
+4. If the user provides a non-GitHub URL, prompt:
+   > "Currently, only GitHub open-source repositories are supported for Fork contributions. Please confirm the repository is on GitHub."
 
-**Step 0a-fork-2：Fork 仓库**
+**Step 0a-fork-2: Fork the Repository**
 
-1. 先检查是否已存在 fork：
-   - 使用 `gh repo list <username> --json name --jq '.[].name'` 或 `mcp__plugin_github_github__list_commits` 检查
-2. 若不存在 → 执行 fork：
-   - 优先使用 `gh repo fork <owner/repo> --clone=false`（更可靠）
-   - 备用：GitHub MCP `mcp__plugin_github_github__fork_repository`
-3. 若已存在 → `AskUserQuestion`：
-   > "检测到你已 fork 过 `<owner/repo>`。是否使用已有 fork？"
+1. First check if a fork already exists:
+   - Use `gh repo list <username> --json name --jq '.[].name'` or `mcp__plugin_github_github__list_commits` to check
+2. If not exists → execute fork:
+   - Prefer `gh repo fork <owner/repo> --clone=false` (more reliable)
+   - Fallback: GitHub MCP `mcp__plugin_github_github__fork_repository`
+3. If exists → `AskUserQuestion`:
+   > "I found you already forked `<owner/repo>`. Would you like to use the existing fork?"
 
-   | 选项 | 说明 |
-   |------|------|
-   | ✅ **使用已有 fork** | 直接使用现有的 fork 仓库 |
-   | 🔄 **重新 fork** | 删除已有 fork 并重新创建（`gh repo fork --force`） |
-   | ⬆️ **同步已有 fork** | 将上游仓库的最新变更同步到你的 fork（`gh repo sync`） |
-   | ❌ **取消** | 放弃 Fork 操作 |
+   | Option | Description |
+   |--------|-------------|
+   | ✅ **Use Existing Fork** | Use the existing fork repository directly |
+   | 🔄 **Re-fork** | Delete the existing fork and create a new one (`gh repo fork --force`) |
+   | ⬆️ **Sync Existing Fork** | Sync the latest changes from the upstream repository to your fork (`gh repo sync`) |
+   | ❌ **Cancel** | Abort the Fork operation |
 
-4. Fork 成功后记录变量：
-   - `_FORK_UPSTREAM = "owner/repo"`（上游仓库）
-   - `_FORK_REPO = "your-username/repo"`（你的 fork）
+4. After successful fork, record variables:
+   - `_FORK_UPSTREAM = "owner/repo"` (upstream repository)
+   - `_FORK_REPO = "your-username/repo"` (your fork)
 
-**Step 0a-fork-3：Clone 到本地**
+**Step 0a-fork-3: Clone to Local**
 
-1. 询问用户 clone 目标目录（默认当前工作区下的 `<repo-name>`）
-2. 检查本地是否已存在该目录：
-   - 不存在 → 执行 `gh repo clone <your-username/repo>` 或 `git clone https://github.com/<your-username/repo>.git`
-   - 已存在 → `AskUserQuestion`：
-     > "本地已存在同名目录。怎么处理？"
-     - ✅ 复用现有目录 / 🔄 重新 clone / ❌ 取消
-3. Clone 后设置 upstream：
+1. Ask the user for the clone target directory (default: `<repo-name>` under the current workspace)
+2. Check if the directory already exists locally:
+   - Not exists → execute `gh repo clone <your-username/repo>` or `git clone https://github.com/<your-username/repo>.git`
+   - Exists → `AskUserQuestion`:
+     > "A directory with the same name already exists locally. How would you like to proceed?"
+     - ✅ Reuse existing directory / 🔄 Re-clone / ❌ Cancel
+3. After cloning, set up upstream:
    ```bash
    cd <repo-name>
-   git remote add upstream https://github.com/<owner/repo>.git  # 如尚未添加
+   git remote add upstream https://github.com/<owner/repo>.git  # If not already added
    git fetch upstream
    ```
-4. 记录 `_FORK_LOCAL_PATH = "<clone-path>"`
+4. Record `_FORK_LOCAL_PATH = "<clone-path>"`
 
-**Step 0a-fork-4：项目分析**
+**Step 0a-fork-4: Project Analysis**
 
-1. 进入 clone 目录后，提示用户执行技术栈扫描：
-   > "已 clone [repo] 到本地。建议先扫描项目技术栈，帮助你快速理解项目结构。是否开始分析？"
+1. After entering the cloned directory, prompt the user to run a tech stack scan:
+   > "[repo] has been cloned locally. It's recommended to scan the project tech stack first to help you quickly understand the project structure. Would you like to start the analysis?"
 
-   | 选项 | 说明 |
-   |------|------|
-   | ✅ **开始分析** | 执行 Step 0c 技术栈确认 + 能力发现 |
-   | ⏭️ **跳过** | 跳过技术栈扫描，直接进入贡献工作流引导 |
+   | Option | Description |
+   |--------|-------------|
+   | ✅ **Start Analysis** | Execute Step 0c Tech Stack Confirmation + Capability Discovery |
+   | ⏭️ **Skip** | Skip the tech stack scan and go directly to contribution workflow guidance |
 
-2. 若用户选择「开始分析」，执行完整的 Step 0c 流程（0c-1 至 0c-7）
-3. 额外检查：
-   - 读取上游 `CONTRIBUTING.md`（如存在）
-   - 检查 `.github/` 目录下的 PR 模板、Issue 模板
-   - 读取 `LICENSE` 文件
-4. 展示项目概览摘要（技术栈 + 贡献指南要点 + 许可证类型）
+2. If the user chooses "Start Analysis", execute the full Step 0c flow (0c-1 through 0c-7)
+3. Additional checks:
+   - Read the upstream `CONTRIBUTING.md` (if it exists)
+   - Check `.github/` directory for PR templates, Issue templates
+   - Read the `LICENSE` file
+4. Display project overview summary (tech stack + contribution guide highlights + license type)
 
-**联动钩子（仅 PACKAGE_MODE = true 时执行）：**
-在项目分析完成后，匹配 `integrates_with: pr-management`：
-- 若检测到兄弟技能 `github-pr-manager` 可用 → 提示："💡 完成改动后，可以使用 **GitHub PR 管理器** 来创建和管理你的 Pull Request。"
+**Linkage Hooks (only when PACKAGE_MODE = true):**
+After project analysis completes, match `integrates_with: pr-management`:
+- If sibling skill `github-pr-manager` is detected as available → prompt: "💡 After making changes, you can use the **GitHub PR Manager** to create and manage your Pull Request."
 
-**Step 0a-fork-5：贡献工作流引导**
+**Step 0a-fork-5: Contribution Workflow Guide**
 
-1. 展示贡献流程概览：
+1. Display the contribution process overview:
    ```
-   ## 🍴 Fork 贡献流程
+   ## 🍴 Fork Contribution Flow
    
-   1. ✅ Fork 仓库 → [fork-url]
-   2. ✅ Clone 到本地 → [local-path]
-   3. ✅ 项目分析 → [tech-stack]
-   4. 📝 创建功能分支 → 待执行
-   5. 🔨 开发改动 → 待执行
-   6. 📤 推送并创建 PR → 待执行
+   1. ✅ Fork Repository → [fork-url]
+   2. ✅ Clone to Local → [local-path]
+   3. ✅ Project Analysis → [tech-stack]
+   4. 📝 Create Feature Branch → Pending
+   5. 🔨 Develop Changes → Pending
+   6. 📤 Push and Create PR → Pending
    ```
 
-2. 引导创建功能分支：
-   > "建议为你的改动创建一个功能分支。分支名称格式：`feat/<description>` 或 `fix/<description>`"
-   - 让用户输入分支名，或根据描述自动建议
+2. Guide creating a feature branch:
+   > "I recommend creating a feature branch for your changes. Branch name format: `feat/<description>` or `fix/<description>`"
+   - Let the user enter a branch name, or auto-suggest based on description
 
-3. **联动钩子（仅 PACKAGE_MODE = true）**：
-   - 匹配 `integrates_with: pr-management` → 提示："💡 改动完成后，可使用 **GitHub PR 管理器** 创建和管理你的 Pull Request。"
-   - 匹配 `integrates_with: plugin-installation` 中的 `git-commit` → 提示："💡 提交代码时，可使用 **Git 提交助手** 自动生成 Conventional Commits 消息。"
+3. **Linkage Hooks (only when PACKAGE_MODE = true):**
+   - Match `integrates_with: pr-management` → prompt: "💡 After making changes, you can use the **GitHub PR Manager** to create and manage your Pull Request."
+   - Match `git-commit` within `integrates_with: plugin-installation` → prompt: "💡 When committing code, you can use the **Git Commit Helper** to auto-generate Conventional Commits messages."
 
-4. 总结下一步：
-   > "项目已就绪。接下来的流程：做改动 → `git add` + `git commit` → `git push origin <branch>` → 创建 PR。如需帮助，随时告诉我。"
+4. Summarize next steps:
+   > "Your project is ready. Next steps: make changes → `git add` + `git commit` → `git push origin <branch>` → create PR. Let me know if you need any help."
 
-#### Step 0b：语言/框架确认（仅「启动新项目」时追问）
+#### Step 0b: Language/Framework Confirmation (Only for "Start New Project")
 
-> "你想用什么编程语言/框架？"
+> "What programming language/framework would you like to use?"
 
-| 选项 | 说明 |
-|------|------|
-| 🟢 **Python** | AI/ML、数据分析、Web 后端、脚本自动化 |
-| 🟡 **JavaScript/TypeScript** | Web 全栈、前端、跨平台 |
-| 🔵 **Java/Kotlin** | 企业级后端、Android |
-| 🟣 **Rust** | 系统编程、高性能场景 |
-| ⚪ **Go** | 云原生、微服务、CLI 工具 |
-| 🟠 **C# (.NET)** | Windows 桌面、游戏、企业应用 |
-| 🔴 **Swift** | Apple 生态 (iOS/macOS) |
-| 🤔 **我不确定，帮我推荐** | → 追问项目类型 → 加载 `references/language-guide.md` → 列出优劣势 + 推荐 |
+| Option | Description |
+|--------|-------------|
+| 🟢 **Python** | AI/ML, data analysis, web backend, script automation |
+| 🟡 **JavaScript/TypeScript** | Web full-stack, frontend, cross-platform |
+| 🔵 **Java/Kotlin** | Enterprise backend, Android |
+| 🟣 **Rust** | Systems programming, high-performance scenarios |
+| ⚪ **Go** | Cloud-native, microservices, CLI tools |
+| 🟠 **C# (.NET)** | Windows desktop, games, enterprise applications |
+| 🔴 **Swift** | Apple ecosystem (iOS/macOS) |
+| 🤔 **Not sure, recommend for me** | → Ask for project type → Load `references/language-guide.md` → List pros/cons + recommendation |
 
-**「我不确定」分支的推荐逻辑：**
+**"Not sure" branch recommendation logic:**
 
-1. 追问项目类型：Web 应用 / 移动 App / 桌面应用 / CLI 工具 / AI/ML / 游戏 / 嵌入式
-2. 追问关注点：开发速度 / 运行性能 / 生态丰富度 / 学习曲线
-3. 加载 `references/language-guide.md`，输出推荐表：
+1. Ask for project type: Web App / Mobile App / Desktop App / CLI Tool / AI/ML / Game / Embedded
+2. Ask for priorities: Development speed / Runtime performance / Ecosystem richness / Learning curve
+3. Load `references/language-guide.md`, output recommendation table:
 
 ```
-## 语言推荐
+## Language Recommendation
 
-根据你的需求（[项目类型] + [关注点]），推荐以下语言：
+Based on your needs ([project type] + [priorities]), the following languages are recommended:
 
-| 语言 | 适合度 | 优势 | 劣势 |
-|------|--------|------|------|
-| [语言A] | ⭐⭐⭐⭐⭐ | [优势] | [劣势] |
-| [语言B] | ⭐⭐⭐⭐ | [优势] | [劣势] |
-| [语言C] | ⭐⭐⭐ | [优势] | [劣势] |
+| Language | Suitability | Advantages | Disadvantages |
+|----------|-------------|------------|---------------|
+| [Language A] | ⭐⭐⭐⭐⭐ | [Advantages] | [Disadvantages] |
+| [Language B] | ⭐⭐⭐⭐ | [Advantages] | [Disadvantages] |
+| [Language C] | ⭐⭐⭐ | [Advantages] | [Disadvantages] |
 
-**推荐首选：[语言]** — [一句话理由]
+**Top Recommendation: [Language]** — [One-line rationale]
 ```
 
-用户确认语言后，进入强制六步流程。
+After the user confirms the language, proceed to the mandatory six-step process.
 
-#### Step 0c：技术栈确认 + 能力发现（7 步子程序）
+#### Step 0c: Tech Stack Confirmation + Capability Discovery (7-Step Sub-Process)
 
-详细算法参见 `references/scanner-patterns.md`。
+See `references/scanner-patterns.md` for the detailed algorithm.
 
 ---
 
-**0c-1. 项目指纹扫描**
+**0c-1. Project Fingerprint Scan**
 
-**扫描前 — 缓存检查：**
+**Before scanning — Cache check:**
 
-1. 检查会话上下文中是否存在 `_SCAN_CACHE` 记录（包含 `timestamp` 和 `fingerprint`）
-2. 若存在缓存记录：
-   - 读取 `.discovery-rules.json` 中的 `cache_ttl_hours`（默认 24 小时）
-   - 若距上次扫描未超过 TTL → 复用缓存指纹和扫描结果，跳过 0c-1 和 0c-2，直接进入 0c-3
-   - 若已超过 TTL → 继续执行完整扫描
-3. 若不存在缓存记录（首次扫描）→ 继续执行完整扫描
+1. Check if a `_SCAN_CACHE` record exists in the session context (containing `timestamp` and `fingerprint`)
+2. If a cached record exists:
+   - Read `cache_ttl_hours` from `.discovery-rules.json` (default 24 hours)
+   - If last scan is within TTL → reuse cached fingerprint and scan results, skip 0c-1 and 0c-2, go directly to 0c-3
+   - If TTL exceeded → continue with full scan
+3. If no cached record (first scan) → continue with full scan
 
-对已有项目执行扫描。使用 `Glob` 检查以下文件（扩展的检测矩阵在 `references/scanner-patterns.md` §Fingerprint Detection Map）：
+Scan existing projects. Use `Glob` to check for the following files (extended detection matrix in `references/scanner-patterns.md` §Fingerprint Detection Map):
 
-| 文件 | 推断结果 |
-|------|---------|
+| File | Inference |
+|------|-----------|
 | `pom.xml` | Java + Maven |
 | `build.gradle` / `build.gradle.kts` | Java/Kotlin + Gradle |
 | `package.json` | Node.js / JavaScript / TypeScript |
@@ -361,7 +361,7 @@ metadata:
 | `*.sln` / `*.csproj` | .NET / C# |
 | `CMakeLists.txt` | C/C++ |
 | `pubspec.yaml` | Flutter/Dart |
-| `Package.swift` / `*.xcodeproj` | Swift / Apple 生态 |
+| `Package.swift` / `*.xcodeproj` | Swift / Apple Ecosystem |
 | `docker-compose.yml` / `Dockerfile` | DevOps / Container |
 | `next.config.*` | Next.js |
 | `vite.config.*` | Vite |
@@ -374,456 +374,455 @@ metadata:
 | `schema.prisma` | Prisma |
 | `schema.graphql` | GraphQL |
 
-- 如果 `package.json` 存在，`Read` 其 `dependencies` 和 `devDependencies` 提取框架关键词
-- 如果 `pom.xml` 存在，`Grep` 查找 `<artifactId>` 和 `<parent>` 检测 Spring Boot、Quarkus 等
-- 检测 `app/` 或 `src/` 子目录作为补充信号
+- If `package.json` exists, `Read` its `dependencies` and `devDependencies` to extract framework keywords
+- If `pom.xml` exists, `Grep` for `<artifactId>` and `<parent>` to detect Spring Boot, Quarkus, etc.
+- Check `app/` or `src/` subdirectories as supplementary signals
 
-**对全新项目：** 直接使用 Step 0b 选择的语言/框架。
+**For brand new projects:** Directly use the language/framework from Step 0b.
 
-**输出：** 项目指纹（逗号分隔标签，如 `java, spring-boot, maven, postgresql`）。
+**Output:** Project fingerprint (comma-separated tags, e.g., `java, spring-boot, maven, postgresql`).
 
-**联动钩子（仅 PACKAGE_MODE = true）：** 检测 `.git/config` 中 GitHub remote，若存在则匹配 `integrates_with: pr-management`，提示 "💡 检测到 GitHub 项目。推荐使用 **GitHub PR 管理器** 来管理此仓库的 Pull Request。"
+**Linkage Hooks (only when PACKAGE_MODE = true):** Check `.git/config` for a GitHub remote. If found, match `integrates_with: pr-management`, prompt "💡 GitHub project detected. It is recommended to use the **GitHub PR Manager** to manage Pull Requests for this repository."
 
 ---
 
-**0c-2. 能力清单扫描（并行执行）**
+**0c-2. Capability Inventory Scan (Parallel Execution)**
 
-加载 `references/scanner-patterns.md` 进行并行三路扫描。
+Load `references/scanner-patterns.md` for parallel three-way scanning.
 
-**扫描前 — 读取深度探索配置：**
+**Before scanning — Read deep exploration configuration:**
 
-1. 尝试读取 `~/.claude/skills/.discovery-rules.json`
-2. 若文件存在且定义了 `deep_explore_plugins`（字符串数组）→ 使用该列表作为深度探索目标
-3. 若文件存在且定义了 `priority_boost_plugins`（字符串数组）→ 使用该列表作为优先级加成插件
-4. 若文件不存在或字段缺失 → 使用内置默认值：
+1. Attempt to read `~/.claude/skills/.discovery-rules.json`
+2. If the file exists and defines `deep_explore_plugins` (array of strings) → use that list as deep exploration targets
+3. If the file exists and defines `priority_boost_plugins` (array of strings) → use that list as priority boost plugins
+4. If the file does not exist or fields are missing → use built-in defaults:
    - `deep_explore_plugins`: `["everything-claude-code", "superpowers", "andrej-karpathy-skills", "oh-my-claudecode"]`
    - `priority_boost_plugins`: `["everything-claude-code", "superpowers", "andrej-karpathy-skills"]`
 
-**2a. 技能扫描：** Glob `~/.claude/skills/*/SKILL.md`，解析 frontmatter 提取 name、description、tags、category、source。
+**2a. Skill Scan:** Glob `~/.claude/skills/*/SKILL.md`, parse frontmatter to extract name, description, tags, category, source.
 
-**2b. 插件扫描：**
-- MCP 配置：读取 `~/.claude/settings.json` → `mcpServers`，提取 server name、type、command、description
-- 本地插件：Glob `~/.claude/plugins/*/plugin.json` 或 `package.json`
+**2b. Plugin Scan:**
+- MCP Configuration: Read `~/.claude/settings.json` → `mcpServers`, extract server name, type, command, description
+- Local plugins: Glob `~/.claude/plugins/*/plugin.json` or `package.json`
 
-**2c. 深度探索（必需，参见 scanner-patterns.md §Deep Exploration Reference）：**
-对上一步确定的深度探索目标插件列表执行深度探索：
-- 列出根级 `.md`/`.json`/`.yaml`/`.yml`/`.mdc` 文件（跳过 node_modules、.git）
-- 读取每个 `.md` 文件前 5-10 行识别用途
-- 扫描嵌套技能（`.agents/skills/*/SKILL.md`）
-- 提取 `.mdc` 规则文件名和描述
-- 输出格式：tagged with `source: deep-exploration` and `plugin: <name>`，每项含 name、type (soul/rules/agents/claude-md/commands-ref/nested-skill)、description、path
-
----
-
-**0c-3. 匹配与排序**
-
-加载 `references/scanner-patterns.md` §Skill-to-Project Matching Algorithm + §Priority Boost System。
-
-**技能评分：** 标签匹配 +3、框架匹配 +3、类别对齐 +1、通用 +0
-**插件评分：** 工具匹配 +3、领域匹配 +1、通用 +0
-
-**优先级加成系统（Priority Boost）：**
-检测到 ECC、superpowers、andrej-karpathy-skills、oh-my-claudecode 或深度资源时 → base score = max(normal_score, 10)，标记 ⭐ 置顶。
-
-**按意图过滤：**
-
-| 意图 | 优先推荐 | 降权 |
-|------|---------|------|
-| 开发新功能 | 对应语言的开发技能、代码生成工具 | 审查/调试类 |
-| 审查代码 | 代码审查、PR 审查、lint 技能 | — |
-| 修复 Bug | 调试、错误追踪、测试技能 | — |
-| Fork 项目 | 项目分析、贡献指南、PR 管理、代码审查相关技能 | — |
-| 探索工具 | 不做过滤，展示全部匹配结果 | — |
-
-**输出三个独立列表（始终按此顺序）：**
-1. ⭐ 优先推荐（加成插件/深度资源 — 始终最先）
-2. 📋 推荐技能（top 5-10，项目匹配）
-3. 🔌 推荐插件（top 3-5，项目匹配）
-
-未匹配项保留给 Step 0c-6 全量导出。
+**2c. Deep Exploration (Required, see scanner-patterns.md §Deep Exploration Reference):**
+Execute deep exploration on the list of deep exploration target plugins determined above:
+- List root-level `.md`/`.json`/`.yaml`/`.yml`/`.mdc` files (skip node_modules, .git)
+- Read the first 5-10 lines of each `.md` file to identify purpose
+- Scan nested skills (`.agents/skills/*/SKILL.md`)
+- Extract `.mdc` rule filenames and descriptions
+- Output format: tagged with `source: deep-exploration` and `plugin: <name>`, each entry with name, type (soul/rules/agents/claude-md/commands-ref/nested-skill), description, path
 
 ---
 
-**0c-4. 交互式推荐（⚠️ 强制步骤）**
+**0c-3. Matching and Ranking**
 
-展示推荐结果，使用以下模板：
+Load `references/scanner-patterns.md` §Skill-to-Project Matching Algorithm + §Priority Boost System.
+
+**Skill Scoring:** Tag match +3, Framework match +3, Category alignment +1, General +0
+**Plugin Scoring:** Tool match +3, Domain match +1, General +0
+
+**Priority Boost System:**
+When ECC, superpowers, andrej-karpathy-skills, oh-my-claudecode, or deep resources are detected → base score = max(normal_score, 10), mark with ⭐ pinned to top.
+
+**Filter by intent:**
+
+| Intent | Prioritize | Deprioritize |
+|--------|------------|--------------|
+| Develop New Feature | Language-specific development skills, code generation tools | Review/debugging categories |
+| Review Code | Code review, PR review, lint skills | — |
+| Fix Bug | Debugging, error tracking, testing skills | — |
+| Fork Project | Project analysis, contribution guide, PR management, code review-related skills | — |
+| Explore Tools | No filtering, show all matched results | — |
+
+**Output three separate lists (always in this order):**
+1. ⭐ Priority Recommendations (boosted plugins/deep resources — always first)
+2. 📋 Recommended Skills (top 5-10, project-matched)
+3. 🔌 Recommended Plugins (top 3-5, project-matched)
+
+Unmatched items are kept for Step 0c-6 full export.
+
+---
+
+**0c-4. Interactive Recommendation (⚠️ Mandatory Step)**
+
+Display recommendation results using the following template:
 
 ```markdown
-## 🔍 项目识别结果
+## 🔍 Project Identification Results
 
-**项目:** [项目名或路径]
-**技术栈:** [语言] + [框架] + [构建工具]
-**检测依据:** [发现的配置文件列表]
+**Project:** [project name or path]
+**Tech Stack:** [language] + [framework] + [build tool]
+**Detection Basis:** [list of discovered config files]
 
-## ⭐ 优先推荐（核心能力增强）
+## ⭐ Priority Recommendations (Core Capability Enhancement)
 
-> 以下插件/资源提供基础能力增强，无论项目类型都强烈建议启用。
+> The following plugins/resources provide foundational capability enhancement and are strongly recommended regardless of project type.
 
-| # | 名称 | 类型 | 描述 | 包含的未加载资源 |
-|---|------|------|------|----------------|
-| 1 | `everything-claude-code` | 插件 | AI 行为配置/安全指南 | SOUL.md, RULES.md, AGENTS.md, COMMANDS-QUICK-REF.md, WORKING-CONTEXT.md, the-security-guide.md, agent.yaml, 嵌套技能 |
-| 2 | `superpowers` | 插件 | 核心工作流技能 | AGENTS.md, hooks.json, GEMINI.md |
-| 3 | `andrej-karpathy-skills` | 插件 | Karpathy 编码准则 | CURSOR.md, karpathy-guidelines.mdc |
-| 4 | `oh-my-claudecode` | 插件 | 多 Agent 编排 | 数十个嵌套技能 (`.agents/skills/*/SKILL.md`) |
+| # | Name | Type | Description | Unloaded Resources Included |
+|---|------|------|-------------|----------------------------|
+| 1 | `everything-claude-code` | Plugin | AI behavior configuration / security guide | SOUL.md, RULES.md, AGENTS.md, COMMANDS-QUICK-REF.md, WORKING-CONTEXT.md, the-security-guide.md, agent.yaml, nested skills |
+| 2 | `superpowers` | Plugin | Core workflow skills | AGENTS.md, hooks.json, GEMINI.md |
+| 3 | `andrej-karpathy-skills` | Plugin | Karpathy coding guidelines | CURSOR.md, karpathy-guidelines.mdc |
+| 4 | `oh-my-claudecode` | Plugin | Multi-Agent orchestration | Dozens of nested skills (`.agents/skills/*/SKILL.md`) |
 
-## 📋 推荐技能（按匹配度排序）
+## 📋 Recommended Skills (Sorted by Match)
 
-| # | 名称 | 描述 | 匹配理由 | 来源 |
-|---|------|------|---------|------|
+| # | Name | Description | Match Reason | Source |
+|---|------|-------------|--------------|--------|
 
-## 🔌 推荐插件（按匹配度排序）
+## 🔌 Recommended Plugins (Sorted by Match)
 
-| # | 名称 | 描述 | 匹配理由 | 类型 |
-|---|------|------|---------|------|
+| # | Name | Description | Match Reason | Type |
+|---|------|-------------|--------------|------|
 ```
 
-> 💡 如插件列表为空，则显示："未检测到与当前项目强相关的插件。"
+> 💡 If the plugin list is empty, display: "No strongly related plugins detected for the current project."
 
-**使用 `AskUserQuestion` 询问：**
-> "以上是根据当前项目为您推荐的技能、插件和未加载资源，请问您希望如何处理？"
+**Use `AskUserQuestion` to prompt:**
+> "Based on your current project, these are the recommended skills, plugins, and unloaded resources. How would you like to proceed?"
 
-提供以下选项：
-- **一键启用所有推荐** — 在后续对话中主动使用所有推荐项
-- **逐项选择** — 由用户指定启用哪些（可输入编号）
-- **跳过，本次不启用** — 记录选择，本次会话不再重复推荐
-- **了解更多** — 展开某个技能/插件/深度资源的详细说明（用户指定名称）
-- **加载未加载资源** — 对深度探索发现的 SOUL/RULES/AGENTS 等文件，询问是否需要手动加载
+Provide the following options:
+- **Enable All Recommendations** — Actively use all recommended items in subsequent conversation
+- **Select Individually** — Let the user specify which ones to enable (enter by number)
+- **Skip, Don't Enable This Time** — Record the choice, no repeated recommendations for this session
+- **Learn More** — Expand detailed explanation for a specific skill/plugin/deep resource (user specifies name)
+- **Load Unloaded Resources** — For SOUL/RULES/AGENTS files discovered during deep exploration, ask if manual loading is needed
 
-**联动钩子（仅 PACKAGE_MODE = true）：**
+**Linkage Hooks (only when PACKAGE_MODE = true):**
 
-对推荐列表中未安装的插件标记 🆕。用户选择后，匹配 `integrates_with: plugin-installation`：
-- 若用户选择了未安装的能力 → 提示："💡 检测到你尚未安装 [name]。是否需要使用 **快速插件安装器** 来安装它？"
+Mark uninstalled plugins in the recommendation list with 🆕. After user selection, match `integrates_with: plugin-installation`:
+- If the user selected an uninstalled capability → prompt: "💡 It looks like [name] is not yet installed. Would you like to use the **Quick Plugin Installer** to install it?"
 
 ---
 
-**0c-5. 指令发现（仅在用户完成 0c-4 选择后执行）**
+**0c-5. Command Discovery (Only Runs After User Completes 0c-4 Selection)**
 
-⚠️ 若用户选择「跳过」→ 跳至 0c-6
+⚠️ If the user chooses "Skip" → jump to 0c-6
 
-加载 `references/scanner-patterns.md` §Command Discovery Reference。
+Load `references/scanner-patterns.md` §Command Discovery Reference.
 
-**5a. MCP 工具发现（仅扫描用户已选择的插件）：**
-1. 使用 `ListMcpResourcesTool` 枚举 MCP 资源，或扫描系统提示中 `mcp__` 前缀工具
-2. 仅过滤属于用户**已选择**插件的工具
-3. 每个工具推断：作用（做什么）+ 适用场景（什么时候用）
+**5a. MCP Tool Discovery (only scan plugins the user selected):**
+1. Use `ListMcpResourcesTool` to enumerate MCP resources, or scan system prompts for `mcp__` prefixed tools
+2. Only filter tools belonging to the user's **selected** plugins
+3. For each tool, infer: purpose (what it does) + applicable scenario (when to use it)
 
-**5b. Slash 命令发现：**
-从系统提示中提取 `/` 命令，匹配所选技能类别/能力
+**5b. Slash Command Discovery:**
+Extract `/` commands from system prompts, matching the selected skill categories/capabilities
 
-**5c. 展示模板：**
+**5c. Display Template:**
 
 ```markdown
-## 🔧 所选工具的可用指令
+## 🔧 Available Commands for Selected Tools
 
-根据您选择的 [skill-names] 和 [plugin-names]，以下是可用的指令：
+Based on your selection of [skill-names] and [plugin-names], here are the available commands:
 
-### 🛠 MCP 工具指令
+### 🛠 MCP Tool Commands
 
 #### [Selected Plugin Name]
-| 工具名称 | 作用 | 适用场景 |
-|---------|------|---------|
-| `mcp__*__tool_name` | [一句话描述] | [什么情况下使用] |
+| Tool Name | Purpose | Applicable Scenario |
+|-----------|---------|---------------------|
+| `mcp__*__tool_name` | [one-line description] | [when to use] |
 
-### ⌨️ 相关 Slash 命令
+### ⌨️ Related Slash Commands
 
-| 命令 | 作用 | 适用场景 |
-|------|------|---------|
-| `/command-name` | [功能描述] | [什么情况下使用] |
+| Command | Purpose | Applicable Scenario |
+|---------|---------|---------------------|
+| `/command-name` | [function description] | [when to use] |
 ```
 
-> 💡 如果选中的插件没有 MCP 工具或当前无 MCP 连接，显示："所选插件当前无可用的 MCP 工具指令。"
-> 💡 Slash 命令始终可用，至少列出与所选技能相关的通用命令。
+> 💡 If the selected plugins have no MCP tools or there is no MCP connection, display: "Selected plugins currently have no available MCP tool commands."
+> 💡 Slash commands are always available; at least list general commands related to the selected skills.
 
 ---
 
-**0c-6. 全量导出（⚠️ 先问后导）**
+**0c-6. Full Export (⚠️ Ask Before Exporting)**
 
-必须获得用户同意后才导出。
+Must obtain user consent before exporting.
 
-询问用户：
-> "是否需要将所有已安装的技能、插件和指令完整列表导出到文件？这样您可以离线浏览所有可用能力。"
+Ask the user:
+> "Would you like to export a complete list of all installed skills, plugins, and commands to a file? This way you can browse all available capabilities offline."
 
-若用户同意，追问三个选项（使用 `AskUserQuestion`）：
-1. **目标导出目录** — 输入路径（如 `D:\docs\skills-list\`）
-2. **输出语言** — 自由输入任意语言（默认跟随当前对话语言）
-3. **输出格式** — `Markdown`（推荐）/ `JSON` / `纯文本`
+If the user agrees, ask three follow-up questions (using `AskUserQuestion`):
+1. **Target export directory** — enter a path (e.g., `D:\docs\skills-list\`)
+2. **Output language** — free input of any language (default: follow the current conversation language)
+3. **Output format** — `Markdown` (recommended) / `JSON` / `Plain Text`
 
-**导出内容结构：** 加载 `references/scanner-patterns.md` §Export Field Definitions。
+**Export Content Structure:** Load `references/scanner-patterns.md` §Export Field Definitions.
 
-导出文件命名：`{project-name}-skills-plugins-export.{format}`
+Export file naming: `{project-name}-skills-plugins-export.{format}`
 
 ```markdown
-# [标题 — 使用用户指定语言]
+# [Title — in user-specified language]
 
-> 导出时间: [timestamp]
-> 项目: [project path]
-> 总计: [N] 个技能, [M] 个插件, [K] 个指令
-> 语言: [用户指定的语言]
+> Export time: [timestamp]
+> Project: [project path]
+> Total: [N] skills, [M] plugins, [K] commands
+> Language: [user-specified language]
 
-## 📋 技能 (Skills) — 按分类
+## 📋 Skills — By Category
 
 ### [Category]
-| 名称 | 描述 | 标签 | 来源 | 文件路径 |
+| Name | Description | Tags | Source | File Path |
 | ... | ... | ... | ... | ... |
 
-## 🔌 插件 (Plugins) — 按类型
+## 🔌 Plugins — By Type
 
 ### [Type]
-| 名称 | 类型 | 命令 | 描述 | 来源 |
+| Name | Type | Command | Description | Source |
 | ... | ... | ... | ... | ... |
 
-## 🔧 指令 (Commands)
+## 🔧 Commands
 
-### 🛠 MCP 工具指令 — 按插件分组
+### 🛠 MCP Tool Commands — Grouped by Plugin
 
 #### [Plugin Name]
-| 工具名称 | 作用 | 适用场景 |
-|---------|------|---------|
+| Tool Name | Purpose | Applicable Scenario |
+|-----------|---------|---------------------|
 
-### ⌨️ Slash 命令 — 按分类
+### ⌨️ Slash Commands — By Category
 
 #### [Category]
-| 命令 | 作用 | 适用场景 |
-|------|------|---------|
+| Command | Purpose | Applicable Scenario |
+|---------|---------|---------------------|
 ```
 
 ---
 
-**0c-7. 上下文持久化**
+**0c-7. Context Persistence**
 
-- 用户选择「跳过」→ 记录到会话上下文，本次会话不再重复推荐（除非项目指纹显著变化）
-- 用户选择特定技能/插件 → 记录接受列表，供后续联动引用
-- 项目指纹显著变化时重新触发发现。**显著变化定义为以下任一：**
-  - 新增了任意语言/框架配置文件（如新出现 `package.json`、`go.mod`、`Cargo.toml`、`pom.xml` 等）
-  - 新增了子目录且子目录包含独立的项目配置文件
-  - 用户通过 `git checkout` 切换到了不同技术栈的分支
-  - 工作目录切换到了同一 monorepo 的不同子项目
-- **仅文件内容修改（不改变技术栈）不触发重新发现**
-- 其他包内技能完成主要操作后 → 提示联动发现
-- **缓存记录**：扫描完成后，在会话上下文中记录 `_SCAN_CACHE = { timestamp: <当前时间>, fingerprint: <项目指纹标签>, ttl_hours: <从 rules 读取的 cache_ttl_hours，默认 24> }`，供后续调用复用
-
----
-
-非「启动新项目」意图在此步骤结束，不进入强制六步流程。但能力扫描结果可作为后续工作的上下文。
+- User chooses "Skip" → record in session context, do not repeat recommendations in this session (unless project fingerprint changes significantly)
+- User selects specific skills/plugins → record acceptance list for subsequent linkage references
+- Re-trigger discovery when the project fingerprint changes significantly. **Significant change is defined as any of the following:**
+  - A new language/framework configuration file is added (e.g., new `package.json`, `go.mod`, `Cargo.toml`, `pom.xml`, etc.)
+  - A new subdirectory is added that contains its own project configuration files
+  - The user switches to a branch with a different tech stack via `git checkout`
+  - The working directory switches to a different subproject within the same monorepo
+- **Content-only modifications (without changing the tech stack) do not trigger re-discovery**
+- After other in-package skills complete their main operation → prompt linked discovery
+- **Cache Record**: After scanning completes, record `_SCAN_CACHE = { timestamp: <current time>, fingerprint: <project fingerprint tags>, ttl_hours: <cache_ttl_hours from rules, default 24> }` in the session context for reuse on subsequent calls
 
 ---
 
-### 强制六步流程（仅「启动新项目」时执行）
-
-以下六步是原 kickoff 的完整流程，**必须按顺序执行**。
-
-### 第一步：澄清"为什么"与"是什么"
-向用户提问（至少覆盖以下 3 个问题）：
-1. 这个项目解决了谁的什么痛点？不做会有什么损失？
-2. 成功的可衡量标准是什么？（例如：日活>1000，成本<0.1元/次，首个付费用户等）
-3. 请用一句话填空："我们要为【谁】解决【什么问题】，通过【什么方式】，达到【什么效果】。"
-
-- 如果用户无法回答第 3 问，则引导其先完成"一句话定义"，再继续。
-- 如果是 AI Agent 项目，额外追问："不用 Agent 行不行？规则引擎能否解决？"
-- 如需更详细的问题定义指导，加载 `references/project-checklist.md` 第一章或 `references/ai-agent-checklist.md` 第一章。
-
-### 第二步：圈定边界 – 明确"不做什么"
-要求用户列出第一版的所有想做的功能，然后：
-- 强制砍掉 80%，只保留**能验证核心假设的最小集合（MVP）**。
-- 明确三重约束（时间、成本/资源、质量/范围），并指出"最多只能同时保两个"。
-- 如果是 Agent 项目，额外列出**禁飞区**（例如：不能删除生产数据、不能对外转账、不能发送未审核内容）。
-- 边界讨论遇到困难时，加载 `references/project-checklist.md` 第二章。
-
-**联动钩子（仅 PACKAGE_MODE = true 时执行）：**
-
-确认项目技术栈后，扫描兄弟技能的 `capabilities`，匹配 `integrates_with: plugin-installation`：
-- 匹配成功 → 提示用户："💡 检测到你的项目使用 [技术栈]。是否需要安装相关的 MCP Server（如 GitHub MCP、Playwright、Context7）来增强开发体验？"
-
-### 第三步：快速风险摸底
-让用户回答：
-- 技术、人力、市场、合规四方面是否有明显障碍？
-- 写下**最可能让项目失败的三件事**，并为每件想一个 B 计划（即便只是"换方案，慢 30%"）。
-- 对于 AI Agent：用当前最强模型做"纸上原型"手动模拟 3~5 步，观察是否会跑偏。若跑偏，要求简化任务或增加护栏。
-- 详细可行性分析模板参见 `references/project-checklist.md` 第三章；Agent 特有风险评估参见 `references/ai-agent-checklist.md` 第四章。
-
-### 第四步：利益相关者与期望对齐
-- 引导用户识别核心圈（执行者）、影响圈（资源方）、外围圈（用户/监管）。
-- 强制建议："拿着第一步的'项目定义'和'成功标准'，去跟关键人物口头确认一次，再继续。"
-- 完整利益相关者分析指导参见 `references/project-checklist.md` 第四章。
-
-### 第五步：绘制粗糙路线图（仅里程碑）
-- 输出 3~5 个里程碑（以周为单位），每个里程碑必须有明确的**产出物**和**验收标准**。
-- 最后，要求用户确认以下开工 Checklist：
-  - ☑ 项目定义与目标已和关键人确认
-  - ☑ MVP 范围已明确（以及不做什么）
-  - ☑ 资源（时间、钱、人）已到位或得到承诺
-  - ☑ 前三风险已有应对预案
-  - ☑ 代码仓库、沟通群组、文档协作工具已就绪
-- 路线图设计参考参见 `references/project-checklist.md` 第五章。
-
-### 第六步（关键）：生成 CLAUDE.md —— 将思考成果固化到项目
-
-在完成五步检查并确认代码风格后，**必须**执行以下流程：
-
-#### 6a. 确认用户意愿
-向用户确认：
-> "我们已经完成了五步启动检查，并确认了项目的代码风格。现在要调用 /init 生成项目的 CLAUDE.md，把刚才讨论的内容 —— 项目定义、MVP 范围、里程碑、风险预案、风格约定 —— 都固化到项目根目录。是否继续？"
-
-- 如果用户同意，继续 6b。
-- 如果用户暂不需要，跳至 6d。
-
-#### 6b. 检测已有 CLAUDE.md
-检查项目根目录是否已存在 `CLAUDE.md` 文件：
-- **若不存在**：直接执行 `/init` 命令。`/init` 是 Claude Code 的内置项目初始化命令，会引导生成标准的 CLAUDE.md 文件。技能已收集的五步检查信息都在对话上下文中，/init 可直接利用。
-- **若已存在**：读取现有 CLAUDE.md，执行逐段对比合并：
-  1. 提取现有 CLAUDE.md 中的自定义命令、构建步骤、测试框架配置 → **保留不动**
-  2. 对比五步检查结果，识别缺失章节（项目定义、MVP 范围、风险预案、风格约定）
-  3. 仅补充缺失部分，不覆盖已有内容
-  4. 向用户展示合并差异摘要，确认后写入
-
-#### 6c. 验证生成结果
-在 `/init` 执行完毕后：
-- 检查项目根目录是否已生成或更新了 CLAUDE.md。
-- 如果生成成功，向用户展示摘要：
-  > "✅ CLAUDE.md 已生成。你的项目现在有了一个包含项目定义、MVP 范围、里程碑、风险预案和代码风格约定的标准入口文件。每次 Claude 进入这个项目时都会自动加载这些上下文。"
-- 如果 `/init` 因任何原因未完成（如用户中途退出），使用下面的"输出模板"手动输出一份启动摘要，并告知用户随时可再次运行 `/init`。
-
-**联动钩子（仅 PACKAGE_MODE = true 时执行，在 6c 成功后）：**
-
-CLAUDE.md 生成成功后，本技能已内置完整的技能发现能力（Step 0c），可直接提示用户：
-> "✅ CLAUDE.md 已生成。是否需要扫描当前项目技术栈，推荐匹配的技能和插件？"
-
-（无需通过 `integrates_with: skill-discovery` 跨技能联动——此能力内置于本技能中。）
-- 同时检查其他兄弟技能的 `integrates_with`，如发现匹配则一并提示
-
-#### 6d. 后备方案
-如果用户选择不执行 `/init`，输出完整的启动摘要（见下方模板），并告知：
-> "了解。以下是本次启动检查的完整摘要。你可以随时运行 `/init` 来将这些内容固化为正式的 CLAUDE.md。"
+Non-"Start New Project" intents end at this step and do not enter the mandatory six-step process. However, the capability scan results can serve as context for subsequent work.
 
 ---
 
-## 代码风格保留规则（必须执行）
+### Mandatory Six-Step Process (Only for "Start New Project")
 
-当本项目涉及生成任何代码、配置文件、注释模板或项目脚手架时，**必须**按以下优先级确定并保留风格：
+The following six steps are the complete original kickoff flow — **must be executed in order**.
 
-1. **主动探测**：检查用户是否已提供现有代码文件、`.editorconfig`、`eslint`/`prettier` 配置、或口头说明的风格偏好（如"我们用制表符缩进"）。
-2. **若无既有风格，则采用行业默认推荐**（例如 Python 用 PEP8，JavaScript 用 2 空格缩进，注释使用 `#` 或 `//` 后跟一个空格），并在生成前向用户确认。
-3. **注释规范**：要求用户提供注释密度偏好（关键函数必写 / 仅复杂逻辑写 / 每一行都写）。默认采用"公共 API 和复杂逻辑写注释，自解释的语句不写"。
-4. **命名规范**：明确变量、函数、类、文件的命名风格（驼峰、下划线、大驼峰等），并统一应用到所有生成内容。
-5. **即使生成示例代码，也要符合上述风格**；若用户未指定，在代码块上方用注释标明"请按你的项目风格调整"。
+### Step 1: Clarify the "Why" and the "What"
+Ask the user (at minimum, cover these 3 questions):
+1. Whose pain point does this project solve, and what is lost by not doing it?
+2. What are the measurable criteria for success? (e.g., DAU > 1000, cost < 0.1 CNY per use, first paying customer, etc.)
+3. Fill in the blank: "We are solving **[problem]** for **[who]**, through **[what means]**, to achieve **[what effect]**."
+
+- If the user cannot answer question 3, guide them to complete the "one-sentence definition" first before continuing.
+- If it's an AI Agent project, additionally ask: "Can it be done without an Agent? Could a rule engine solve it?"
+- For more detailed problem definition guidance, load Chapter 1 of `references/project-checklist.md` or Chapter 1 of `references/ai-agent-checklist.md`.
+
+### Step 2: Define Boundaries — Make Clear "What Not to Do"
+Ask the user to list all desired features for the first version, then:
+- Forcefully cut 80%, keeping only the **minimum set that validates the core hypothesis (MVP).**
+- Make clear the triple constraints (time, cost/resources, quality/scope), and note that "at most two can be preserved simultaneously."
+- For Agent projects, additionally list **no-fly zones** (e.g., cannot delete production data, cannot transfer money externally, cannot send unapproved content).
+- When boundary discussions hit difficulty, load Chapter 2 of `references/project-checklist.md`.
+
+**Linkage Hooks (only when PACKAGE_MODE = true):**
+
+After confirming the project tech stack, scan sibling skills' `capabilities`, match `integrates_with: plugin-installation`:
+- Match succeeds → prompt user: "💡 I see your project uses [tech stack]. Would you like to install related MCP Servers (such as GitHub MCP, Playwright, Context7) to enhance the development experience?"
+
+### Step 3: Quick Risk Assessment
+Have the user respond to:
+- Are there obvious obstacles in technology, personnel, market, or compliance?
+- Write down the **three things most likely to cause project failure**, and come up with a Plan B for each (even if it's just "switch approaches, 30% slower").
+- For AI Agent: use the current strongest model to manually simulate 3-5 steps of a "paper prototype" and observe whether it goes off track. If it does, require task simplification or add guardrails.
+- See Chapter 3 of `references/project-checklist.md` for detailed feasibility analysis templates; see Chapter 4 of `references/ai-agent-checklist.md` for Agent-specific risk assessment.
+
+### Step 4: Stakeholder Alignment
+- Guide the user to identify the core circle (doers), influence circle (resource providers), and outer circle (users/regulators).
+- Mandatory recommendation: "Take the 'project definition' and 'success criteria' from Step 1 and verbally confirm them with key people before proceeding."
+- See Chapter 4 of `references/project-checklist.md` for complete stakeholder analysis guidance.
+
+### Step 5: Draw a Rough Roadmap (Milestones Only)
+- Output 3-5 milestones (in weeks), each milestone must have a clear **deliverable** and **acceptance criteria**.
+- Finally, ask the user to confirm the following startup checklist:
+  - ☑ Project definition and goals confirmed with key people
+  - ☑ MVP scope defined (and what's not included)
+  - ☑ Resources (time, money, people) secured or promised
+  - ☑ Contingency plans in place for the top three risks
+  - ☑ Code repository, communication channels, and documentation collaboration tools ready
+- See Chapter 5 of `references/project-checklist.md` for roadmap design reference.
+
+### Step 6 (Critical): Generate CLAUDE.md — Solidify Thinking into the Project
+
+After completing the five-step check and confirming the code style, **must** execute the following process:
+
+#### 6a. Confirm User Willingness
+Ask the user:
+> "We've completed the five-step startup check and confirmed the project's code style. Now I'll call /init to generate the project's CLAUDE.md, solidifying everything we discussed — project definition, MVP scope, milestones, risk plans, style conventions — into the project root. Shall we proceed?"
+
+- If the user agrees, proceed to 6b.
+- If the user is not ready yet, skip to 6d.
+
+#### 6b. Detect Existing CLAUDE.md
+Check whether a `CLAUDE.md` file already exists in the project root:
+- **If not exists**: directly execute the `/init` command. `/init` is Claude Code's built-in project initialization command, which guides the generation of a standard CLAUDE.md file. The five-step check information collected by the skill is all in the conversation context, and /init can use it directly.
+- **If exists**: read the existing CLAUDE.md, perform a paragraph-by-paragraph comparison and merge:
+  1. Extract custom commands, build steps, test framework configuration from existing CLAUDE.md → **keep unchanged**
+  2. Compare against the five-step check results, identify missing sections (project definition, MVP scope, risk plans, style conventions)
+  3. Only supplement the missing parts, do not overwrite existing content
+  4. Show the user a merge diff summary, write after confirmation
+
+#### 6c. Verify Generation Result
+After `/init` completes:
+- Check whether CLAUDE.md was generated or updated in the project root.
+- If generation succeeds, show the user a summary:
+  > "✅ CLAUDE.md has been generated. Your project now has a standard entry file containing project definition, MVP scope, milestones, risk plans, and code style conventions. Claude will automatically load this context every time it enters this project."
+- If `/init` did not complete for any reason (e.g., the user exited mid-way), manually output a startup summary using the "Output Template" below, and let the user know they can run `/init` again at any time.
+
+**Linkage Hooks (only when PACKAGE_MODE = true, after 6c succeeds):**
+
+After CLAUDE.md is generated, this skill already has built-in complete skill discovery capability (Step 0c), so it can directly prompt the user:
+> "✅ CLAUDE.md has been generated. Would you like to scan the current project's tech stack and recommend matching skills and plugins?"
+
+(No need for cross-skill linkage via `integrates_with: skill-discovery` — this capability is built into this skill.)
+- Also check other sibling skills' `integrates_with`, and prompt if matches are found
+
+#### 6d. Fallback Plan
+If the user chooses not to run `/init`, output the complete startup summary (see template below) and inform:
+> "Understood. Here is the complete startup check summary. You can run `/init` at any time to solidify these contents as a formal CLAUDE.md."
 
 ---
 
-## 针对 AI Agent 项目的额外检查项
+## Code Style Preservation Rules (Mandatory)
 
-若用户确认项目类型为 AI Agent，在完成上述六步后，追加以下问题（详细内容参见 `references/ai-agent-checklist.md`）：
-- 记忆系统（短期/长期）如何设计？（参见第三章）
-- 规划策略（ReAct / Plan-and-Execute / 多 Agent）选哪一种？（参见第三章）
-- 工具集的输入/输出格式是否严格定义？（参见第三章）
-- 如何评估"好坏"？（任务成功率、工具调用准确率、成本）（参见第七章）
-- 安全与伦理：防注入、权限最小化、透明度、合规是否已考虑？（参见第八章）
+When this skill involves generating any code, configuration files, comment templates, or project scaffolding, **must** determine and preserve style according to the following priority:
 
-并建议用户先实现一个**最小可行性 Agent**（模型调用 + 一个工具），再引入框架。
+1. **Proactive Detection**: Check whether the user has provided existing code files, `.editorconfig`, `eslint`/`prettier` config, or verbally stated style preferences (e.g., "we use tab indentation").
+2. **If no existing style, adopt industry standard defaults** (e.g., PEP8 for Python, 2-space indentation for JavaScript, comments using `#` or `//` followed by a space), and confirm with the user before generation.
+3. **Comment Conventions**: Ask the user for comment density preference (required for key functions / only complex logic / every line). Default: "write comments for public APIs and complex logic; omit for self-explanatory statements."
+4. **Naming Conventions**: Clarify naming style for variables, functions, classes, and files (camelCase, snake_case, PascalCase, etc.), and apply consistently to all generated content.
+5. **Even example code must follow the above style**; if the user has not specified, add a comment above the code block stating "Please adjust to your project's style."
 
 ---
 
-## 输出模板（强制使用）
+## Additional Checks for AI Agent Projects
 
-在完成六步检查后，**必须**使用以下格式输出启动摘要（控制在 500 字以内）：
+If the user confirms the project type is an AI Agent, append the following questions after completing the above six steps (see `references/ai-agent-checklist.md` for details):
+- How is the memory system (short-term/long-term) designed? (See Chapter 3)
+- Which planning strategy (ReAct / Plan-and-Execute / Multi-Agent) is chosen? (See Chapter 3)
+- Are the tool set's input/output formats strictly defined? (See Chapter 3)
+- How is "good vs bad" evaluated? (Task success rate, tool call accuracy, cost) (See Chapter 7)
+- Security and ethics: have injection prevention, least privilege, transparency, and compliance been considered? (See Chapter 8)
+
+And recommend that the user first implement a **minimum viable Agent** (model call + one tool) before introducing a framework.
+
+---
+
+## Output Template (Mandatory)
+
+After completing the six-step check, **must** output a startup summary using the following format (keep under 500 words):
 
 ```markdown
-## 项目启动摘要：[项目名称]
+## Project Startup Summary: [project name]
 
-### 项目定义
-- **一句话**：[填入]
-- **成功标准**：[可衡量指标]
-- **利益相关者**：核心圈=[...], 影响圈=[...], 外围圈=[...]
+### Project Definition
+- **One-liner**: [fill in]
+- **Success Criteria**: [measurable metrics]
+- **Stakeholders**: Core circle=[...], Influence circle=[...], Outer circle=[...]
 
-### MVP 范围
-- **包含**：[功能A, 功能B]
-- **不包含**：[功能C, 功能D, 功能E]
-- **约束**：时间=[Deadline], 资源=[预算/人力], 质量=[可妥协项]
+### MVP Scope
+- **Includes**: [Feature A, Feature B]
+- **Excludes**: [Feature C, Feature D, Feature E]
+- **Constraints**: Time=[Deadline], Resources=[budget/headcount], Quality=[compromise area]
 
-### 路线图
-| 里程碑 | 产出物 | 验收标准 |
-|--------|--------|---------|
-| W1 | [产出物] | [标准] |
-| W2 | [产出物] | [标准] |
-| W3 | [产出物] | [标准] |
+### Roadmap
+| Milestone | Deliverable | Acceptance Criteria |
+|-----------|-------------|---------------------|
+| W1 | [deliverable] | [criteria] |
+| W2 | [deliverable] | [criteria] |
+| W3 | [deliverable] | [criteria] |
 
-### 风险预案
-| 风险 | 可能性 | B计划 |
-|------|--------|-------|
-| [风险1] | 高/中/低 | [备选方案] |
-| [风险2] | 高/中/低 | [备选方案] |
-| [风险3] | 高/中/低 | [备选方案] |
+### Risk Plan
+| Risk | Likelihood | Plan B |
+|------|------------|--------|
+| [Risk 1] | High/Medium/Low | [alternative] |
+| [Risk 2] | High/Medium/Low | [alternative] |
+| [Risk 3] | High/Medium/Low | [alternative] |
 
-### 代码风格约定
-- 缩进：[空格/制表符，数量]
-- 注释：[密度与格式]
-- 命名：[变量/函数/类规则]
+### Code Style Conventions
+- Indentation: [spaces/tabs, count]
+- Comments: [density and format]
+- Naming: [variable/function/class rules]
 
-### 开工状态
-☑ 全部确认完成 → /init 已调用，CLAUDE.md 已生成 ✅
+### Startup Status
+☑ All confirmed → /init called, CLAUDE.md generated ✅
 ```
 
 ---
 
-## 边界条件处理
+## Edge Case Handling
 
-### 用户已有 CLAUDE.md
-如果检测到项目根目录已存在 CLAUDE.md（在第六步之前或之中检测到），先询问用户是覆盖更新还是合并补充。建议策略：读取现有 CLAUDE.md 内容，与五步检查结果对比，补充缺失的部分而非完全覆盖——CLAUDE.md 中可能已包含项目特有的构建命令、测试框架等不应被覆盖的信息。
+### User Already Has CLAUDE.md
+If a CLAUDE.md already exists in the project root (detected before or during Step 6), first ask the user whether to overwrite or merge. Recommended strategy: read the existing CLAUDE.md content, compare with the five-step check results, supplement missing parts rather than completely overwriting — the CLAUDE.md may already contain project-specific build commands, test framework configurations, etc., that should not be overwritten.
 
-### 非项目所有者场景
-如果用户明确表示是为他人项目提供建议（如"帮我朋友看看他的项目计划"），则：
-- 跳过第六步（/init 调用），不修改他人的 CLAUDE.md
-- 跳过代码风格询问（除非用户主动问）
-- 集中精力完成五步分析和建议
-- 输出启动摘要供用户转发
+### Non-Project-Owner Scenario
+If the user explicitly indicates they are providing advice for someone else's project (e.g., "help me take a look at my friend's project plan"), then:
+- Skip Step 6 (/init call), do not modify someone else's CLAUDE.md
+- Skip code style questions (unless the user asks)
+- Focus on completing the five-step analysis and recommendations
+- Output a startup summary for the user to forward
 
-### 用户只要求部分检查
-用户可能只关心某个方面（如"帮我只做风险摸底"）。灵活处理：
-- 用户可以选择只走某几个步骤
-- 完成所请求的步骤后，简要询问是否需要完成剩余步骤
-- 不强制走完六步，但总要提及"如果需要完整启动检查，随时可以说"
+### User Only Requests Partial Check
+The user may only care about a specific aspect (e.g., "just do a risk assessment for me"). Handle flexibly:
+- The user can choose to go through only some steps
+- After completing the requested steps, briefly ask if they'd like to complete the remaining steps
+- Do not force all six steps, but always mention "if you need a full startup check, feel free to say so"
 
-### 项目范围极小
+### Minimal Project Scope
 
-满足以下**任意 2 条**即启用极简模式：
+Enable minimal mode when **any 2** of the following conditions are met:
 
-1. **任务描述为单文件级**：用户描述为「写一个脚本」「一个工具」「一个函数」「批量处理」等单文件级任务
-2. **源代码文件数量少**：项目目录中源代码文件 < 3 个（不含 `README.md`、`.gitignore`、`*.json`/`*.toml`/`*.yaml` 等配置文件）
-3. **用户明确要求简化**：用户明确表示「不需要完整流程」「简单弄一下就行」「快速过一遍」
+1. **Single-file level task description**: the user describes it as "write a script", "a tool", "a function", "batch processing", or similar single-file level tasks
+2. **Few source code files**: the project directory has < 3 source code files (excluding `README.md`, `.gitignore`, `*.json`/`*.toml`/`*.yaml` and other config files)
+3. **User explicitly requests simplification**: the user explicitly says "don't need the full process", "just a quick pass", "fast-track it"
 
-**仅满足 1 条时**，追问用户确认是否启用极简模式。
+**When only 1 condition is met**, ask the user to confirm whether to enable minimal mode.
 
-极简模式内容：
-- **执行**：问题定义（一句话）+ 代码风格确认
-- **跳过**：MVP 边界圈定（第二步）、利益相关者分析（第四步）、里程碑路线图（第五步）
-- **仍执行**：快速风险摸底（第三步，简化为"最可能出错的一件事"）
-- **仍执行**：第六步 CLAUDE.md 生成（若项目目录存在）
-- 完成后提示："这是一个极简项目。如需完整启动检查流程，随时可以说。"
-
----
-
-## 错误处理
-
-| 场景 | 处理方式 |
-|------|---------|
-| `~/.claude/skills/` 不存在或无法读取 | 跳过技能扫描，仅推荐插件和命令，不报错 |
-| SKILL.md frontmatter 格式错误 | 跳过该技能，记录名称到跳过列表，继续扫描其他技能 |
-| `settings.json` 无 `mcpServers` 字段 | 跳过 MCP 插件扫描，仅扫描本地插件目录 |
-| `.discovery-rules.json` JSON 解析失败 | 静默跳过，使用内置默认规则 |
-| Glob 操作超时（>5 秒） | 跳过深度探索，标注「部分插件未深度扫描」 |
-| 深度探索文件 > 50KB | 仅读前 5 行判断类型，不读取全文 |
-| PACKAGE_MODE 检测失败（任何原因） | 降级为 PACKAGE_MODE = false，静默运行 |
-| `/init` 执行失败 | 手动输出启动摘要，提示用户可随时重试 |
-| `gh repo fork` 失败（未登录/权限不足） | 提示用户先执行 `gh auth login`，或手动在 GitHub 网页 fork 后提供 clone URL |
-| 目标仓库不存在（Fork 模式） | 提示确认 URL，重新输入 owner/repo |
-| Fork 已存在且用户选择同步 | 执行 `git fetch upstream && git merge upstream/main` 同步上游变更 |
-| GitHub MCP 和 `gh` CLI 均不可用（Fork 模式） | 提示用户手动在浏览器中 Fork，引导用户提供 clone URL 继续 |
-| 用户指定的仓库非 GitHub（Fork 模式） | 提示仅支持 GitHub 仓库，询问是否继续或取消 |
-| Clone 目标目录冲突（Fork 模式） | 询问用户：复用现有目录 / 重新 clone / 选择其他目录 |
+Minimal mode content:
+- **Do**: Problem definition (one-liner) + code style confirmation
+- **Skip**: MVP boundary scoping (Step 2), stakeholder analysis (Step 4), milestone roadmap (Step 5)
+- **Still do**: Quick risk assessment (Step 3, simplified to "the one thing most likely to go wrong")
+- **Still do**: Step 6 CLAUDE.md generation (if project directory exists)
+- Upon completion, prompt: "This is a minimal project. If you need the full startup check process, feel free to say so."
 
 ---
 
-## 交互风格
-- 使用简洁的清单式提问，每次最多问 3 个问题，避免信息过载。
-- 对用户的回答进行总结并复述，确保对齐。
-- 最后输出一份 **< 500 字的启动摘要**，包含：项目定义、MVP 范围、关键里程碑、前三风险、风格约定、CLAUDE.md 生成状态。
-- 全程使用中文与用户沟通。
+## Error Handling
+
+| Scenario | Handling |
+|----------|----------|
+| `~/.claude/skills/` does not exist or cannot be read | Skip skill scan, only recommend plugins and commands, no error reported |
+| SKILL.md frontmatter format error | Skip that skill, record its name in a skip list, continue scanning other skills |
+| `settings.json` has no `mcpServers` field | Skip MCP plugin scan, only scan local plugin directory |
+| `.discovery-rules.json` JSON parse failure | Silently skip, use built-in default rules |
+| Glob operation times out (>5 seconds) | Skip deep exploration, mark as "some plugins not deeply scanned" |
+| Deep exploration file > 50KB | Only read first 5 lines to determine type, do not read full content |
+| PACKAGE_MODE detection fails (any reason) | Degrade to PACKAGE_MODE = false, run silently |
+| `/init` execution fails | Manually output startup summary, prompt user they can retry anytime |
+| `gh repo fork` fails (not logged in / insufficient permissions) | Prompt user to run `gh auth login` first, or manually fork on GitHub website and provide clone URL |
+| Target repository does not exist (Fork mode) | Prompt to confirm URL, re-enter owner/repo |
+| Fork already exists and user chooses sync | Execute `git fetch upstream && git merge upstream/main` to sync upstream changes |
+| GitHub MCP and `gh` CLI both unavailable (Fork mode) | Prompt user to manually Fork in browser, guide them to provide clone URL to continue |
+| User-specified repository not on GitHub (Fork mode) | Prompt that only GitHub repositories are supported, ask whether to continue or cancel |
+| Clone target directory conflict (Fork mode) | Ask the user: reuse existing directory / re-clone / choose another directory |
+
+---
+
+## Interaction Style
+- Use concise checklist-style questions, asking at most 3 questions at a time to avoid information overload.
+- Summarize and paraphrase the user's answers to ensure alignment.
+- Finally output a **< 500 word startup summary** containing: project definition, MVP scope, key milestones, top three risks, style conventions, CLAUDE.md generation status.
