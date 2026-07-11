@@ -19,9 +19,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
     └── skill-health.yml          # Frontmatter 格式校验 + 标签一致性检查
 docs/                            # 技能详细文档（README 链接指向此处），每技能一份
 skills/                          # 所有技能（每个子目录一个技能）
-├── _shared/                      # 包级共享资源（检测协议、通用模板）
+├── _shared/                      # 包级共享资源（检测协议、术语表、同步验证器）
+│   ├── check-i18n-sync.sh        # EN/CN 结构同步验证脚本
+│   ├── i18n-glossary.md          # 中英术语映射表
+│   └── locale/                   # 共享文档的中文副本
 ├── universal-project-kickoff/   # 通用项目启动与能力发现（已吸收原 proactive-skill-discovery，含 Fork 模式）
-│   └── references/               # 7 份参考文件
+│   ├── references/               # 参考文件（中文副本为 *.cn.md）
+│   └── locale/                   # 中文副本（SKILL.cn.md）
 ├── github-pr-manager/           # GitHub PR 全功能管理器
 ├── github-pr-reviewer/          # GitHub PR 审查器（逐行 inline 评论）
 ├── quick-plugin-installer/      # 快速安装插件（MCP + SKILL）
@@ -47,7 +51,7 @@ CONTRIBUTING.md                  # 贡献指南（含能力标签注册表 + 标
 - frontmatter `source`：来源标识（`community` / `official` / `custom`），用于 Marketplace 分类
 - frontmatter 联动字段：`capabilities`（提供的能力标签）、`integrates_with`（需要配合的能力标签）— 可选，用于包内技能动态发现
 - 脚本文件：`snake_case.sh`
-- 所有面向用户的内容使用中文，技术术语保留英文
+- 所有面向用户的内容使用英文，技术术语保留英文（中文副本见 *.cn.md 文件）
 - 跨技能引用必须通过 PACKAGE_MODE 检测门控，独立安装时静默降级
 - `.discovery-rules.json` 覆盖约定 — `deep_explore_plugins`、`priority_boost_plugins`、`cache_ttl_hours` 等字段的硬编码默认值可被 `~/.claude/skills/.discovery-rules.json` 覆盖。修改默认值时需同步更新三处：SKILL.md（Step 0c-2 配置读取段）、scanner-patterns.md（默认值标注）、discovery-rules.json 的 JSON Schema
 
@@ -78,6 +82,9 @@ CONTRIBUTING.md                  # 贡献指南（含能力标签注册表 + 标
 ```bash
 # Shell 语法检查
 find skills/ -name "*.sh" -exec bash -n {} \;
+
+# 中英文同步检查
+bash skills/_shared/check-i18n-sync.sh
 
 # 手动验证标签一致性（CI 自动执行）
 grep -oP 'capabilities:\s*\[\K[^\]]+' skills/*/SKILL.md | tr '"' '\n' | sort -u
@@ -116,6 +123,7 @@ git push --force-with-lease origin <branch>
 - worktree 提交 — 如 `EnterWorktree` 创建的 worktree 中 git 命令不可用（`not a git repository`），使用 `GIT_DIR=../.git GIT_WORK_TREE=<path> git ...` 变通
 - 推送后本地同步 — 通过 worktree 提交推送后，主仓库工作树会脱节，执行 `git fetch && git reset --hard origin/main` 同步（`git restore .` 只恢复文件，不移动分支指针）
 - 不写 `Co-Authored-By` 尾部
+- 双语结构 — 每个技能有 `locale/SKILL.cn.md` 中文副本；文档和参考文件遵循相同 `*.cn.md` 模式。提交前运行 `bash skills/_shared/check-i18n-sync.sh` 确保中英文结构一致
 
 ## 新技能注册清单
 

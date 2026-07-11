@@ -19,15 +19,20 @@ Solving the pain points of cross-project skill reuse and proactive tool discover
     └── skill-health.yml          # Frontmatter format validation + tag consistency check
 docs/                            # Skill documentation (README links point here), one per skill
 skills/                          # All skills (one subdirectory per skill)
-├── _shared/                      # Package-level shared resources (detection protocol, common templates, i18n glossary)
+├── _shared/                      # Package-level shared resources (detection protocol, i18n glossary, sync validator)
+│   ├── check-i18n-sync.sh        # EN/CN structural sync validator
+│   ├── i18n-glossary.md          # EN↔CN terminology glossary
+│   └── locale/                   # Chinese copies of shared docs
 ├── universal-project-kickoff/   # Universal project kickoff & capability discovery (absorbed proactive-skill-discovery, includes Fork mode)
-│   └── references/               # 7 reference files
+│   ├── references/               # Reference files (+ CN copies at *.cn.md)
+│   └── locale/                   # Chinese copy (SKILL.cn.md)
 ├── github-pr-manager/           # GitHub PR full-featured manager
 ├── github-pr-reviewer/          # GitHub PR reviewer (line-by-line inline comments)
 ├── quick-plugin-installer/      # Quick plugin installer (MCP + SKILL)
 ├── git-commit-helper/           # Git commit standardization helper (Conventional Commits)
 └── env-health-check/            # Cross-platform environment health check
 CONTRIBUTING.md                  # Contribution guide (capability tag registry + tag decision tree)
+CLAUDE.cn.md                     # 中文版本 (Chinese version)
 ```
 
 ## Quick Start
@@ -80,6 +85,9 @@ Run these commands before committing to ensure CI passes:
 # Shell syntax check
 find skills/ -name "*.sh" -exec bash -n {} \;
 
+# Bilingual EN/CN sync check
+bash skills/_shared/check-i18n-sync.sh
+
 # Manual tag consistency verification (CI runs this automatically)
 # Note: grep -oP requires GNU grep (Linux); macOS BSD grep does not support -P, use brew install grep or CI verification
 grep -oP 'capabilities:\s*\[\K[^\]]+' skills/*/SKILL.md | tr '"' '\n' | sort -u
@@ -118,6 +126,7 @@ Users installing this plugin need:
 - worktree commits — if git commands are unavailable in a worktree created by `EnterWorktree` (`not a git repository`), use `GIT_DIR=../.git GIT_WORK_TREE=<path> git ...` as a workaround
 - Post-push local sync — after committing and pushing through a worktree, the main repo worktree will be detached; run `git fetch && git reset --hard origin/main` to sync (`git restore .` only restores files, does not move the branch pointer)
 - Do not append `Co-Authored-By` trailer
+- Bilingual structure — each skill has a `locale/SKILL.cn.md` Chinese copy; docs and references follow the same `*.cn.md` pattern. Run `bash skills/_shared/check-i18n-sync.sh` before committing to ensure EN/CN parity
 
 ## New Skill Registration Checklist
 
