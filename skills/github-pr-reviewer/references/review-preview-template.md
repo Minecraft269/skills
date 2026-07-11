@@ -1,78 +1,78 @@
-# 审查预览模板
+# Review Preview Template
 
-在调用任何 GitHub API 之前，必须将每条审查发现以完整格式化预览展示给用户。禁止以 MCP 工具调用参数格式展示 — 用户需要看到最终会出现在 PR 上的完整评论内容。
+Before calling any GitHub API, each review finding must be presented to the user as a fully formatted preview. It is forbidden to display findings in MCP tool call parameter format — the user needs to see the complete comment content that will eventually appear on the PR.
 
-## 预览格式
+## Preview Format
 
 ```
-## 🔍 PR 审查预览
+## 🔍 PR Review Preview
 
-**审查仓库：** owner/repo
-**审查 PR：** #[N] — PR 标题
-**审查模型：** <当前模型名称>
-**审查时间：** <当前时间>
-
----
-
-### 发现 #1 — 🔒 安全 · critical
-
-**文件：** `src/auth/login.ts`
-**diff 行号：** 第 42 行（RIGHT 侧 — 新增代码）
-**类别：** security
-**严重程度：** critical
+**Repository:** owner/repo
+**PR:** #[N] — PR title
+**Review Model:** <current model name>
+**Review Time:** <current time>
 
 ---
 
-📝 **将发布的 inline 评论内容：**
+### Finding #1 — 🔒 Security · critical
 
-当前代码在 `password` 为 `null` 或 `undefined` 时会直接传递给 `hashPassword()`，
-可能导致运行时异常或不安全的哈希结果。
+**File:** `src/auth/login.ts`
+**Diff Line:** Line 42 (RIGHT side — new code)
+**Category:** security
+**Severity:** critical
 
-**建议修复：**
+---
+
+📝 **Inline comment to be posted:**
+
+The current code passes `password` directly to `hashPassword()` when it is `null` or `undefined`,
+which may cause a runtime exception or unsafe hash result.
+
+**Suggested Fix:**
 ```typescript
 if (!password) {
-  throw new BadRequestError('密码不能为空');
+  throw new BadRequestError('Password cannot be empty');
 }
 const hashed = await hashPassword(password);
 ```
 
-📋 **相关 diff 上下文：**
+📋 **Relevant diff context:**
 ```diff
 @@ -38,6 +38,8 @@ export async function login(username: string, password: string) {
-   // 验证用户名
+   // Validate username
    const user = await db.findUser(username);
    ...
 ```
 
 ---
 
-...（每条发现完整展开）...
+...(each finding fully expanded)...
 
 ---
 
-## 📊 审查统计
+## 📊 Review Statistics
 
-| 严重程度 | 数量 |
+| Severity | Count |
 |---------|------|
-| 🔴 critical | X 条 |
-| 🟡 warning | Y 条 |
-| 🔵 suggestion | Z 条 |
-| 🟢 praise | P 条 |
+| 🔴 critical | X |
+| 🟡 warning | Y |
+| 🔵 suggestion | Z |
+| 🟢 praise | P |
 
 ---
 
-## ⏳ 等待确认
+## ⏳ Awaiting Confirmation
 
-你可以：
-- 回复「**确认**」→ 按默认范围（P0-P2）开始发布
-- 回复 `--all` → 发布所有发现（含 P3-P5）
-- 回复 `--select 1,3,5` → 仅发布指定编号
-- 回复「**修改 #N**」→ 编辑第 N 条发现
+You can:
+- Reply **"confirm"** → start posting with the default scope (P0-P2)
+- Reply `--all` → post all findings (including P3-P5)
+- Reply `--select 1,3,5` → post only the specified indices
+- Reply **"edit #N"** → edit the Nth finding
 ```
 
-## 重要规则
+## Important Rules
 
-- 每条发现必须完整展开评论文本（问题描述 + 建议修复 + 代码示例）
-- 每条发现必须附带相关 diff 上下文（含 `@@` hunk 头部）
-- 审查模型名称必须从系统提示上下文中获取实际值，不可编造
-- 必须等待用户确认后才能创建 pending review
+- Each finding must display the full comment text (problem description + suggested fix + code example)
+- Each finding must include relevant diff context (including `@@` hunk headers)
+- The review model name must be obtained from the system prompt context — never fabricated
+- Must wait for user confirmation before creating a pending review

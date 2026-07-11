@@ -1,105 +1,105 @@
-# 编程语言选择参考指南
+# Programming Language Selection Guide
 
-本文件为 `universal-project-kickoff` 的 Step 0b「我不确定，帮我推荐」分支提供参考数据。
-当用户不确定用什么编程语言时，加载本文件并根据用户的项目类型和关注点给出推荐。
+This document provides reference data for the `universal-project-kickoff` Step 0b "I'm not sure, recommend for me" branch.
+When the user is unsure which programming language to use, load this file and make recommendations based on the user's project type and concerns.
 
-## 语言速查表
+## Language Quick Reference
 
 ### Python
-- **适合**：AI/ML、数据分析与可视化、Web 后端（Django/FastAPI）、自动化脚本、科学计算
-- **不适合**：高性能实时系统、移动端原生 App、浏览器前端
-- **优势**：语法简洁学习曲线低、AI/ML 生态全球第一（PyTorch/TensorFlow/Scikit-learn）、第三方库极丰富
-- **劣势**：运行速度比编译型语言慢 10-100 倍、GIL 限制多线程并发、移动端和浏览器端弱
-- **新手友好度**：⭐⭐⭐⭐⭐
+- **Best for:** AI/ML, data analysis and visualization, web backend (Django/FastAPI), automation scripts, scientific computing
+- **Not suitable for:** High-performance real-time systems, native mobile apps, browser frontend
+- **Strengths:** Clean syntax with gentle learning curve, world's #1 AI/ML ecosystem (PyTorch/TensorFlow/Scikit-learn), extremely rich third-party libraries
+- **Weaknesses:** 10-100x slower than compiled languages, GIL limits multi-threaded concurrency, weak on mobile and browser
+- **Beginner friendliness:** &#11088;&#11088;&#11088;&#11088;&#11088;
 
 ### JavaScript / TypeScript
-- **适合**：Web 全栈（React/Vue/Next.js）、跨平台桌面（Electron）、移动端（React Native/Expo）、后端（Node.js/Express）、小程序
-- **不适合**：高性能计算、系统编程、嵌入式
-- **优势**：唯一同时跑浏览器和服务器的语言、npm 生态全球最大、TypeScript 提供类型安全
-- **劣势**：npm 生态碎片化严重、运行时性能中等、Node.js 标准库不如 Python/Go 完善
-- **新手友好度**：JS ⭐⭐⭐⭐ / TS ⭐⭐⭐
+- **Best for:** Web full-stack (React/Vue/Next.js), cross-platform desktop (Electron), mobile (React Native/Expo), backend (Node.js/Express), mini programs
+- **Not suitable for:** High-performance computing, systems programming, embedded
+- **Strengths:** The only language that runs in both browser and server, largest npm ecosystem in the world, TypeScript provides type safety
+- **Weaknesses:** npm ecosystem fragmentation, moderate runtime performance, Node.js standard library less comprehensive than Python/Go
+- **Beginner friendliness:** JS &#11088;&#11088;&#11088;&#11088; / TS &#11088;&#11088;&#11088;
 
 ### Java
-- **适合**：企业级后端（Spring Boot）、Android 原生开发、大数据（Hadoop/Spark）、金融系统
-- **不适合**：快速原型、前端开发、脚本自动化
-- **优势**：生态成熟稳定、JVM 性能优秀、强类型+丰富工具链、人才市场大
-- **劣势**：语法冗长、启动慢内存占用高、开发效率不如 Python/JS
-- **新手友好度**：⭐⭐⭐
+- **Best for:** Enterprise backend (Spring Boot), Android native development, big data (Hadoop/Spark), financial systems
+- **Not suitable for:** Rapid prototyping, frontend development, script automation
+- **Strengths:** Mature and stable ecosystem, excellent JVM performance, strong typing + rich toolchain, large talent market
+- **Weaknesses:** Verbose syntax, slow startup and high memory usage, lower development efficiency than Python/JS
+- **Beginner friendliness:** &#11088;&#11088;&#11088;
 
 ### Kotlin
-- **适合**：Android 开发（官方首选）、后端（Ktor/Spring Boot）、跨平台移动（KMP）
-- **不适合**：需要极简语法的场景、传统企业 Java 遗留代码（互操作但需学习成本）
-- **优势**：比 Java 简洁 40%+、空安全内置、协程原生支持、与 Java 100% 互操作
-- **劣势**：社区小于 Java、编译速度有时慢、非 Android 领域知名度低
-- **新手友好度**：⭐⭐⭐
+- **Best for:** Android development (official first choice), backend (Ktor/Spring Boot), cross-platform mobile (KMP)
+- **Not suitable for:** Scenarios requiring minimal syntax, traditional enterprise Java legacy code (interoperable but with learning cost)
+- **Strengths:** 40%+ more concise than Java, built-in null safety, native coroutine support, 100% Java interop
+- **Weaknesses:** Smaller community than Java, occasionally slow compilation, low visibility outside Android
+- **Beginner friendliness:** &#11088;&#11088;&#11088;
 
 ### Go
-- **适合**：云原生/微服务、CLI 工具、网络服务/API 网关、DevOps 工具、高性能中间件
-- **不适合**：桌面 GUI、移动端 App、机器学习、复杂业务逻辑（泛型仍不如传统 OOP 语言灵活）
-- **优势**：编译极快、部署简单（单二进制文件）、并发编程一等公民（goroutine）、语法简洁强制统一
-- **劣势**：缺少传统 UI 框架、泛型支持较新、依赖管理历史复杂、简单需求代码量偏多（显式错误处理）
-- **新手友好度**：⭐⭐⭐⭐
+- **Best for:** Cloud native / microservices, CLI tools, network services / API gateways, DevOps tools, high-performance middleware
+- **Not suitable for:** Desktop GUI, mobile apps, machine learning, complex business logic (generics still less flexible than traditional OOP languages)
+- **Strengths:** Extremely fast compilation, simple deployment (single binary), first-class concurrency (goroutines), clean syntax with enforced formatting
+- **Weaknesses:** Lacks traditional UI frameworks, generics support is relatively new, complex dependency management history, more boilerplate for simple needs (explicit error handling)
+- **Beginner friendliness:** &#11088;&#11088;&#11088;&#11088;
 
 ### Rust
-- **适合**：系统编程、高性能服务、WebAssembly、嵌入式、区块链、需要内存安全的底层软件
-- **不适合**：快速原型、UI 密集型应用、团队缺乏系统编程经验的场景
-- **优势**：零成本抽象+内存安全（无 GC）、性能与 C++ 同级、编译器错误信息业界最佳
-- **劣势**：学习曲线极陡（所有权/借用/生命周期）、编译时间长、生态年轻库不够丰富
-- **新手友好度**：⭐⭐
+- **Best for:** Systems programming, high-performance services, WebAssembly, embedded, blockchain, memory-safe low-level software
+- **Not suitable for:** Rapid prototyping, UI-intensive applications, teams lacking systems programming experience
+- **Strengths:** Zero-cost abstractions + memory safety (no GC), performance on par with C++, best-in-class compiler error messages
+- **Weaknesses:** Very steep learning curve (ownership/borrowing/lifetimes), long compile times, young ecosystem with fewer libraries
+- **Beginner friendliness:** &#11088;&#11088;
 
 ### C# (.NET)
-- **适合**：Windows 桌面应用、Unity 游戏开发、企业级后端（ASP.NET Core）、Xbox/游戏主机
-- **不适合**：非 Windows 环境下桌面开发（跨平台桌面仍在成熟中）、Linux 服务器的传统首选
-- **优势**：LINQ 数据查询极强、Visual Studio 一流 IDE、微软全面投入跨平台、游戏开发首选之一
-- **劣势**：Windows 生态烙印重、社区小于 Java/JS、部分高级功能需付费 Visual Studio
-- **新手友好度**：⭐⭐⭐
+- **Best for:** Windows desktop applications, Unity game development, enterprise backend (ASP.NET Core), Xbox/gaming consoles
+- **Not suitable for:** Desktop development outside Windows (cross-platform desktop still maturing), traditional first choice for Linux servers
+- **Strengths:** Extremely powerful LINQ data queries, first-class Visual Studio IDE, Microsoft's full cross-platform commitment, top choice for game development
+- **Weaknesses:** Heavy Windows ecosystem imprint, smaller community than Java/JS, some advanced features require paid Visual Studio
+- **Beginner friendliness:** &#11088;&#11088;&#11088;
 
 ### Swift
-- **适合**：iOS/macOS/watchOS/tvOS 原生 App、Apple 生态服务端（Vapor）
-- **不适合**：非 Apple 平台、跨平台移动开发（用 Flutter/React Native 代替）
-- **优势**：Apple 官方语言顶级支持、语法现代安全、性能接近 C++
-- **劣势**：仅限 Apple 生态、跨平台能力弱、社区规模远小于 JS/Python
-- **新手友好度**：⭐⭐⭐
+- **Best for:** iOS/macOS/watchOS/tvOS native apps, Apple ecosystem server-side (Vapor)
+- **Not suitable for:** Non-Apple platforms, cross-platform mobile development (use Flutter/React Native instead)
+- **Strengths:** Top-tier Apple official language support, modern and safe syntax, performance close to C++
+- **Weaknesses:** Limited to Apple ecosystem, weak cross-platform capabilities, significantly smaller community than JS/Python
+- **Beginner friendliness:** &#11088;&#11088;&#11088;
 
 ### Dart (Flutter)
-- **适合**：跨平台移动 App（iOS + Android）、Flutter Web、桌面应用（Windows/macOS/Linux）
-- **不适合**：纯 iOS 原生体验要求极高的场景、需要大量原生平台 API 调用的场景
-- **优势**：一套代码多平台、Hot Reload 开发体验极佳、Material Design 内置、Google 持续投入
-- **劣势**：Dart 语言本身通用性差（几乎仅用于 Flutter）、非标准 UI 效果需大量定制、原生功能需写 Platform Channel
-- **新手友好度**：⭐⭐⭐⭐
+- **Best for:** Cross-platform mobile apps (iOS + Android), Flutter Web, desktop applications (Windows/macOS/Linux)
+- **Not suitable for:** Scenarios demanding pure iOS native experience, scenarios requiring extensive native platform API calls
+- **Strengths:** Single codebase for multiple platforms, excellent Hot Reload development experience, built-in Material Design, Google's continuous investment
+- **Weaknesses:** Dart language has poor generality (almost exclusively used for Flutter), non-standard UI effects require extensive customization, native features require Platform Channel
+- **Beginner friendliness:** &#11088;&#11088;&#11088;&#11088;
 
-## 场景速查表
+## Scenario Quick Reference
 
-| 场景 | 首选 | 备选 | 说明 |
-|------|------|------|------|
-| Web 全栈 | TypeScript + Next.js | Python + Django | 全栈 JS 一套语言搞定前后端 |
-| AI/ML 应用 | Python | — | 生态碾压式优势 |
-| 移动 App 跨平台 | Flutter (Dart) | React Native (TypeScript) | Flutter 性能更好，RN 生态更大 |
-| iOS 原生 | Swift | — | Apple 官方语言，别无选择 |
-| Android 原生 | Kotlin | Java | Kotlin 已是官方首选 |
-| 云原生微服务 | Go | Rust | Go 简洁，Rust 极致性能 |
-| 企业后端 | Java (Spring Boot) | C# (ASP.NET Core) | Java 生态最成熟 |
-| CLI 工具 | Go | Python | Go 编译为单文件，分发方便 |
-| 桌面应用 | C# (.NET) + WPF | Electron (TypeScript) | Windows 首选 C#，跨平台用 Electron |
-| 游戏开发 | C# (Unity) | C++ (Unreal) | Unity 上手快，Unreal 画质强 |
-| 嵌入式/IoT | Rust | C | Rust 安全性是新项目首选 |
-| 快速原型 | Python | TypeScript | Python 开发速度最快 |
-| 系统编程 | Rust | C++ | Rust 内存安全是新项目首选 |
+| Scenario | First Choice | Alternative | Notes |
+|----------|-------------|-------------|-------|
+| Web full-stack | TypeScript + Next.js | Python + Django | Full-stack JS handles frontend and backend with one language |
+| AI/ML applications | Python | -- | Overwhelming ecosystem advantage |
+| Cross-platform mobile app | Flutter (Dart) | React Native (TypeScript) | Flutter has better performance, RN has larger ecosystem |
+| iOS native | Swift | -- | Apple's official language, no alternative |
+| Android native | Kotlin | Java | Kotlin is now the official first choice |
+| Cloud native microservices | Go | Rust | Go is concise, Rust offers extreme performance |
+| Enterprise backend | Java (Spring Boot) | C# (ASP.NET Core) | Java has the most mature ecosystem |
+| CLI tools | Go | Python | Go compiles to a single file for easy distribution |
+| Desktop applications | C# (.NET) + WPF | Electron (TypeScript) | C# is preferred for Windows, Electron for cross-platform |
+| Game development | C# (Unity) | C++ (Unreal) | Unity is quick to pick up, Unreal has superior graphics |
+| Embedded / IoT | Rust | C | Rust's safety makes it the first choice for new projects |
+| Rapid prototyping | Python | TypeScript | Python has the fastest development speed |
+| Systems programming | Rust | C++ | Rust's memory safety makes it the first choice for new projects |
 
 ---
 
-## 维护
+## Maintenance
 
-**最后审核日期**：2026-06-28
-**数据来源**：综合 TIOBE 指数、Stack Overflow 2025 年开发者调查及实际使用经验
+**Last review date:** 2026-06-28
+**Data sources:** TIOBE Index, Stack Overflow 2025 Developer Survey, and practical experience
 
-语言排名和推荐应每 **6 个月** 审核一次。审核时注意：
-1. 是否有新兴语言需要新增（如 Mojo、Zig 等）
-2. 各语言"优劣势"描述是否需要根据新版本特性更新（如 Java 21+ 虚拟线程、Python 3.13 性能提升等）
-3. 场景速查表的首选/备选推荐是否仍然准确
-4. 保持表格格式一致（每行以 `|` 开头，以 `|` 结尾）
+Language rankings and recommendations should be reviewed every **6 months**. When reviewing:
+1. Check if emerging languages need to be added (e.g. Mojo, Zig, etc.)
+2. Update language strength/weakness descriptions based on new version features (e.g. Java 21+ virtual threads, Python 3.13 performance improvements)
+3. Verify that the first choice / alternative recommendations in the scenario table are still accurate
+4. Maintain table format consistency (each row starts with `|` and ends with `|`)
 
-**更新流程**：
-1. 修改本文件中对应的表格行
-2. 如果新增语言，同步更新 SKILL.md 中 Step 0b 的语言选项列表（第 83-92 行）
-3. 更新「最后审核日期」
+**Update process:**
+1. Modify the corresponding table rows in this file
+2. If adding a new language, update the language option list in SKILL.md Step 0b (lines 83-92) accordingly
+3. Update the "Last review date"

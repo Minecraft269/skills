@@ -1,50 +1,50 @@
-# 错误处理参考
+# Error Handling Reference
 
-## 错误场景及处理
+## Error Scenarios and Handling
 
-| 错误场景 | 检测方式 | 处理方式 |
+| Error Scenario | Detection Method | Handling Method |
 |----------|----------|----------|
-| `gh` 未安装 | `which gh` 返回空 | 提示安装：https://cli.github.com/ |
-| `gh` 未登录 | `gh auth status` 非 0 | 提示执行 `gh auth login` |
-| 仓库不存在 | `gh pr list` 返回 404 | "仓库 owner/repo 不存在或无访问权限，请检查拼写或权限" |
-| 无开放 PR | `gh pr list` 返回空数组 | "该仓库当前没有开放的 PR" |
-| PR 编号无效 | `gh pr view` 返回 "not found" | "未找到 PR #xxxx，请检查编号或输入 r 刷新列表" |
-| 目标目录已存在 | `test -d <owner>-<repo>-pr-<编号>` | 询问 `[y]` 删除重建 / `[n]` 跳过直接进入 / `[q]` 取消 |
-| 磁盘空间不足 | `df -h` 检查 | 提示清理空间或 `/set-clone-path` 换路径 |
-| 克隆失败（网络） | `gh pr checkout` 超时 | 检查网络，建议重试；提供 `--depth 1` 浅克隆 |
-| 克隆失败（权限） | 返回 403 | 检查仓库权限（私有仓库需 `gh auth` scope） |
-| `jq` 未安装 | `which jq` 返回空 | 回退到原始 JSON 输出，提示安装 jq 获得更好格式 |
-| 仓库有 50+ PR | 返回数量 = limit | "仅展示最近 50 个 PR，使用 `--limit 100` 查看更多" |
+| `gh` not installed | `which gh` returns empty | Prompt to install: https://cli.github.com/ |
+| `gh` not logged in | `gh auth status` non-zero | Prompt to run `gh auth login` |
+| Repository does not exist | `gh pr list` returns 404 | "Repository owner/repo does not exist or is not accessible. Please check the spelling or your permissions." |
+| No open PRs | `gh pr list` returns empty array | "This repository currently has no open PRs." |
+| Invalid PR number | `gh pr view` returns "not found" | "PR #xxxx not found. Please check the number or press r to refresh the list." |
+| Target directory already exists | `test -d <owner>-<repo>-pr-<number>` | Prompt `[y]` delete and recreate / `[n]` skip and enter directly / `[q]` cancel |
+| Insufficient disk space | `df -h` check | Prompt to free up space or use `/set-clone-path` to change the path |
+| Clone failed (network) | `gh pr checkout` timeout | Check network, suggest retry; offer `--depth 1` shallow clone |
+| Clone failed (permissions) | Returns 403 | Check repository permissions (private repos require `gh auth` scope) |
+| `jq` not installed | `which jq` returns empty | Fall back to raw JSON output, prompt to install jq for better formatting |
+| Repository has 50+ PRs | Return count = limit | "Showing only the 50 most recent PRs. Use `--limit 100` to see more." |
 
-## 优雅降级原则
+## Graceful Degradation Principles
 
-- 任何工具缺失都不应阻止核心流程
-- `jq` 缺失 → 用 `gh` 内置 `--jq` 或原始输出
-- `gh` 版本过低 → 降级使用兼容命令
-- 网络错误 → 重试一次后给出明确的下一步操作
+- No missing tool should block the core workflow
+- `jq` missing → use `gh` built-in `--jq` or raw output
+- `gh` version too old → degrade to compatible commands
+- Network error → retry once, then give clear next steps
 
-## 用户反馈模式
+## User Feedback Pattern
 
-始终做到：
-1. 清晰说明出了什么问题
-2. 解释可能的原因
-3. 给出具体的解决步骤
-4. 提供替代方案（如果有）
+Always:
+1. Clearly explain what went wrong
+2. Describe possible causes
+3. Provide concrete resolution steps
+4. Offer alternative approaches (if available)
 
-### 示例
+### Example
 
 ```
-❌ 克隆 PR #1234 失败
+❌ Failed to clone PR #1234
 
-原因：网络连接超时（gh 无法访问 api.github.com）
+Cause: Network connection timed out (gh cannot reach api.github.com)
 
-建议：
-  1. 检查网络连接
-  2. 确认 gh auth status 正常
-  3. 重试：输入 c 1234
+Suggestions:
+  1. Check your network connection
+  2. Verify gh auth status is working
+  3. Retry: enter c 1234
 
-替代方案：
-  手动克隆：
+Alternative:
+  Clone manually:
   git clone https://github.com/owner/repo.git owner-repo-pr-1234
   cd owner-repo-pr-1234
   gh pr checkout 1234

@@ -1,158 +1,158 @@
-# 详细工作流参考
+# Detailed Workflow Reference
 
-## 目录命名规则
+## Directory Naming Convention
 
-多仓库场景下，克隆目录使用 `<owner>-<repo>-pr-<编号>` 格式：
-
-```
-facebook-react-pr-28452/    # facebook/react 的 PR #28452
-lodash-lodash-pr-4528/      # lodash/lodash 的 PR #4528
-vuejs-core-pr-9012/         # vuejs/core 的 PR #9012
-```
-
-这样不同仓库的 PR 互不干扰，一目了然。
-
-## 多仓库管理
-
-技能维护一个仓库列表，支持快速切换：
-
-- 最近使用过的仓库自动记录（最多 10 个）
-- `/set-repo owner/repo` 添加新仓库或切换到已有仓库
-- `repo owner/repo` 快速切换（简写形式）
-- `/show-config` 展示当前配置和最近仓库列表
-
-### 配置展示格式
+In multi-repo scenarios, clone directories follow the `<owner>-<repo>-pr-<number>` format:
 
 ```
-⚙️  当前配置
+facebook-react-pr-28452/    # PR #28452 from facebook/react
+lodash-lodash-pr-4528/      # PR #4528 from lodash/lodash
+vuejs-core-pr-9012/         # PR #9012 from vuejs/core
+```
+
+This keeps PRs from different repositories separate and easily identifiable.
+
+## Multi-Repository Management
+
+The skill maintains a repository list for quick switching:
+
+- Recently used repositories are automatically recorded (up to 10)
+- `/set-repo owner/repo` adds a new repository or switches to an existing one
+- `repo owner/repo` quick switch (shorthand)
+- `/show-config` displays the current configuration and recent repository list
+
+### Configuration Display Format
+
+```
+⚙️  Current Configuration
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-当前仓库:   facebook/react
-克隆路径:   ./
-最近仓库:
-  1. facebook/react (当前)
+Current repo:   facebook/react
+Clone path:     ./
+Recent repos:
+  1. facebook/react (current)
   2. lodash/lodash
   3. vuejs/core
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-## PR 详情展示格式
+## PR Details Display Format
 
-### 完整信息（默认，输入 PR 编号时触发）
+### Full Information (default, triggered when a PR number is entered)
 
-一次性展示：基本详情 + diff + 评论/审查 + 提交历史。
+Displays everything at once: basic details + diff + comments/reviews + commit history.
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📌 PR #1234 详情 (facebook/react)
+📌 PR #1234 Details (facebook/react)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-标题:       feat: add new button component
-作者:       @john_doe
-状态:       🟢 OPEN | 可合并: ✅
-分支:       feature/button → main
-创建时间:   2026-05-28
-标签:       enhancement, UI
-变更文件:   5 个文件 (+234 / -56)
-提交数:     3
-🔗 链接:    https://github.com/facebook/react/pull/1234
+Title:      feat: add new button component
+Author:     @john_doe
+Status:     🟢 OPEN | Mergeable: ✅
+Branch:     feature/button → main
+Created:    2026-05-28
+Labels:     enhancement, UI
+Files changed:   5 files (+234 / -56)
+Commits:    3
+🔗 Link:    https://github.com/facebook/react/pull/1234
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📝 描述:
-添加了一个新的按钮组件，支持多种样式和尺寸配置...
+📝 Description:
+Added a new button component supporting multiple styles and size configurations...
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📊 代码变更 (diff) — 前 200 行:
+📊 Code Changes (diff) — First 200 lines:
  src/components/Button.tsx       |  45 ++++++++++++++
  src/components/Button.test.tsx  |  67 +++++++++++++++++++
  ...
- (共 5 个文件变更，完整 diff 可用 `gh pr diff 1234` 查看)
+ (5 files changed, full diff available via `gh pr diff 1234`)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-💬 审查状态:
-  @reviewer1 [APPROVED] — "LGTM, nice work!" (2天前)
-  @reviewer2 [COMMENTED] — "Consider adding aria labels" (1天前)
+💬 Review Status:
+  @reviewer1 [APPROVED] — "LGTM, nice work!" (2 days ago)
+  @reviewer2 [COMMENTED] — "Consider adding aria labels" (1 day ago)
 
-💬 评论 (3):
-  @dev_helper — "需要更新 Storybook 吗？"
-    ↳ @john_doe — "已更新，在另一个 PR #1235"
+💬 Comments (3):
+  @dev_helper — "Do we need to update Storybook?"
+    ↳ @john_doe — "Updated, in another PR #1235"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📜 提交历史 (3):
+📜 Commit History (3):
   abc1234  @john_doe     feat: add Button component variants
   def5678  @john_doe     style: format with prettier
   ghi9012  @john_doe     test: add Button unit tests
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-## 克隆后初始化流程
+## Post-Clone Initialization Flow
 
-克隆到 `facebook-react-pr-1234/` 后自动检测项目类型：
+After cloning into `facebook-react-pr-1234/`, auto-detect the project type:
 
-### Node.js 项目
+### Node.js Project
 ```
-🔍 检测到 Node.js 项目 (package.json)
-依赖: express, react, typescript ... (共 42 个包)
-是否执行 npm install？ [y/n] (默认 y)
+🔍 Detected Node.js project (package.json)
+Dependencies: express, react, typescript ... (42 packages total)
+Run npm install? [y/n] (default y)
 ```
 
-### Python 项目
+### Python Project
 ```
-🔍 检测到 Python 项目 (pyproject.toml)
-是否创建虚拟环境并安装依赖？ [y/n] (默认 y)
+🔍 Detected Python project (pyproject.toml)
+Create virtual environment and install dependencies? [y/n] (default y)
 → python -m venv .venv && source .venv/bin/activate && pip install -e .
 ```
 
-### Rust 项目
+### Rust Project
 ```
-🔍 检测到 Rust 项目 (Cargo.toml)
-是否执行 cargo build？ [y/n] (默认 y)
-```
-
-### 完成后
-```
-🎉 开发环境已就绪！
-📂 当前工作目录: ./facebook-react-pr-1234
-🌿 分支: feature/button
-📏 大小: 12MB
+🔍 Detected Rust project (Cargo.toml)
+Run cargo build? [y/n] (default y)
 ```
 
-## 自定义克隆路径
+### Completion
+```
+🎉 Development environment is ready!
+📂 Current directory: ./facebook-react-pr-1234
+🌿 Branch: feature/button
+📏 Size: 12MB
+```
 
-用户可通过 `/set-clone-path <路径>` 修改克隆根目录（默认为当前目录）：
+## Custom Clone Path
+
+Users can change the clone root directory via `/set-clone-path <path>` (default is the current directory):
 
 ```
 /set-clone-path ~/dev/pr-review
 ```
 
-之后克隆创建 `~/dev/pr-review/facebook-react-pr-<编号>`。
+Subsequent clones will create `~/dev/pr-review/facebook-react-pr-<number>`.
 
-## 完整示例对话
+## Full Conversation Example
 
-**用户：** 帮我看看 facebook/react 有哪些 PR
+**User:** Show me what PRs facebook/react has
 
-**Claude：**
+**Claude:**
 ```
-✅ 已设置仓库：facebook/react
-正在获取开放 PR...
+✅ Repo set: facebook/react
+Fetching open PRs...
 
-📋 仓库: facebook/react | 开放 PR 列表
+📋 Repository: facebook/react | Open PR List
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  #28452  feat: new hook useOptimistic    @sebmarkbage   3天前
-  #28400  fix: reconcile edge case        @acdlite       1周前
+  #28452  feat: new hook useOptimistic    @sebmarkbage   3 days ago
+  #28400  fix: reconcile edge case        @acdlite       1 week ago
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-共 2 个开放 PR
+2 open PRs
 ```
 
-**用户：** 看下 28452
+**User:** Check 28452
 
-**Claude：** [展示 PR #28452 完整信息：详情 + diff + 审查 + 提交]
+**Claude:** [Shows PR #28452 full info: details + diff + review + commits]
 
-**用户：** 克隆这个
+**User:** Clone this
 
-**Claude：** [克隆到 facebook-react-pr-28452 → 检测 Node.js → npm install → 完成]
+**Claude:** [Clones to facebook-react-pr-28452 → detects Node.js → npm install → done]
 
-**用户：** 切到 lodash/lodash 看看
+**User:** Switch to lodash/lodash
 
-**Claude：** [切换仓库 → 展示 lodash/lodash 的 PR 列表]
+**Claude:** [Switches repo → shows lodash/lodash PR list]
 
-**用户：** batch clone 4528,4500
+**User:** Batch clone 4528,4500
 
-**Claude：** [分别克隆到 lodash-lodash-pr-4528 和 lodash-lodash-pr-4500]
+**Claude:** [Clones to lodash-lodash-pr-4528 and lodash-lodash-pr-4500 respectively]

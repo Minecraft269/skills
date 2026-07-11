@@ -1,151 +1,151 @@
-# 代码审查检查清单
+# Code Review Checklist
 
-本文件定义 PR 审查时的检查项目，按严重程度（P0-P5）分层。审查时按优先级逐项检查 diff 中的代码变更。
-
----
-
-## P0 — 正确性缺陷（始终审查）
-
-这些是最严重的问题，发现后必须在 inline 评论中标记为 `severity: critical`。
-
-### 逻辑错误
-
-- [ ] **条件判断反转** — `if` / `while` 条件与意图相反
-- [ ] **运算符错误** — `>` 和 `>=`、`&&` 和 `||` 混淆
-- [ ] **循环边界错误** — 起始/结束条件导致多循环或少循环一次（off-by-one）
-- [ ] **返回值错误** — 函数返回了错误的值或类型
-- [ ] **早期返回遗漏** — 在应该提前返回的边界情况下继续执行
-
-### 空值与边界
-
-- [ ] **空指针/undefined 访问** — 对可能为 null/undefined 的值调用方法或属性
-- [ ] **数组越界** — 索引可能超出数组长度
-- [ ] **除零** — 除法运算分母可能为零
-- [ ] **空集合处理** — 未处理空数组/空字符串/空 Map 的情况
-- [ ] **正则表达式匹配失败** — `.match()` 返回 null 时直接访问结果
-
-### 类型与转换
-
-- [ ] **类型强制转换错误** — `==` 和 `===` 混淆、隐式转换导致意外行为
-- [ ] **精度丢失** — 浮点数比较/运算中的精度问题（尤其是金额计算）
-- [ ] **整数溢出** — 大数运算未考虑溢出
-- [ ] **日期/时区错误** — 未指定时区的时间解析、日期比较
-
-### 并发与状态
-
-- [ ] **竞态条件** — 异步操作之间缺少同步
-- [ ] **状态不一致** — 乐观更新失败后未回滚
-- [ ] **死锁** — 锁的获取顺序可能导致死锁
+This document defines the items to check during PR review, organized by severity (P0-P5). Reviewers should inspect code changes in the diff by priority level.
 
 ---
 
-## P1 — 安全问题（始终审查）
+## P0 — Correctness Defects (Always Review)
 
-发现后标记为 `severity: critical` 或 `severity: warning`。
+These are the most severe issues. When found, they must be marked as `severity: critical` in inline comments.
 
-### 注入防护
+### Logic Errors
 
-- [ ] **SQL 注入** — 使用字符串拼接构建 SQL 查询（应使用参数化查询或 ORM）
-- [ ] **NoSQL 注入** — 用户输入直接传入 MongoDB/Redis 等查询
-- [ ] **命令注入** — `exec()` / `spawn()` / `subprocess` 中使用未过滤的用户输入
-- [ ] **XSS** — 用户输入直接插入 HTML（应使用转义或安全的 DOM API）
-- [ ] **路径遍历** — 文件路径中包含未过滤的 `../`
+- [ ] **Inverted condition** — `if` / `while` condition is the opposite of what was intended
+- [ ] **Wrong operator** — `>` vs `>=`, `&&` vs `||` confusion
+- [ ] **Loop boundary errors** — start/end conditions cause one too many or one too few iterations (off-by-one)
+- [ ] **Wrong return value** — function returns the wrong value or type
+- [ ] **Missing early return** — execution continues in a boundary case where it should have returned early
 
-### 认证与授权
+### Null Values and Boundaries
 
-- [ ] **认证绕过** — 敏感端点缺少认证中间件
-- [ ] **权限缺失** — 操作未检查用户是否有权限执行
-- [ ] **JWT 验证不完整** — 未验证签名、过期时间、签发者
-- [ ] **会话固定** — 登录后未重新生成会话 ID
+- [ ] **Null/undefined access** — calling methods or properties on a value that may be null/undefined
+- [ ] **Array index out of bounds** — index may exceed array length
+- [ ] **Division by zero** — denominator in a division operation may be zero
+- [ ] **Empty collection handling** — not handling cases of empty arrays, empty strings, or empty Maps
+- [ ] **Regex match failure** — accessing `.match()` results directly when it may return null
 
-### 敏感数据
+### Types and Conversions
 
-- [ ] **密钥/Token 硬编码** — API key、密码、私钥写在代码中
-- [ ] **敏感信息日志泄露** — `console.log` / `log.info` 打印密码、token、用户数据
-- [ ] **不安全传输** — 敏感数据通过 HTTP 明文传输
-- [ ] **错误信息泄露** — 错误响应中暴露数据库结构、堆栈跟踪
+- [ ] **Type coercion errors** — `==` vs `===` confusion, implicit coercion causing unexpected behavior
+- [ ] **Precision loss** — floating point precision issues in comparisons/operations (especially monetary calculations)
+- [ ] **Integer overflow** — large number operations without overflow consideration
+- [ ] **Date/timezone errors** — time parsing without timezone specification, date comparisons
 
-### 加密
+### Concurrency and State
 
-- [ ] **弱加密算法** — 使用 MD5、SHA1 作为安全哈希
-- [ ] **不安全随机数** — 使用 `Math.random()` 生成 token/密码
-- [ ] **缺少加密** — 密码存储未使用 bcrypt/argon2 等哈希
-
----
-
-## P2 — 性能问题（始终审查）
-
-发现后标记为 `severity: warning`。
-
-### 数据库与 I/O
-
-- [ ] **N+1 查询** — 循环中逐条查询数据库（应使用 JOIN 或批量查询）
-- [ ] **缺少索引** — 新增的 WHERE/ORDER BY 列可能缺少索引
-- [ ] **全表扫描** — 查询条件无法使用索引
-- [ ] **大事务** — 事务中包含耗时操作
-
-### 网络与渲染
-
-- [ ] **不必要的数据传输** — API 返回了大量前端不需要的字段
-- [ ] **重复请求** — 相同数据的多次 API 调用（应使用缓存或去重）
-- [ ] **不必要的重渲染** — React/Vue 组件在 props 未变化时重渲染
-- [ ] **大文件未分页** — 列表接口一次性返回所有数据
-
-### 内存
-
-- [ ] **内存泄漏** — 事件监听未移除、定时器未清除、闭包持有大对象引用
-- [ ] **大对象复制** — 对大数组/对象进行不必要的深拷贝
-- [ ] **不必要的数据保持** — 一次性计算结果被长期缓存
-
-### 算法
-
-- [ ] **O(n²) 或更高的嵌套循环** — 对大数据集的嵌套迭代
-- [ ] **不必要的排序** — 不需要排序时调用了 sort
+- [ ] **Race conditions** — missing synchronization between async operations
+- [ ] **State inconsistency** — no rollback after optimistic update failure
+- [ ] **Deadlock** — lock acquisition order may cause deadlock
 
 ---
 
-## P3 — 设计问题（仅 thorough 模式）
+## P1 — Security Issues (Always Review)
 
-标记为 `severity: suggestion`。
+Mark as `severity: critical` or `severity: warning`.
 
-- [ ] **单一职责违反** — 一个函数/类做了多件不相关的事情
-- [ ] **过度耦合** — 模块间通过具体类型而非接口依赖
-- [ ] **循环依赖** — 模块 A 依赖 B，B 依赖 A
-- [ ] **上帝类/上帝函数** — 一个类/函数承担了过多职责
-- [ ] **重复代码** — 相同的逻辑出现在多个地方（超过 3 处）
-- [ ] **魔法数字** — 未命名的硬编码数值
+### Injection Prevention
 
----
+- [ ] **SQL injection** — building SQL queries with string concatenation (should use parameterized queries or ORM)
+- [ ] **NoSQL injection** — user input passed directly to MongoDB/Redis queries
+- [ ] **Command injection** — unsanitized user input used in `exec()` / `spawn()` / `subprocess`
+- [ ] **XSS** — user input inserted directly into HTML (should use escaping or safe DOM APIs)
+- [ ] **Path traversal** — file paths containing unsanitized `../`
 
-## P4 — 最佳实践（仅 thorough 模式）
+### Authentication and Authorization
 
-标记为 `severity: suggestion`。
+- [ ] **Authentication bypass** — sensitive endpoints missing auth middleware
+- [ ] **Missing authorization** — operations don't check if user has permission
+- [ ] **Incomplete JWT validation** — signature, expiration, or issuer not verified
+- [ ] **Session fixation** — session ID not regenerated after login
 
-- [ ] **命名不清晰** — 变量/函数名未能说明其用途
-- [ ] **缺少错误处理** — try-catch 缺失或 catch 块为空
-- [ ] **缺少文档** — 公共 API 缺少 JSDoc/Python docstring
-- [ ] **测试缺失** — 新增的关键逻辑没有测试用例
-- [ ] **过时的注释** — 注释描述与代码实际行为不一致
-- [ ] **不遵循项目风格** — 缩进、引号、命名风格与项目惯例不一致
+### Sensitive Data
 
----
+- [ ] **Hardcoded secrets/tokens** — API keys, passwords, private keys written in code
+- [ ] **Sensitive information in logs** — `console.log` / `log.info` printing passwords, tokens, user data
+- [ ] **Insecure transmission** — sensitive data sent over plaintext HTTP
+- [ ] **Error information leakage** — error responses exposing database structure, stack traces
 
-## P5 — 锦上添花（仅 thorough 模式）
+### Cryptography
 
-标记为 `severity: suggestion` 或 `severity: praise`。
-
-- [ ] **更好的命名建议** — 有更达意的替代名称
-- [ ] **微小优化** — 使用更简洁的语法或内置方法
-- [ ] **值得称赞的代码** — 清晰的逻辑、好的注释、优美的设计（`severity: praise`）
-- [ ] **可选的代码简化** — 有更简洁但等价表达方式
+- [ ] **Weak encryption algorithm** — using MD5, SHA1 for security hashing
+- [ ] **Insecure random numbers** — using `Math.random()` to generate tokens/passwords
+- [ ] **Missing encryption** — passwords stored without bcrypt/argon2 hashing
 
 ---
 
-## 审查原则
+## P2 — Performance Issues (Always Review)
 
-1. **先理解，后评价** — 在批评前确保你理解了作者的意图
-2. **具体而非笼统** — 「这里可能 NPE」不如「第 42 行 `user.name` 在 `user` 为 null 时会抛出 TypeError」
-3. **建议而非命令** — 「可以考虑使用 `Array.find()` 替代手动循环」而非「必须改用 find」
-4. **附带修复建议** — 指出问题同时给出修复代码示例
-5. **平衡正负反馈** — 好的代码也值得赞许
-6. **不阻塞不严重的问题** — P3 以下用 COMMENT 而非 REQUEST_CHANGES
+Mark as `severity: warning`.
+
+### Database and I/O
+
+- [ ] **N+1 queries** — querying the database one row at a time in a loop (should use JOIN or batch queries)
+- [ ] **Missing index** — newly added WHERE/ORDER BY columns may lack an index
+- [ ] **Full table scan** — query conditions cannot use indexes
+- [ ] **Large transactions** — transactions containing time-consuming operations
+
+### Network and Rendering
+
+- [ ] **Unnecessary data transfer** — API returns many fields the frontend doesn't need
+- [ ] **Duplicate requests** — multiple API calls for the same data (should use caching or deduplication)
+- [ ] **Unnecessary re-renders** — React/Vue components re-rendering when props haven't changed
+- [ ] **Large files without pagination** — list endpoint returning all data at once
+
+### Memory
+
+- [ ] **Memory leaks** — event listeners not removed, timers not cleared, closures holding references to large objects
+- [ ] **Large object copies** — unnecessary deep copies of large arrays/objects
+- [ ] **Unnecessary data retention** — one-time computation results cached indefinitely
+
+### Algorithms
+
+- [ ] **O(n²) or higher nested loops** — nested iteration over large data sets
+- [ ] **Unnecessary sorting** — calling sort when order is not required
+
+---
+
+## P3 — Design Issues (Thorough Mode Only)
+
+Mark as `severity: suggestion`.
+
+- [ ] **Single responsibility violation** — a function/class doing multiple unrelated things
+- [ ] **Excessive coupling** — modules depending on concrete types rather than interfaces
+- [ ] **Circular dependency** — module A depends on B, B depends on A
+- [ ] **God class/god function** — a class/function taking on too many responsibilities
+- [ ] **Duplicate code** — the same logic appearing in multiple places (more than 3)
+- [ ] **Magic numbers** — unnamed hardcoded numeric values
+
+---
+
+## P4 — Best Practices (Thorough Mode Only)
+
+Mark as `severity: suggestion`.
+
+- [ ] **Unclear naming** — variable/function names don't convey their purpose
+- [ ] **Missing error handling** — missing try-catch or empty catch blocks
+- [ ] **Missing documentation** — public APIs without JSDoc/Python docstrings
+- [ ] **Missing tests** — new critical logic without test cases
+- [ ] **Outdated comments** — comments describing behavior that no longer matches the code
+- [ ] **Not following project style** — indentation, quotes, naming inconsistent with project conventions
+
+---
+
+## P5 — Nice-to-Have (Thorough Mode Only)
+
+Mark as `severity: suggestion` or `severity: praise`.
+
+- [ ] **Better naming suggestion** — alternative names that are more expressive
+- [ ] **Minor optimization** — using more concise syntax or built-in methods
+- [ ] **Praiseworthy code** — clear logic, good comments, elegant design (`severity: praise`)
+- [ ] **Optional code simplification** — more concise but equivalent expression available
+
+---
+
+## Review Principles
+
+1. **Understand first, critique second** — before criticizing, ensure you understand the author's intent
+2. **Be specific, not vague** — "this could NPE" is worse than "line 42 `user.name` will throw TypeError when `user` is null"
+3. **Suggest, don't command** — "consider using `Array.find()` instead of a manual loop" rather than "must use find instead"
+4. **Include fix suggestions** — provide code examples when pointing out issues
+5. **Balance positive and negative feedback** — good code deserves praise too
+6. **Don't block non-critical issues** — use COMMENT instead of REQUEST_CHANGES for P3 and below

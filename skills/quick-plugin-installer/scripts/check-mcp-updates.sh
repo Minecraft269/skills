@@ -1,23 +1,23 @@
 #!/bin/bash
-# 检查已安装的 MCP Server 是否有新版本
-# 用法: ./check-mcp-updates.sh [server-name]
-# 不指定名称则检查所有已安装的 MCP Server
+# Check if installed MCP Servers have new versions
+# Usage: ./check-mcp-updates.sh [server-name]
+# Without a server name, checks all installed MCP Servers
 
 set -euo pipefail
 
 SETTINGS_FILE="$HOME/.claude/settings.json"
 
 if [ ! -f "$SETTINGS_FILE" ]; then
-  echo "❌ 未找到 settings.json，请先安装 MCP Server"
+  echo "❌ settings.json not found, please install MCP Server first"
   exit 1
 fi
 
-# 列出所有已安装的 MCP Server
+# List all installed MCP Servers
 list_servers() {
   jq -r '.mcpServers // {} | keys[]' "$SETTINGS_FILE" 2>/dev/null
 }
 
-# 提取第一个非选项参数作为包名
+# Extract the first non-option argument as package name
 extract_pkg() {
   local args="$1"
   for arg in $args; do
@@ -28,46 +28,46 @@ extract_pkg() {
   done
 }
 
-# 跨平台超时命令
+# Cross-platform timeout command
 safe_timeout() {
   if command -v timeout &>/dev/null; then
     timeout "$@"
   else
-    # Windows Git Bash / 无 timeout 时的回退
+    # Windows Git Bash / fallback when timeout is unavailable
     "$@"
   fi
 }
 
-# 检查 npm 包的最新版本
+# Check npm package for latest version
 check_npm_update() {
   local pkg="$1"
   local latest
 
-  # 验证包名格式（仅允许 npm 合法字符）
-  [[ "$pkg" =~ ^@?[a-zA-Z0-9_.-]+(/[a-zA-Z0-9_.-]+)?$ ]] || { echo "  ⚠️  包名格式异常，跳过"; return; }
-  # 尝试获取本地已安装版本
+  # Validate package name format (only npm-legal characters)
+  [[ "$pkg" =~ ^@?[a-zA-Z0-9_.-]+(/[a-zA-Z0-9_.-]+)?$ ]] || { echo "  ⚠️  Package name format is unusual, skipping"; return; }
+  # Try to get locally installed version
   local current
   current=$(npm list -g -- "$pkg" --depth=0 2>/dev/null | grep "$pkg@" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo "unknown")
 
-  # 查询 npm registry 最新版本
+  # Query npm registry for latest version
   latest=$(safe_timeout 10 npm view "$pkg" version 2>/dev/null || echo "")
   if [ -z "$latest" ]; then
-    echo "  ⚠️ 无法查询 npm 上的最新版本"
+    echo "  ⚠️ Unable to query latest version on npm"
     return
   fi
 
   if [ "$current" != "unknown" ] && [ "$current" != "$latest" ]; then
-    echo "  🔄 新版本可用: $latest (当前: $current)"
-    echo "  📝 更新命令: npm install -g $pkg@latest"
+    echo "  🔄 New version available: $latest (current: $current)"
+    echo "  📝 Update command: npm install -g $pkg@latest"
   elif [ "$current" != "unknown" ]; then
-    echo "  ✅ 已是最新版本 ($current)"
+    echo "  ✅ Already at latest version ($current)"
   else
-    echo "  📦 最新版本: $latest"
-    echo "  📝 安装命令: npm install -g $pkg@latest"
+    echo "  📦 Latest version: $latest"
+    echo "  📝 Install command: npm install -g $pkg@latest"
   fi
 }
 
-echo "🔍 检查 MCP Server 更新..."
+echo "🔍 Checking MCP Server updates..."
 echo ""
 
 TARGET="${1:-}"
@@ -80,36 +80,36 @@ while IFS= read -r server; do
   COUNT=$((COUNT + 1))
   echo "📦 $server"
 
-  # 使用 --arg 安全传递变量到 jq
+  # Use --arg to safely pass variable to jq
   cmd=$(jq -r --arg s "$server" '.mcpServers[$s].command // empty' "$SETTINGS_FILE")
   args=$(jq -r --arg s "$server" '.mcpServers[$s].args // [] | join(" ")' "$SETTINGS_FILE")
 
   if echo "$cmd" | grep -qE 'npx|npm'; then
     pkg=$(extract_pkg "$args")
     if [ -n "$pkg" ] && [ "$pkg" != "$cmd" ]; then
-      echo "  类型: npm"
-      echo "  包名: $pkg"
+      echo "  Type: npm"
+      echo "  Package: $pkg"
       check_npm_update "$pkg"
     else
-      echo "  类型: npm (无法提取包名，跳过)"
+      echo "  Type: npm (unable to extract package name, skipping)"
     fi
   elif echo "$cmd" | grep -qE 'uvx|pip|pip3'; then
-    echo "  类型: Python"
-    echo "  ⚠️ Python 包更新检查暂不支持，请手动检查"
+    echo "  Type: Python"
+    echo "  ⚠️ Python package update check not yet supported, please check manually"
   elif echo "$cmd" | grep -qE 'docker|podman'; then
-    echo "  类型: 容器"
-    echo "  ⚠️ 容器镜像更新检查暂不支持，请手动拉取"
+    echo "  Type: Container"
+    echo "  ⚠️ Container image update check not yet supported, please pull manually"
   else
-    echo "  类型: 本地命令 ($cmd)"
-    echo "  ⚠️ 本地命令无法自动检查更新"
+    echo "  Type: Local command ($cmd)"
+    echo "  ⚠️ Local commands cannot be automatically checked for updates"
   fi
   echo ""
 done < <(list_servers)
 
 if [ "$COUNT" -eq 0 ]; then
   if [ -n "$TARGET" ]; then
-    echo "❌ 未找到 MCP Server: $TARGET"
+    echo "❌ MCP Server not found: $TARGET"
   else
-    echo "📭 没有已安装的 MCP Server"
+    echo "📭 No MCP Servers installed"
   fi
 fi
