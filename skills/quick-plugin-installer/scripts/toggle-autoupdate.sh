@@ -1,61 +1,61 @@
 #!/bin/bash
-# 切换 known_marketplaces.json 中指定来源的 autoUpdate 状态
-# 用法: ./toggle-autoupdate.sh <source-url-pattern> [on|off]
-# pattern 为子串匹配（不区分大小写），匹配多个时会列出并请求确认
+# Toggle the autoUpdate status for a given source in known_marketplaces.json
+# Usage: ./toggle-autoupdate.sh <source-url-pattern> [on|off]
+# Pattern is substring matched (case-insensitive), lists and confirms when multiple matches found
 
 set -euo pipefail
 
 MARKETPLACES_FILE="$HOME/.claude/known_marketplaces.json"
 
 if [ ! -f "$MARKETPLACES_FILE" ]; then
-  echo "❌ 未找到 known_marketplaces.json，请先注册 Marketplace"
+  echo "❌ known_marketplaces.json not found, please register a Marketplace first"
   exit 1
 fi
 
 PATTERN="${1:-}"
 ACTION="${2:-}"
 
-# 显示当前状态（无参数时）
+# Show current state (no arguments)
 if [ -z "$PATTERN" ]; then
-  echo "用法: $0 <source-url-pattern> [on|off]"
+  echo "Usage: $0 <source-url-pattern> [on|off]"
   echo ""
-  echo "当前所有 Marketplace 的 autoUpdate 状态："
+  echo "Current autoUpdate status for all Marketplaces:"
   jq -r '.[] | "  \(.source // "unknown"): autoUpdate = \(.autoUpdate // false)"' "$MARKETPLACES_FILE"
   exit 0
 fi
 
-# 输入验证：拒绝过长的模式
+# Input validation: reject overly long patterns
 if [ ${#PATTERN} -gt 200 ]; then
-  echo "❌ 匹配模式过长（超过 200 字符）"
+  echo "❌ Pattern too long (exceeds 200 characters)"
   exit 1
 fi
 
-# 使用 --arg 安全传递变量到 jq（防止 jq 注入）
+# Use --arg to safely pass variables to jq (prevents jq injection)
 MATCHES=$(jq -r --arg pattern "$PATTERN" '.[] | select(.source | contains($pattern)) | .source' "$MARKETPLACES_FILE")
 MATCH_COUNT=$(echo "$MATCHES" | grep -c . || true)
 
 if [ -z "$MATCHES" ] || [ "$MATCH_COUNT" -eq 0 ]; then
-  echo "❌ 未找到匹配 '$PATTERN' 的 Marketplace"
+  echo "❌ No Marketplace matching '$PATTERN' found"
   exit 1
 fi
 
-# 多匹配时列出并确认
+# List and confirm when multiple matches
 if [ "$MATCH_COUNT" -gt 1 ]; then
-  echo "⚠️ 匹配到 $MATCH_COUNT 个 Marketplace："
+  echo "⚠️  Matched $MATCH_COUNT Marketplaces:"
   echo "$MATCHES" | while IFS= read -r line; do
     CURRENT=$(jq -r --arg pattern "$line" '.[] | select(.source == $pattern) | .autoUpdate // false' "$MARKETPLACES_FILE")
     echo "  - $line (autoUpdate: $CURRENT)"
   done
   echo ""
   if [ -z "$ACTION" ]; then
-    echo "请指定操作: $0 '$PATTERN' on  或  $0 '$PATTERN' off"
-    echo "💡 提示：使用更精确的模式来匹配单个 Marketplace"
+    echo "Please specify an action: $0 '$PATTERN' on   or  $0 '$PATTERN' off"
+    echo "💡 Hint: use a more precise pattern to match a single Marketplace"
     exit 1
   fi
-  echo "将对以上 $MATCH_COUNT 个 Marketplace 执行操作..."
+  echo "Will apply the operation to the above $MATCH_COUNT Marketplaces..."
 fi
 
-# 跨平台临时文件（Windows 无 mktemp 时回退）
+# Cross-platform temp file (fallback when Windows lacks mktemp)
 if command -v mktemp &>/dev/null; then
   tmpfile=$(mktemp "${MARKETPLACES_FILE}.XXXXXXXX")
 else
@@ -72,11 +72,11 @@ case "$ACTION" in
       'map(if .source | contains($pattern) then .autoUpdate = true else . end)' \
       "$MARKETPLACES_FILE" > "$tmpfile"; then
       mv "$tmpfile" "$MARKETPLACES_FILE"
-      trap - EXIT  # 文件已成功移动，取消 cleanup
-      echo "✅ autoUpdate 已启用（匹配 $MATCH_COUNT 个 Marketplace）"
+      trap - EXIT  # File moved successfully, cancel cleanup
+      echo "✅ autoUpdate enabled (matched $MATCH_COUNT Marketplaces)"
     else
       cleanup
-      echo "❌ jq 处理失败，原文件未修改"
+      echo "❌ jq processing failed, original file unchanged"
       exit 1
     fi
     ;;
@@ -86,21 +86,21 @@ case "$ACTION" in
       "$MARKETPLACES_FILE" > "$tmpfile"; then
       mv "$tmpfile" "$MARKETPLACES_FILE"
       trap - EXIT
-      echo "✅ autoUpdate 已禁用（匹配 $MATCH_COUNT 个 Marketplace）"
+      echo "✅ autoUpdate disabled (matched $MATCH_COUNT Marketplaces)"
     else
       cleanup
-      echo "❌ jq 处理失败，原文件未修改"
+      echo "❌ jq processing failed, original file unchanged"
       exit 1
     fi
     ;;
   *)
-    # 仅显示状态
-    echo "📋 当前 autoUpdate 状态："
+    # Show status only
+    echo "📋 Current autoUpdate status:"
     echo "$MATCHES" | while IFS= read -r line; do
       CURRENT=$(jq -r --arg pattern "$line" '.[] | select(.source == $pattern) | .autoUpdate // false' "$MARKETPLACES_FILE")
       echo "  $line: autoUpdate = $CURRENT"
     done
     echo ""
-    echo "可用操作: $0 '$PATTERN' on  或  $0 '$PATTERN' off"
+    echo "Available actions: $0 '$PATTERN' on   or  $0 '$PATTERN' off"
     ;;
 esac

@@ -293,14 +293,14 @@ To keep the interactive experience responsive, always:
 
 ### MCP Tool Discovery
 
-MCP 工具指令通过在系统提示中识别 `mcp__*` 前缀来发现。
+MCP tools are discovered by identifying the `mcp__*` prefix in system prompts.
 
 #### Discovery Method
 
-1. **从系统提示提取:** 扫描 `<system-reminder>` 中的 tool list，识别所有 `mcp__` 前缀的函数
-2. **使用 ListMcpResourcesTool:** 调用内置 MCP 查看所有连接的服务器资源
-3. **从 settings.json 读取:** 解析 `mcpServers` 获取服务器列表
-4. **从工具列表中获取 schema:** 工具的参数 schema 反映了其功能
+1. **Extract from system prompts:** Scan the tool list in `<system-reminder>`, identify all functions with `mcp__` prefix
+2. **Use ListMcpResourcesTool:** Invoke the built-in MCP to view all connected server resources
+3. **Read from settings.json:** Parse `mcpServers` for the server list
+4. **Get schema from the tool list:** A tool's parameter schema reflects its capabilities
 
 #### MCP Tool Naming Convention
 
@@ -310,61 +310,61 @@ or
 mcp__{server-name}__{tool-name}
 
 Examples:
-- mcp__plugin_github_github__create_pull_request  → GitHub 插件 → create_pull_request 工具
-- mcp__plugin_context7_context7__query-docs       → Context7 插件 → query-docs 工具
-- mcp__longhand__recall                           → Longhand 插件 → recall 工具
+- mcp__plugin_github_github__create_pull_request  → GitHub plugin → create_pull_request tool
+- mcp__plugin_context7_context7__query-docs       → Context7 plugin → query-docs tool
+- mcp__longhand__recall                           → Longhand plugin → recall tool
 ```
 
 #### MCP Tool → Use Case Inference Rules
 
 | Tool Name Pattern | Inferred Purpose | Inferred Use Case |
 |-------------------|-----------------|-------------------|
-| `create_*` | 创建资源 | 需要新建 PR/Issue/分支/文件时 |
-| `search_*` | 搜索/查找 | 需要查找代码/文档/用户时 |
-| `get_*` / `read_*` | 读取/获取 | 需要查看详情/内容时 |
-| `list_*` | 列出集合 | 需要浏览列表/目录时 |
-| `update_*` / `edit_*` | 修改资源 | 需要更新配置/内容时 |
-| `delete_*` / `remove_*` | 删除资源 | 需要移除文件/资源时 |
-| `query-*` | 查询文档 | 需要查阅 API/框架文档时 |
-| `recall` / `find_*` | 回忆/记忆查找 | 需要查找历史会话/记忆时 |
-| `replay_*` | 重放/回放 | 需要回溯历史状态时 |
-| `resolve-*` | 解析/查找 ID | 需要查找库 ID 时 |
+| `create_*` | Create resources | When creating new PRs/Issues/branches/files |
+| `search_*` | Search / find | When searching for code/docs/users |
+| `get_*` / `read_*` | Read / retrieve | When viewing details/content |
+| `list_*` | List collections | When browsing lists/directories |
+| `update_*` / `edit_*` | Modify resources | When updating config/content |
+| `delete_*` / `remove_*` | Delete resources | When removing files/resources |
+| `query-*` | Query documentation | When looking up API/framework docs |
+| `recall` / `find_*` | Recall / memory lookup | When searching session history/memory |
+| `replay_*` | Replay / trace back | When tracing historical state |
+| `resolve-*` | Resolve / lookup ID | When looking up library IDs |
 
 ### Slash Command Discovery
 
-Slash 命令在系统提示中以 `- name: description` 格式列出。
+Slash commands are listed in system prompts in the format `- name: description`.
 
 #### Discovery Method
 
-1. 扫描系统提示中 "available skills" / slash commands 段落
-2. 命令格式: `- command-name: Description text`
-3. 提取后按功能分类
+1. Scan the "available skills" / slash commands section in system prompts
+2. Command format: `- command-name: Description text`
+3. After extraction, categorize by function
 
 #### Slash Command Categories
 
-| 分类 | 典型命令 | 通用适用场景 |
-|------|---------|-------------|
-| **Git 操作** | `/commit`, `/create-pr`, `/create-branch`, `/git-pushing`, `/clean_gone` | 代码版本管理 |
-| **代码审查** | `/code-review`, `/review`, `/simplify`, `/security-review` | 代码质量保障 |
-| **开发流程** | `/tdd`, `/feature-dev`, `/init`, `/setup` | 正规开发流程 |
-| **调试与验证** | `/debug`, `/verify`, `/lint`, `/test` | 问题排查和修复验证 |
-| **研究工作** | `/deep-research`, `/analyze`, `/explain` | 需求分析和调研 |
-| **会话管理** | `/discover`, `/clear`, `/loop`, `/exit`, `/schedule` | 会话交互控制 |
-| **配置管理** | `/config`, `/keybindings`, `/update-config`, `/install` | 环境和个人设置 |
-| **文档与写作** | `/write-plan`, `/write-skill`, `/generate-docs` | 文档创建和维护 |
-| **自动化** | `/hookify`, `/cron`, `/workflow` | 自动化工作流 |
+| Category | Typical Commands | General Use Case |
+|----------|-----------------|------------------|
+| **Git Operations** | `/commit`, `/create-pr`, `/create-branch`, `/git-pushing`, `/clean_gone` | Code version management |
+| **Code Review** | `/code-review`, `/review`, `/simplify`, `/security-review` | Code quality assurance |
+| **Development Workflow** | `/tdd`, `/feature-dev`, `/init`, `/setup` | Formal development process |
+| **Debugging & Verification** | `/debug`, `/verify`, `/lint`, `/test` | Issue troubleshooting and fix verification |
+| **Research Work** | `/deep-research`, `/analyze`, `/explain` | Requirements analysis and research |
+| **Session Management** | `/discover`, `/clear`, `/loop`, `/exit`, `/schedule` | Session interaction control |
+| **Configuration Management** | `/config`, `/keybindings`, `/update-config`, `/install` | Environment and personal settings |
+| **Documentation & Writing** | `/write-plan`, `/write-skill`, `/generate-docs` | Document creation and maintenance |
+| **Automation** | `/hookify`, `/cron`, `/workflow` | Automated workflows |
 
 #### Command-to-Project Matching
 
-| 项目阶段 | 最有用的 Slash 命令 |
-|---------|-------------------|
-| **项目初始化** | `/init`, `/setup`, `/discover` |
-| **日常开发** | `/commit`, `/feature-dev`, `/code-review` |
-| **调试修复** | `/debug`, `/verify`, `/test` |
-| **代码审查** | `/review`, `/simplify`, `/code-review`, `/security-review` |
-| **发布准备** | `/create-pr`, `/lint`, `/verify` |
-| **学习探索** | `/explain`, `/analyze`, `/deep-research` |
-| **会话管理** | `/clear`, `/loop`, `/exit`, `/discover` |
+| Project Phase | Most Useful Slash Commands |
+|---------------|---------------------------|
+| **Project Initiation** | `/init`, `/setup`, `/discover` |
+| **Daily Development** | `/commit`, `/feature-dev`, `/code-review` |
+| **Debug & Fix** | `/debug`, `/verify`, `/test` |
+| **Code Review** | `/review`, `/simplify`, `/code-review`, `/security-review` |
+| **Release Preparation** | `/create-pr`, `/lint`, `/verify` |
+| **Learning & Exploration** | `/explain`, `/analyze`, `/deep-research` |
+| **Session Management** | `/clear`, `/loop`, `/exit`, `/discover` |
 
 ### Command Matching Algorithm
 
@@ -411,7 +411,7 @@ Some plugins contain critical files that are NOT automatically loaded or indexed
 | `everything-claude-code` (ECC) | SOUL.md, RULES.md, AGENTS.md, CLAUDE.md, COMMANDS-QUICK-REF.md, WORKING-CONTEXT.md, the-security-guide.md, agent.yaml | Behavioral rules, security guides, agent configs |
 | `superpowers` | AGENTS.md, CLAUDE.md, GEMINI.md, hooks/hooks.json | Multi-platform agent behavior configs, hooks |
 | `andrej-karpathy-skills` | CLAUDE.md, CURSOR.md, .cursor/rules/karpathy-guidelines.mdc, skills/karpathy-guidelines/SKILL.md | Coding guidelines, nested skills, Cursor rules |
-| `oh-my-claudecode` | .agents/skills/\*/\*.md (数十个嵌套技能) | Plugin-internal skills (may not appear in `~/.claude/skills/`) |
+| `oh-my-claudecode` | .agents/skills/\*/\*.md (dozens of nested skills) | Plugin-internal skills (may not appear in `~/.claude/skills/`) |
 
 ### How to Deep-Explore
 
@@ -473,13 +473,13 @@ The following fields extend the base JSON schema (see Discovery Rules JSON Schem
 
 When generating a full export, use these field tables:
 
-**Per Skill:** 名称, 类别 (dev/meta/ops), 来源 (community/official/custom), 描述, 适用场景标签, 文件路径
+**Per Skill:** name, category (dev/meta/ops), source (community/official/custom), description, use-case tags, file path
 
-**Per Plugin:** 名称, 类型 (stdio/sse/http), 命令/可执行文件, 描述, 来源 (MCP配置/本地插件目录)
+**Per Plugin:** name, type (stdio/sse/http), command/executable, description, source (MCP config / local plugin directory)
 
-**Per MCP Tool:** 工具名称, 所属插件, 作用, 适用场景
+**Per MCP Tool:** tool name, parent plugin, purpose, use case
 
-**Per Slash Command:** 命令 (/name), 作用, 适用场景, 分类 (Git/审查/开发/调试/会话/设置)
+**Per Slash Command:** command (/name), purpose, use case, category (Git/Review/Dev/Debug/Session/Config)
 
 ---
 
@@ -498,7 +498,7 @@ The scanning logic in Step 2 is designed to be extensible. When new sources emer
 2. **Deep exploration is REQUIRED** — always deep-scan ECC/superpowers/andrej-karpathy/OMC for SOUL.md, RULES.md, AGENTS.md, nested skills, and other unindexed resources
 3. **Priority boost** — ECC, superpowers, andrej-karpathy-skills, and any deep resources always get ⭐ top placement
 4. **Step 0c-5 commands come AFTER selection** — never show MCP tools or slash commands in Step 0c-4's initial recommendation
-5. **Each command MUST include "作用" and "适用场景"** — describe what it does and when to use it
+5. **Each command MUST include "purpose" and "use case"** — describe what it does and when to use it
 6. **Step 0c-4 is MANDATORY** — always ask user after displaying recommendations
 7. **Step 0c-6 requires consent** — always ask before exporting
 8. **Respect "skip"** — don't re-recommend in the same session unless project context changes significantly

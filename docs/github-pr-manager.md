@@ -1,42 +1,41 @@
 # github-pr-manager
 
-GitHub PR 全功能管理器 — 在终端中列出、查看、克隆、分析 GitHub Pull Request。
+Full-featured GitHub PR manager — list, view, clone, and analyze GitHub Pull Requests in the terminal.
 
-## 核心功能
+## Core Features
 
-- 列出仓库所有开放 PR（表格展示，支持翻页）
-- 查看 PR 完整信息：详情、diff、评论、审查状态、提交历史
-- 克隆 PR 到本地并自动检测项目类型（Node/Python/Rust/Go/Java）初始化环境
-- CI 状态查看和失败原因分析
-- 多仓库切换和批量操作
+- List all open PRs for a repository (table display, supports pagination)
+- View complete PR info: details, diff, comments, review status, commit history
+- Clone PRs locally with automatic project type detection (Node/Python/Rust/Go/Java) and environment initialization
+- CI status viewing and failure analysis
+- Multi-repository switching and batch operations
 
-## 前置依赖
+## Prerequisites
 
 - `gh` (GitHub CLI ≥ 2.0.0)
 - `git`
 - `jq`
 
-## 命令速查
+## Command Quick Reference
 
-| 输入 | 说明 |
-|------|------|
-| `<编号>` | 查看 PR 完整信息（默认行为） |
-| `c <编号>` | 克隆 PR 并初始化 |
-| `d <编号>` | 仅查看详情 |
-| `diff <编号>` | 查看代码变更 |
-| `comments <编号>` | 查看评论和审查 |
-| `commits <编号>` | 查看提交历史 |
-| `batch clone <n1>,<n2>` | 批量克隆 |
-| `batch view <n1>,<n2>` | 批量查看 |
-| `r` | 刷新 PR 列表 |
-| `repo <owner/repo>` | 切换仓库 |
+| Input | Description |
+|-------|-------------|
+| `<number>` | View full PR info (default behavior) |
+| `c <number>` | Clone PR and initialize |
+| `d <number>` | View details only |
+| `diff <number>` | View code changes |
+| `comments <number>` | View comments and reviews |
+| `commits <number>` | View commit history |
+| `batch clone <n1>,<n2>` | Batch clone |
+| `batch view <n1>,<n2>` | Batch view |
+| `r` | Refresh PR list |
+| `repo <owner/repo>` | Switch repository |
 
-## 相关技能
+## Related Skills
 
-本技能属于 [minecraft269-skills](https://github.com/Minecraft269/skills) 插件包。当完整安装插件包时，本技能可与其他包内技能自动联动：
+This skill is part of the [minecraft269-skills](https://github.com/Minecraft269/skills) plugin package. When the full package is installed, this skill can auto-link with other package skills:
 
-- 克隆 PR 后自动提示项目启动流程和技能发现
-- 被主动技能发现引擎自动推荐给 GitHub 项目
+- After cloning a PR, automatically suggests project kickoff flow and skill discovery
+- Auto-recommended by the proactive skill discovery engine for GitHub projects
 
-独立安装本技能时，上述联动功能静默关闭，不影响核心 PR 管理功能。
-
+When installed standalone, the above linkage features are silently disabled, with no impact on core PR management functionality.

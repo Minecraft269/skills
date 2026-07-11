@@ -1,11 +1,11 @@
 ---
 name: github-pr-reviewer
 description: >
-  GitHub PR 代码审查器 — 使用 GitHub MCP 工具在 PR 上创建逐行 inline 审查评论。
-  自动拉取 PR diff、分析代码变更、创建 pending review、逐行添加 inline 评论、
-  提交审查结论（APPROVE/REQUEST_CHANGES/COMMENT）。
-  当你需要审查 PR、检查代码质量、review 代码、或对 PR 提出具体行级建议时使用此技能。
-  即使用户只说「帮我 review 这个 PR」或「看看这个代码有什么问题」也应触发。
+  GitHub PR Code Reviewer — Creates line-by-line inline review comments on PRs using GitHub MCP tools.
+  Automatically fetches the PR diff, analyzes code changes, creates a pending review, adds inline comments line by line,
+  and submits a review conclusion (APPROVE/REQUEST_CHANGES/COMMENT).
+  Use this skill when you need to review a PR, check code quality, or provide specific line-level suggestions on a PR.
+  Should trigger even if the user simply says "review this PR" or "see what's wrong with this code".
 capabilities: ["pr-review", "code-review", "inline-comments"]
 integrates_with: ["pr-management", "skill-discovery"]
 metadata:
@@ -13,42 +13,42 @@ metadata:
   risk: safe
 ---
 
-# GitHub PR 审查器
+# GitHub PR Reviewer
 
-在 GitHub Pull Request 上执行代码审查，使用 GitHub MCP 工具创建 **逐行 inline 评论**——这是本技能与现有审查技能的核心区别。
+Performs code reviews on GitHub Pull Requests, using GitHub MCP tools to create **line-by-line inline comments** — this is the core distinction from other review skills.
 
-## 前置条件
+## Prerequisites
 
-- **必须**：GitHub MCP Server（`plugin:github:github`）已配置并连接
-- **可选降级**：`gh` CLI（≥ 2.0.0）— 当 MCP 不可用时作为降级方案
+- **Required**: GitHub MCP Server (`plugin:github:github`) configured and connected
+- **Optional fallback**: `gh` CLI (>= 2.0.0) — serves as a fallback when MCP is unavailable
 
-启动时先验证 MCP 工具可用性：
+Verify MCP tool availability on startup:
 
 ```
 方法：尝试调用 pull_request_read 获取任意公开 PR 的元信息
 如果失败 → 提示用户配置 GitHub MCP Server，同时启用 gh CLI 降级模式
 ```
 
-## 包联动
+## Package Linking
 
-本技能支持在 minecraft269-skills 插件包内与兄弟技能联动。
+This skill supports linking with sibling skills within the minecraft269-skills plugin package.
 
-**联动钩子（仅 PACKAGE_MODE = true 时执行）：**
+**Linkage Hooks (executed only when PACKAGE_MODE = true):**
 
-检测方法：
-1. 搜索 `~/.claude/plugins/minecraft269-skills/.claude-plugin/plugin.json` 是否存在
-2. 如存在 → PACKAGE_MODE = true，执行以下联动逻辑
-3. 如不存在 → PACKAGE_MODE = false，跳过所有联动引用
+Detection method:
+1. Glob search for `~/.claude/plugins/minecraft269-skills/.claude-plugin/plugin.json`
+2. If found → PACKAGE_MODE = true, execute the linkage logic below
+3. If not found → PACKAGE_MODE = false, skip all linkage references
 
-### 阶段 0 联动：从 github-pr-manager 获取上下文
+### Phase 0 Linkage: Get context from github-pr-manager
 
-当 PACKAGE_MODE = true 且对话上下文中存在以下信号时，用户可能已通过 github-pr-manager 选中了 PR：
+When PACKAGE_MODE = true and the following signals are present in the conversation context, the user may have already selected a PR via github-pr-manager:
 
-- 对话中最近出现了 `pull_request_read` 或 `gh pr view` 调用
-- 用户输入了 PR 编号但未指定仓库
-- 对话上下文中有 `owner/repo` 格式的仓库标识
+- A recent `pull_request_read` or `gh pr view` call appears in the conversation
+- The user entered a PR number without specifying the repository
+- A repository identifier in `owner/repo` format is present in the conversation context
 
-**联动操作：**
+**Linkage operation:**
 ```
 如果检测到上述信号 → 主动询问用户：
 「检测到你正在查看 [owner/repo] 的 PR #[N]。是否对此 PR 执行代码审查？」
@@ -56,43 +56,43 @@ metadata:
 - 如果用户拒绝 → 照常询问仓库和 PR 编号
 ```
 
-### 审查完成后联动
+### Post-Review Linkage
 
-审查提交后，扫描兄弟技能的 capabilities：
+After the review is submitted, scan sibling skills' capabilities:
 
-- 匹配 `pr-management` → 提示：「💡 可使用 **GitHub PR 管理器** 查看其他 PR 或克隆此 PR 到本地」
-- 匹配 `skill-discovery` → 提示：「💡 可运行 **主动技能发现** 获取当前项目的更多工具推荐」
+- Matches `pr-management` → Prompt: "💡 You can use **GitHub PR Manager** to view other PRs or clone this PR locally"
+- Matches `skill-discovery` → Prompt: "💡 You can run **Proactive Skill Discovery** to get more tool recommendations for the current project"
 
-独立模式（PACKAGE_MODE = false）时，上述联动提示完全不显示。
+In Standalone Mode (PACKAGE_MODE = false), none of the above linkage prompts are displayed.
 
 ---
 
-## 三阶段审查工作流
+## Three-Phase Review Workflow
 
-以下三个阶段必须严格按顺序执行。每个阶段完成后才能进入下一阶段。
+The following three phases must be executed strictly in order. Do not proceed to the next phase until the current one is complete.
 
-### 阶段 0：识别目标 PR
+### Phase 0: Identify Target PR
 
-确定要审查的 PR 身份。按以下优先级获取：
+Determine the PR to review. Obtain it in the following priority order:
 
-1. **联动上下文**（PACKAGE_MODE = true）：从 github-pr-manager 的会话上下文提取仓库和 PR 编号
-2. **用户直接提供**：用户说了目标仓库和 PR 编号（如「审查 Minecraft269/skills #5」）
-3. **主动询问**：如果以上都不可用，询问用户：
+1. **Linkage context** (PACKAGE_MODE = true): Extract the repository and PR number from github-pr-manager's session context
+2. **User provides directly**: The user states the target repository and PR number (e.g., "review Minecraft269/skills #5")
+3. **Ask proactively**: If neither is available, ask the user:
    ```
    「请提供要审查的 PR：
    - 仓库：owner/repo
    - PR 编号：#N」
    ```
 
-获取后立即验证 PR 存在：
+Once obtained, immediately verify the PR exists:
 ```
 pull_request_read(method="get", owner, repo, pullNumber)
 ```
-如果返回错误 → 提示用户检查仓库名和 PR 编号。
+If an error is returned → Prompt the user to check the repository name and PR number.
 
-### 阶段 1：获取审查上下文
+### Phase 1: Gather Review Context
 
-在开始审查前，并行获取 PR 的完整上下文。以下四个调用可以同时进行：
+Before starting the review, fetch the PR's full context in parallel. The following four calls can be made simultaneously:
 
 ```
 pull_request_read(method="get_diff", owner, repo, pullNumber)
@@ -108,50 +108,50 @@ pull_request_read(method="get_reviews", owner, repo, pullNumber)
   → 获取整体审查状态（已 APPROVED / CHANGES_REQUESTED / 无审查）
 ```
 
-**输出：** 汇总 PR 上下文信息给用户：
+**Output:** Summarize the PR context information for the user:
 
-| 指标 | 数值 |
-|------|------|
-| 变更文件 | N 个 |
-| 新增行 | +M |
-| 删除行 | -K |
-| 已有审查 | X 条（状态） |
-| 已有 inline 评论 | Y 条 |
+| Metric | Value |
+|--------|-------|
+| Changed files | N |
+| Lines added | +M |
+| Lines deleted | -K |
+| Existing reviews | X (status) |
+| Existing inline comments | Y |
 
-### 阶段 2：分析代码并发布 inline 评论
+### Phase 2: Analyze Code and Publish Inline Comments
 
-这是本技能的核心价值——**逐行 inline 评论**。
+This is the skill's Core Value — **line-by-line inline comments**.
 
-#### 2a. 分析 diff，生成审查发现
+#### 2a. Analyze Diff, Generate Review Findings
 
-根据 `references/review-checklist.md` 中的检查清单分析 diff。每条发现记录：
+Analyze the diff against the checklist in `references/review-checklist.md`. Each finding includes:
 
-| 字段 | 说明 | 示例 |
-|------|------|------|
-| `path` | 文件相对路径 | `src/auth/login.ts` |
-| `line` | **diff 中的行号**（见下方重要说明） | `42` |
-| `side` | `"LEFT"`（旧代码）或 `"RIGHT"`（新代码） | `"RIGHT"` |
-| `body` | 评论正文（结构化 Markdown） | 见下方模板 |
+| Field | Description | Example |
+|-------|-------------|---------|
+| `path` | File relative path | `src/auth/login.ts` |
+| `line` | **Line number in the diff** (see important note below) | `42` |
+| `side` | `"LEFT"` (old code) or `"RIGHT"` (new code) | `"RIGHT"` |
+| `body` | Comment body (structured Markdown) | See template below |
 | `severity` | `critical` / `warning` / `suggestion` / `praise` | `warning` |
 | `category` | `bug` / `security` / `performance` / `design` / `best-practice` / `nitpick` | `security` |
 
-**⚠️ 行号至关重要：** `add_comment_to_pending_review` 的 `line` 参数必须使用 **PR diff 中的行号**，而非源文件行号。详见 `references/diff-line-mapping.md`。核心规则：
+**⚠️ Line numbers are critical:** The `line` parameter of `add_comment_to_pending_review` must use the **line number from the PR diff**, not the source file line number. See `references/diff-line-mapping.md` for details. Core rules:
 
-- Unified diff 中 `@@ -a,b +c,d @@` 标记了 hunk 位置
-- 新代码（`+` 开头）的 diff 行号 ≠ 源文件行号
-- 使用 `scripts/parse_diff_lines.sh` 脚本辅助提取
-- 如果无法确定正确的 diff 行号，降级为文件级评论（`subjectType="FILE"`）
+- In a unified diff, `@@ -a,b +c,d @@` marks the hunk position
+- The diff line number for new code (starting with `+`) ≠ the source file line number
+- Use the `scripts/parse_diff_lines.sh` script to help extract them
+- If the correct diff line number cannot be determined, fall back to a file-level comment (`subjectType="FILE"`)
 
-#### 2b. 展示完整审查预览（必须向用户展示并获得确认）
+#### 2b. Display Full Review Preview (Must Show to User and Get Confirmation)
 
-**在调用任何 GitHub API 之前**，必须将每条审查发现以完整的格式化预览展示给用户。完整的预览格式模板见 `references/review-preview-template.md`。
+**Before calling any GitHub API**, each review finding must be displayed to the user as a complete formatted preview. See `references/review-preview-template.md` for the full preview format template.
 
-核心规则：
-- 每条发现必须完整展开评论文本、建议修复、代码示例和 diff 上下文
-- 审查模型名称必须从系统提示上下文中获取实际值，不可编造
-- 必须等待用户确认后才能进入阶段 2c
+Core rules:
+- Each finding must fully expand the comment text, suggested fix, code example, and diff context
+- The review model name must be obtained from the system prompt context, never fabricated
+- Must wait for user confirmation before proceeding to Phase 2c
 
-#### 2c. 创建 pending review
+#### 2c. Create Pending Review
 
 ```
 pull_request_review_write(
@@ -161,25 +161,25 @@ pull_request_review_write(
 )
 ```
 
-**不传 `event` 参数** — 这创建一个待定（pending）状态的 review，后续 inline 评论将添加到这个 pending review 中。
+**Do not pass the `event` parameter** — this creates a pending review, and subsequent inline comments will be added to this pending review.
 
-**如果返回错误（已有 pending review）：**
-- 先调用 `pull_request_review_write(method="delete_pending", ...)` 删除旧 review
-- 再重新创建
+**If an error is returned (existing pending review):**
+- First call `pull_request_review_write(method="delete_pending", ...)` to delete the old review
+- Then create it again
 
-#### 2d. 逐条添加 inline 评论
+#### 2d. Add Inline Comments One by One
 
-对每条审查发现，调用 `add_comment_to_pending_review`（owner, repo, pullNumber, path, body, line, side, subjectType="LINE"）。
+For each review finding, call `add_comment_to_pending_review` (owner, repo, pullNumber, path, body, line, side, subjectType="LINE").
 
-评论正文模板和类别图标映射见 `references/comment-templates.md`。
+See `references/comment-templates.md` for comment body templates and category icon mappings.
 
-添加策略：按严重程度排序（critical → warning → suggestion → praise），适当间隔避免 API rate limit，添加失败时记录并继续，已有评论位置跳过。
+Adding strategy: Sort by severity (critical → warning → suggestion → praise), space out calls appropriately to avoid API rate limits, log and continue if adding fails, skip locations with existing comments.
 
-### 阶段 3：提交审查结论
+### Phase 3: Submit Review Conclusion
 
-#### 3a. 汇总并确认
+#### 3a. Summary and Confirmation
 
-向用户展示审查完成统计：
+Display the review completion statistics to the user:
 
 ```
 ## 审查完成
@@ -194,12 +194,12 @@ pull_request_review_write(
 请选择审查结论：
 ```
 
-使用 `AskUserQuestion` 提供三个选项：
-- **Approve** — 批准合并（代码质量良好，无阻塞问题）
-- **Request Changes** — 要求修改（存在需要修复的严重问题）
-- **Comment** — 仅提建议（中立，不阻塞合并）
+Use `AskUserQuestion` to provide three options:
+- **Approve** — Approve the merge (code quality is good, no blocking issues)
+- **Request Changes** — Request modifications (there are serious issues that need fixing)
+- **Comment** — Comment only (neutral, does not block the merge)
 
-#### 3b. 提交审查
+#### 3b. Submit Review
 
 ```
 pull_request_review_write(
@@ -210,7 +210,7 @@ pull_request_review_write(
 )
 ```
 
-#### 3c. 输出最终结果
+#### 3c. Output Final Result
 
 ```
 ✅ 审查已提交
@@ -223,37 +223,37 @@ PR [#N](https://github.com/owner/repo/pull/N) 审查完成
 
 ---
 
-## 审查焦点
+## Review Focus
 
-详细检查清单见 `references/review-checklist.md`。审查时按优先级聚焦：
+See `references/review-checklist.md` for the detailed checklist. Focus the review by priority:
 
-| 优先级 | 类别 | 默认行为 |
-|--------|------|---------|
-| P0 | 正确性缺陷 | **始终审查** |
-| P1 | 安全问题 | **始终审查** |
-| P2 | 性能问题 | **始终审查** |
-| P3 | 设计问题 | 仅 `--thorough` 模式 |
-| P4 | 最佳实践 | 仅 `--thorough` 模式 |
-| P5 | 锦上添花 | 仅 `--thorough` 模式 |
+| Priority | Category | Default Behavior |
+|----------|----------|-----------------|
+| P0 | Correctness defects | **Always review** |
+| P1 | Security issues | **Always review** |
+| P2 | Performance issues | **Always review** |
+| P3 | Design issues | `--thorough` only |
+| P4 | Best practices | `--thorough` only |
+| P5 | Polish / nits | `--thorough` only |
 
 ---
 
-## 错误处理与降级
+## Error Handling and Degradation
 
-### 错误场景速查
+### Error Scenario Quick Reference
 
-| 错误 | 原因 | 处理 |
-|------|------|------|
-| PR 不存在 | 编号错误或无权限 | 提示用户确认仓库和 PR 编号 |
-| `add_comment_to_pending_review` 失败 | 无 pending review | 先创建 pending review，再重试 |
-| `pull_request_review_write("create")` 冲突 | 已有旧 pending review | 先删除旧的，再创建新的 |
-| 行号无效 | diff 行号计算错误 | 检查行号 → 重试 → 仍失败则降级为文件级评论 |
-| MCP 工具调用全部失败 | GitHub MCP 未配置 | 切换到 `gh` CLI 降级模式（见下方） |
-| API rate limit | 请求过多 | 等待 60s 后重试 |
+| Error | Cause | Handling |
+|-------|-------|----------|
+| PR does not exist | Wrong number or no permission | Prompt the user to confirm the repository and PR number |
+| `add_comment_to_pending_review` fails | No pending review | Create a pending review first, then retry |
+| `pull_request_review_write("create")` conflict | Existing old pending review | Delete the old one first, then create a new one |
+| Invalid line number | Incorrect diff line number | Check the line number → retry → if still fails, fall back to file-level comment |
+| All MCP tool calls fail | GitHub MCP not configured | Switch to `gh` CLI degradation mode (see below) |
+| API rate limit | Too many requests | Wait 60s and retry |
 
-### gh CLI 降级模式
+### gh CLI Degradation Mode
 
-当 GitHub MCP 不可用时：
+When GitHub MCP is unavailable:
 
 ```
 # 替代阶段 1 — 获取 diff
@@ -263,27 +263,27 @@ gh pr diff <NUMBER> --repo <owner/repo>
 gh pr review <NUMBER> --repo <owner/repo> --approve/--request-changes/--comment --body "..."
 ```
 
-降级模式下无法发布 inline 评论。告知用户这一限制，并提供审查报告的 Markdown 文本供用户手动发布。
+In degradation mode, inline comments cannot be published. Inform the user of this limitation and provide the review report in Markdown for manual posting.
 
 ---
 
-## 命令速查
+## Command Quick Reference
 
-| 用户输入 | 说明 |
-|---------|------|
-| `review <owner/repo> #<N>` | 审查指定仓库的指定 PR |
-| `review #<N>` | 审查当前仓库的 PR（需联动上下文） |
-| `review` | 审查当前 PR（需联动上下文） |
-| `review --thorough` | 全面审查模式（含 P3-P5） |
-| `review --summary-only` | 仅输出审查摘要，不发布到 GitHub |
+| User input | Description |
+|------------|-------------|
+| `review <owner/repo> #<N>` | Review a specific PR in a specific repository |
+| `review #<N>` | Review a PR in the current repository (requires linkage context) |
+| `review` | Review the current PR (requires linkage context) |
+| `review --thorough` | Thorough review mode (includes P3-P5) |
+| `review --summary-only` | Output review summary only, do not publish to GitHub |
 
-## 脚本
+## Scripts
 
-- `scripts/parse_diff_lines.sh` — 从 unified diff 输出中提取文件路径和对应的 diff 行号。用于辅助 `add_comment_to_pending_review` 的行号参数计算。
+- `scripts/parse_diff_lines.sh` — Extracts file paths and corresponding diff line numbers from unified diff output. Used to help calculate the line number parameter for `add_comment_to_pending_review`.
 
-## 参考文档
+## References
 
-- `references/review-checklist.md` — 代码审查检查清单，按 P0-P5 优先级分层
-- `references/diff-line-mapping.md` — Unified diff 格式解析与行号映射技术指南
-- `references/review-preview-template.md` — 审查预览格式模板和重要规则
-- `references/comment-templates.md` — inline 评论正文模板、类别图标映射和添加策略
+- `references/review-checklist.md` — Code review checklist, organized by P0-P5 priority levels
+- `references/diff-line-mapping.md` — Unified diff format parsing and line number mapping technical guide
+- `references/review-preview-template.md` — Review preview format template and important rules
+- `references/comment-templates.md` — Inline comment body templates, category icon mappings, and adding strategy

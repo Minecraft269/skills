@@ -1,35 +1,36 @@
 ---
 name: git-commit-helper
 description: >
-  Git 提交规范化助手 — 基于 staged diff 自动分析变更类型，生成符合 Conventional Commits
-  规范的提交信息。当你需要提交代码、编写规范的 commit message、整理 git 暂存区、
-  或不确定 commit 怎么写时使用此技能。
+  Git Commit Standardization Helper — automatically analyzes staged diff to determine change types
+  and generates commit messages conforming to the Conventional Commits specification.
+  Use this skill when you need to commit code, write a standardized commit message,
+  organize the git staging area, or are unsure how to write a commit.
 capabilities: ["git-commit"]
 integrates_with: ["pr-management", "code-review"]
 metadata:
-  compatibility: "需要 git"
+  compatibility: "Requires git"
 ---
 
-# Git 提交规范化助手
+# Git Commit Standardization Helper
 
-基于 staged diff 智能分析变更，生成符合 [Conventional Commits](https://www.conventionalcommits.org/) 规范的提交信息。纯 AI 驱动，无需额外脚本依赖。
+Intelligently analyzes staged diff changes and generates commit messages conforming to the [Conventional Commits](https://www.conventionalcommits.org/) specification. Purely AI-driven, no additional script dependencies required.
 
-## 包联动
+## Package Linking
 
-1. Glob 搜索 `~/.claude/plugins/minecraft269-skills/.claude-plugin/plugin.json`
-2. 若找到 → `PACKAGE_MODE = true`，可发现并联动兄弟技能
-3. 若未找到 → `PACKAGE_MODE = false`，跳过所有跨技能逻辑（静默降级）
+1. Glob search for `~/.claude/plugins/minecraft269-skills/.claude-plugin/plugin.json`
+2. If found → `PACKAGE_MODE = true`, can discover and link with sibling skills
+3. If not found → `PACKAGE_MODE = false`, skip all cross-skill logic (silent degradation)
 
-当 `PACKAGE_MODE = true` 时：
-- 提交完成后可联动 `integrates_with: pr-management`（PR 管理）
-- 提交完成后可联动 `integrates_with: code-review`（代码审查）
-- 扫描兄弟 SKILL.md 的 `capabilities` 字段做交集匹配
+When `PACKAGE_MODE = true`:
+- After commit, can link with `integrates_with: pr-management` (PR management)
+- After commit, can link with `integrates_with: code-review` (code review)
+- Scan sibling SKILL.md `capabilities` fields for intersection matching
 
-详见 `_shared/package-context.md`。
+See `_shared/package-context.md` for details.
 
-## 核心工作流
+## Core Workflow
 
-### 1. 检测暂存状态
+### 1. Detect Staging Area State
 
 ```bash
 git status --short
@@ -37,120 +38,120 @@ git diff --staged --stat
 git diff --staged
 ```
 
-首先检查暂存区是否有变更。如果没有，提示用户：
+First check if the staging area has changes. If not, prompt the user:
 
 ```markdown
-📭 暂存区为空。请先使用 `git add <文件>` 将要提交的变更添加到暂存区。
+📭 The staging area is empty. Please use `git add <file>` to add the changes you want to commit.
 
-当前工作区变更（unstaged）：
-<git status --short 的输出>
+Current workspace changes (unstaged):
+<output of git status --short>
 
-是否需要我帮你整理暂存区？
+Would you like me to help you organize the staging area?
 ```
 
-### 2. 分析变更生成消息
+### 2. Analyze Changes and Generate Message
 
-基于 `git diff --staged` 的内容分析变更，生成 Conventional Commits 格式的提交信息。
+Analyze changes based on `git diff --staged` content and generate a Conventional Commits format commit message.
 
-**分析维度：**
-- **类型推断**：根据变更性质确定 type
-- **scope 提取**：从变更文件路径中提取影响范围
-- **主体编写**：一句话描述核心变更 + 可选的多行要点
+**Analysis Dimensions:**
+- **Type Inference**: Determine the type based on the nature of the change
+- **Scope Extraction**: Extract the scope from changed file paths
+- **Subject Writing**: One sentence describing the core change, plus optional multi-line bullet points
 
-**类型推断规则：**
+**Type Inference Rules:**
 
-| 类型 | 判断依据 |
+| Type | Criteria |
 |------|---------|
-| `feat` | 新增功能、新文件、新 API 端点、新组件 |
-| `fix` | 修复 bug、修正逻辑错误、修复空指针/空值 |
-| `docs` | 仅修改文档（`*.md`、注释、README） |
-| `style` | 格式化、空格、分号等不影响代码逻辑的调整 |
-| `refactor` | 重构（既无新功能也不修 bug，但改动代码结构） |
-| `perf` | 性能优化（减少循环、缓存、算法改进） |
-| `test` | 添加或修改测试 |
-| `chore` | 构建配置、依赖更新、CI/CD、`.gitignore` 等杂务 |
-| `ci` | CI/CD 流水线变更 |
-| `build` | 构建系统或外部依赖变更 |
+| `feat` | New feature, new file, new API endpoint, new component |
+| `fix` | Bug fix, logic error correction, null pointer/null value fix |
+| `docs` | Only documentation changes (`*.md`, comments, README) |
+| `style` | Formatting, whitespace, semicolons, etc. — adjustments not affecting code logic |
+| `refactor` | Refactoring (neither new feature nor bug fix, but changes code structure) |
+| `perf` | Performance optimization (loop reduction, caching, algorithm improvements) |
+| `test` | Adding or modifying tests |
+| `chore` | Build configuration, dependency updates, CI/CD, `.gitignore`, etc. |
+| `ci` | CI/CD pipeline changes |
+| `build` | Build system or external dependency changes |
 
-**scope 提取规则：**
-- 从变更文件路径中提取共同前缀（如 `skills/github-pr-manager` → `github-pr-manager`）
-- 单文件变更：用文件名作为 scope
-- 多模块变更：用最高频路径或 `multiple`
-- 无明确 scope 时可省略
+**Scope Extraction Rules:**
+- Extract the common prefix from changed file paths (e.g. `skills/github-pr-manager` → `github-pr-manager`)
+- Single-file change: use the file name as the scope
+- Multi-module change: use the most frequent path or `multiple`
+- Can be omitted when no clear scope exists
 
-**生成格式：**
+**Generated Format:**
 ```
-<type>(<scope>): <简短描述>
+<type>(<scope>): <short description>
 
-<详细说明（可选，多行要点）>
+<detailed description (optional, multi-line bullet points)>
 
-BREAKING CHANGE: <破坏性变更说明（如有）>
-```
-
-**示例输出：**
-```
-feat(git-commit-helper): 添加基于 staged diff 的提交信息自动生成
-
-- 自动分析变更类型推断 type 和 scope
-- 支持 Conventional Commits 规范
-- 提交前交互式预览和编辑
-- 提交后联动 PR 管理和代码审查
+BREAKING CHANGE: <description of breaking change (if any)>
 ```
 
-### 3. 预览与确认
+**Example Output:**
+```
+feat(git-commit-helper): add automatic commit message generation based on staged diff
 
-生成消息后，以完整格式化预览展示给用户：
+- Automatically analyze changes to infer type and scope
+- Support Conventional Commits specification
+- Interactive preview and editing before commit
+- Link to PR management and code review after commit
+```
+
+### 3. Preview and Confirm
+
+After generating the message, present it to the user in a fully formatted preview:
 
 ```markdown
-## 📝 提交预览
+## 📝 Commit Preview
 
 ```
-feat(git-commit-helper): 添加基于 staged diff 的提交信息自动生成
+feat(git-commit-helper): add automatic commit message generation based on staged diff
 
-- 自动分析变更类型推断 type 和 scope
-- 支持 Conventional Commits 规范
-- 提交前交互式预览和编辑
+- Automatically analyze changes to infer type and scope
+- Support Conventional Commits specification
+- Interactive preview and editing before commit
 ```
 
-| 项目 | 详情 |
-|------|------|
-| 📂 变更文件 | N 个 |
-| 🏷️ 类型 | feat |
-| 🎯 scope | git-commit-helper |
-| 📏 行数 | +X / -Y |
+| Item | Detail |
+|------|--------|
+| 📂 Changed files | N |
+| 🏷️ Type | feat |
+| 🎯 Scope | git-commit-helper |
+| 📏 Lines | +X / -Y |
 
 ---
 
-请选择：
-1. ✅ **确认提交** — 直接执行 `git commit`
-2. ✏️ **编辑修改** — 修改 type / scope / 描述
-3. 🔄 **重新生成** — 换用另一种角度重新分析
-4. 📝 **手动输入** — 你自己手写 commit message
-5. ❌ **取消** — 不做任何操作
+Please choose:
+1. ✅ **Confirm** — Execute `git commit` directly
+2. ✏️ **Edit** — Modify type / scope / description
+3. 🔄 **Regenerate** — Re-analyze from a different perspective
+4. 📝 **Manual** — Write the commit message yourself
+5. ❌ **Cancel** — Do nothing
 ```
 
-**重要：必须等待用户选择后才执行下一步。**
+**Important: Wait for the user's choice before proceeding to the next step.**
 
-### 4. 执行提交并联动
+### 4. Execute Commit and Link
 
-**确认后执行：**
+**Execute after confirmation:**
 ```bash
-git commit -m "<消息>"
+git commit -m "<message>"
 ```
 
-**提交成功后联动（仅 PACKAGE_MODE = true 时）：**
+**Linkage after successful commit (only when PACKAGE_MODE = true):**
 
-检查是否有 GitHub remote：
+Check for GitHub remote:
 ```bash
 git remote get-url origin 2>/dev/null
 ```
 
-- 如果有 GitHub remote → 提示：`💡 变更已提交。是否需要推送并创建 PR？`（匹配 `pr-management`）
-- 如果涉及功能性代码变更 → 提示：`💡 是否需要在推送 PR 前运行代码审查？`（匹配 `code-review`）
+- If a GitHub remote exists → prompt: `💡 Changes committed. Would you like to push and create a PR?` (matches `pr-management`)
+- If functional code changes are involved → prompt: `💡 Would you like to run a code review before pushing the PR?` (matches `code-review`)
 
-## Conventional Commits 规范速查
+## Conventional Commits Quick Reference
 
-### 格式
+### Format
 ```
 <type>[optional scope]: <description>
 
@@ -159,29 +160,29 @@ git remote get-url origin 2>/dev/null
 [optional footer(s)]
 ```
 
-### 类型速查
-- `feat` — 新功能
-- `fix` — Bug 修复
-- `docs` — 文档
-- `style` — 格式调整（不影响代码逻辑）
-- `refactor` — 重构
-- `perf` — 性能优化
-- `test` — 测试
-- `chore` — 构建/工具/依赖
+### Type Quick Reference
+- `feat` — New feature
+- `fix` — Bug fix
+- `docs` — Documentation
+- `style` — Formatting (does not affect code logic)
+- `refactor` — Refactoring
+- `perf` — Performance optimization
+- `test` — Tests
+- `chore` — Build/tooling/dependencies
 - `ci` — CI/CD
-- `build` — 构建系统
+- `build` — Build system
 
 ### Breaking Change
-- 正文末尾或 footer 中以 `BREAKING CHANGE:` 开头
-- 或在 type/scope 后追加 `!`：`feat(api)!: 重新设计用户接口`
+- Prefix the body or footer with `BREAKING CHANGE:`
+- Or append `!` after type/scope: `feat(api)!: Redesign user API`
 
-## 错误处理
+## Error Handling
 
-| 场景 | 处理方式 |
-|------|---------|
-| 暂存区为空 | 显示 unstaged 变更，提示用户 `git add` |
-| 不在 git 仓库中 | 提示初始化 `git init` 或切换到仓库目录 |
-| diff 过大（>500 行） | 截取前 500 行分析，标注「仅分析前 500 行」 |
-| 变更类型难以判断 | 列出 2-3 个可能类型，让用户选择 |
-| `git commit` 失败 | 显示错误信息，提供重试或手动输入 |
-| pre-commit hook 失败 | 显示 hook 输出，提示修复后重试 |
+| Scenario | Handling |
+|----------|---------|
+| Empty staging area | Show unstaged changes, prompt user to `git add` |
+| Not in a git repository | Prompt to initialize with `git init` or switch to a repository directory |
+| Diff too large (>500 lines) | Analyze only the first 500 lines, annotate as "only the first 500 lines were analyzed" |
+| Change type is ambiguous | List 2-3 possible types and ask the user to choose |
+| `git commit` fails | Display the error, offer retry or manual input |
+| pre-commit hook fails | Display hook output, prompt to fix and retry |

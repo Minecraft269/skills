@@ -2,133 +2,133 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 项目定义
+## Project Definition
 
-为使用 Claude Code 的开发者解决跨项目复用技能和主动发现工具的痛点，通过持续创作和维护高质量 Claude Code 技能并通过 Marketplace 分发。想到什么就创建什么，也欢迎社区贡献。不设禁区，但在创建涉及外部 API、付费服务、敏感操作的技能时需在 frontmatter 中声明。
+Solving the pain points of cross-project skill reuse and proactive tool discovery for developers using Claude Code, through continuous creation and maintenance of high-quality Claude Code skills distributed via Marketplace. Create whatever comes to mind; community contributions are welcome. No restrictions, but skills involving external APIs, paid services, or sensitive operations must be declared in frontmatter.
 
-## 项目结构
+## Project Structure
 
 ```
-.claude-plugin/                  # 插件清单 + Marketplace 注册
+.claude-plugin/                  # Plugin manifest + Marketplace registration
 ├── plugin.json
 └── marketplace.json
-.github/                          # CI/CD 配置
+.github/                          # CI/CD configuration
 └── workflows/
-    └── skill-health.yml          # Frontmatter 格式校验 + 标签一致性检查
-docs/                            # 技能详细文档（README 链接指向此处），每技能一份
-skills/                          # 所有技能（每个子目录一个技能）
-├── _shared/                      # 包级共享资源（检测协议、通用模板）
-├── universal-project-kickoff/   # 通用项目启动与能力发现（已吸收原 proactive-skill-discovery，含 Fork 模式）
-│   └── references/               # 7 份参考文件
-├── github-pr-manager/           # GitHub PR 全功能管理器
-├── github-pr-reviewer/          # GitHub PR 审查器（逐行 inline 评论）
-├── quick-plugin-installer/      # 快速安装插件（MCP + SKILL）
-├── git-commit-helper/           # Git 提交规范化助手（Conventional Commits）
-└── env-health-check/            # 跨平台环境自检
-CONTRIBUTING.md                  # 贡献指南（含能力标签注册表 + 标签决策树）
+    └── skill-health.yml          # Frontmatter format validation + tag consistency check
+docs/                            # Skill documentation (README links point here), one per skill
+skills/                          # All skills (one subdirectory per skill)
+├── _shared/                      # Package-level shared resources (detection protocol, common templates, i18n glossary)
+├── universal-project-kickoff/   # Universal project kickoff & capability discovery (absorbed proactive-skill-discovery, includes Fork mode)
+│   └── references/               # 7 reference files
+├── github-pr-manager/           # GitHub PR full-featured manager
+├── github-pr-reviewer/          # GitHub PR reviewer (line-by-line inline comments)
+├── quick-plugin-installer/      # Quick plugin installer (MCP + SKILL)
+├── git-commit-helper/           # Git commit standardization helper (Conventional Commits)
+└── env-health-check/            # Cross-platform environment health check
+CONTRIBUTING.md                  # Contribution guide (capability tag registry + tag decision tree)
 ```
 
-## 快速开始
+## Quick Start
 
 ```bash
 git clone https://github.com/Minecraft269/skills.git
 cd skills
-find skills/ -name "*.sh" -exec bash -n {} \;   # Shell 语法检查
-grep -oP 'capabilities:\s*\[\K[^\]]+' skills/*/SKILL.md | tr '"' '\n' | sort -u   # 标签一致性
+find skills/ -name "*.sh" -exec bash -n {} \;   # Shell syntax check
+grep -oP 'capabilities:\s*\[\K[^\]]+' skills/*/SKILL.md | tr '"' '\n' | sort -u   # Tag consistency
 ```
 
-## 创建新技能
+## Creating New Skills
 
-**必须使用 `/skill-creator` 创建新技能。** 使用前确认已安装 skill-creator 插件。
+**You must use `/skill-creator` to create new skills.** Confirm the skill-creator plugin is installed first.
 
-创建完成后将技能目录放入 `skills/<skill-name>/`，每个技能至少包含一个 `SKILL.md`（YAML frontmatter + Markdown 正文）。同步在 `docs/<skill-name>.md` 创建技能文档。
+After creation, place the skill directory into `skills/<skill-name>/`. Each skill must contain at least a `SKILL.md` (YAML frontmatter + Markdown body). Simultaneously create skill documentation at `docs/<skill-name>.md`.
 
-## 代码风格
+## Code Style
 
-- 缩进：2 空格（与 skill-creator 生成的标准一致）
-- 注释：头部写用途和用法，关键逻辑写注释，自解释代码不写
-- 技能目录命名：`kebab-case`（如 `github-pr-manager`）
-- frontmatter `name`：与目录名一致
-- frontmatter `version`：技能版本号，推荐 SemVer（如 `"3.0.0"`），用于追踪重大变更
-- frontmatter `risk`：操作风险等级（`safe` / `medium` / `high`），涉及外部 API、付费服务、敏感操作的技能必须声明
-- frontmatter `source`：来源标识（`community` / `official` / `custom`），用于 Marketplace 分类
-- frontmatter 联动字段：`capabilities`（提供的能力标签）、`integrates_with`（需要配合的能力标签）— 可选，用于包内技能动态发现
-- 脚本文件：`snake_case.sh`
-- 所有面向用户的内容使用中文，技术术语保留英文
-- 跨技能引用必须通过 PACKAGE_MODE 检测门控，独立安装时静默降级
-- `.discovery-rules.json` 覆盖约定 — `deep_explore_plugins`、`priority_boost_plugins`、`cache_ttl_hours` 等字段的硬编码默认值可被 `~/.claude/skills/.discovery-rules.json` 覆盖。修改默认值时需同步更新三处：SKILL.md（Step 0c-2 配置读取段）、scanner-patterns.md（默认值标注）、discovery-rules.json 的 JSON Schema
+- Indentation: 2 spaces (consistent with skill-creator generated standard)
+- Comments: header documents purpose and usage, key logic gets comments, self-explanatory code stays comment-free
+- Skill directory naming: `kebab-case` (e.g. `github-pr-manager`)
+- frontmatter `name`: matches directory name
+- frontmatter `version`: skill version number, SemVer recommended (e.g. `"3.0.0"`), used for tracking breaking changes
+- frontmatter `risk`: operational risk level (`safe` / `medium` / `high`); skills involving external APIs, paid services, or sensitive operations must declare this
+- frontmatter `source`: origin identifier (`community` / `official` / `custom`), used for Marketplace categorization
+- frontmatter linkage fields: `capabilities` (capabilities provided), `integrates_with` (capabilities needed for coordination) — optional, used for intra-package dynamic skill discovery
+- Script files: `snake_case.sh`
+- All user-facing content uses English; technical terms remain in English
+- Cross-skill references must be gated by PACKAGE_MODE detection; silently degrade when installed standalone
+- `.discovery-rules.json` override convention — hardcoded defaults for `deep_explore_plugins`, `priority_boost_plugins`, `cache_ttl_hours` and other fields can be overridden by `~/.claude/skills/.discovery-rules.json`. When modifying defaults, update three locations simultaneously: SKILL.md (Step 0c-2 config reading section), scanner-patterns.md (default value annotations), and discovery-rules.json JSON Schema
 
-## 风险与预案
+## Risks and Contingency Plans
 
-| 风险 | B 计划 |
+| Risk | Plan B |
 |------|--------|
-| 合规踩坑（License 冲突、引用未授权代码） | 每个新技能发布前做 License 审查；工具依赖统一声明 |
-| Claude Code 版本升级导致技能不兼容 | 技能中写明最低兼容版本；新版发布后优先跑一遍核心路径 |
-| 社区贡献失控（PR 质量参差、风格不统一） | CONTRIBUTING.md + PR 模板把关；核心技能自己审核 |
+| Compliance pitfalls (license conflicts, unauthorized code references) | License review before each new skill release; unified tool dependency declarations |
+| Claude Code version upgrade causing skill incompatibility | Document minimum compatible version in skill; run core paths first after new release |
+| Community contribution chaos (uneven PR quality, inconsistent style) | CONTRIBUTING.md + PR template gatekeeping; core skills self-reviewed |
 
-## 路线图
+## Roadmap
 
-M1–M7 已全部完成 ✅ — 历经 Marketplace 可用、扩展强化、技能联动、能力合并、质量审查、逻辑修复、审查增强。当前阶段：持续功能扩展（如 v4.0.0 Fork 模式）。
+M1–M7 all completed ✅ — through Marketplace availability, extension hardening, skill linkage, capability merging, quality review, logic fixes, review enhancement. Current phase: ongoing feature expansion (e.g. v4.0.0 Fork mode).
 
-## 本地验证
+## Local Verification
 
-提交前运行以下命令确保通过 CI：
+Run these commands before committing to ensure CI passes:
 
 ```bash
-# Shell 语法检查
+# Shell syntax check
 find skills/ -name "*.sh" -exec bash -n {} \;
 
-# 手动验证标签一致性（CI 自动执行）
-# 注意：grep -oP 需要 GNU grep（Linux），macOS BSD grep 不支持 -P，请 brew install grep 或使用 CI 验证
+# Manual tag consistency verification (CI runs this automatically)
+# Note: grep -oP requires GNU grep (Linux); macOS BSD grep does not support -P, use brew install grep or CI verification
 grep -oP 'capabilities:\s*\[\K[^\]]+' skills/*/SKILL.md | tr '"' '\n' | sort -u
-# 对比 CONTRIBUTING.md 中的标签注册表
+# Compare against the tag registry in CONTRIBUTING.md
 ```
 
-## 发布流程
+## Release Workflow
 
 ```bash
-# 1. 本地验证：frontmatter 完整性 + 标签一致性 + ShellCheck
+# 1. Local verification: frontmatter completeness + tag consistency + ShellCheck
 find skills/<name>/ -name "*.sh" -exec bash -n {} \;
 grep -oP 'capabilities:\s*\[\K[^\]]+' skills/*/SKILL.md | tr '"' '\n' | sort -u
 
-# 2. 提交推送（需同步修改 4 处文件，见「新技能注册清单」）
+# 2. Commit and push (must update 4 files simultaneously, see "New Skill Registration Checklist")
 git add skills/<name>/ docs/<name>.md CONTRIBUTING.md README.md
 git commit -m "feat: add <name> skill"
 git push
 
-# 若 commit 后发现需同步更新 README/docs，使用 amend 追加：
+# If you need to sync README/docs after committing, use amend:
 git add README.md docs/<name>.md
 git commit --amend --no-edit
 git push --force-with-lease origin <branch>
 
-# 3. 推送到 GitHub 后 Marketplace 自动同步
+# 3. Marketplace auto-syncs after pushing to GitHub
 ```
 
-## 前置依赖
+## Prerequisites
 
-安装此插件的用户需要：
+Users installing this plugin need:
 - Claude Code CLI
-- 各技能声明的前置工具（如 `gh`、`git`、`jq`）
+- Prerequisite tools declared by each skill (e.g. `gh`, `git`, `jq`)
 
-## 开发注意事项
+## Development Notes
 
-- `.git/info/exclude` — 个人本地目录（`.omc/`、`.remember/`、`.impeccable/`）放这里，不提交到 `.gitignore`
-- worktree 提交 — 如 `EnterWorktree` 创建的 worktree 中 git 命令不可用（`not a git repository`），使用 `GIT_DIR=../.git GIT_WORK_TREE=<path> git ...` 变通
-- 推送后本地同步 — 通过 worktree 提交推送后，主仓库工作树会脱节，执行 `git fetch && git reset --hard origin/main` 同步（`git restore .` 只恢复文件，不移动分支指针）
-- 不写 `Co-Authored-By` 尾部
+- `.git/info/exclude` — personal local directories (`.omc/`, `.remember/`, `.impeccable/`) go here; do not commit to `.gitignore`
+- worktree commits — if git commands are unavailable in a worktree created by `EnterWorktree` (`not a git repository`), use `GIT_DIR=../.git GIT_WORK_TREE=<path> git ...` as a workaround
+- Post-push local sync — after committing and pushing through a worktree, the main repo worktree will be detached; run `git fetch && git reset --hard origin/main` to sync (`git restore .` only restores files, does not move the branch pointer)
+- Do not append `Co-Authored-By` trailer
 
-## 新技能注册清单
+## New Skill Registration Checklist
 
-创建新技能需同步修改 4 处：
+Creating a new skill requires updating 4 files simultaneously:
 
-1. `skills/<name>/SKILL.md` — 技能定义（~150 行，含 frontmatter + 包联动 + 核心工作流 + 错误处理）
-2. `CONTRIBUTING.md` — 在「能力标签注册表」表格末尾注册新能力标签
-3. `README.md` — 在末尾「技能列表」表格（许可证前面）添加一行
-4. `docs/<name>.md` — 精简文档（~40 行，简介 + 前置条件 + 触发方式 + 工作流 + 交互选项）
+1. `skills/<name>/SKILL.md` — skill definition (~150 lines, includes frontmatter + package linking + core workflow + error handling)
+2. `CONTRIBUTING.md` — register new capability tag at the end of the "Capability Tag Registry" table
+3. `README.md` — add a row to the "Skill List" table (before the license)
+4. `docs/<name>.md` — concise documentation (~40 lines, intro + prerequisites + trigger + workflow + interactive options)
 
-纯 AI 驱动技能无需 `scripts/` 目录和 `references/` 目录。
+Purely AI-driven skills do not need `scripts/` or `references/` directories.
 
-## CI 注意事项
+## CI Notes
 
-- `ludeeus/action-shellcheck@master` 遇 warning 即失败，所有 `*.sh` 必须 `bash -n` + ShellCheck 零 warning
-- CI 会验证 CONTRIBUTING.md 标签注册表与所有 `skills/*/SKILL.md` 的 `capabilities` 字段一致性
+- `ludeeus/action-shellcheck@master` fails on warnings; all `*.sh` must pass `bash -n` + ShellCheck with zero warnings
+- CI validates consistency between the CONTRIBUTING.md tag registry and the `capabilities` fields of all `skills/*/SKILL.md`

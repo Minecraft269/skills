@@ -1,16 +1,16 @@
-# Hook 配置指南
+# Hook Configuration Guide
 
-本文件提供可选的 Claude Code hook 配置，让 `universal-project-kickoff` 在关键时机自动触发。
+This document provides optional Claude Code hook configurations to let `universal-project-kickoff` trigger automatically at key moments.
 
-## 使用方式
+## Usage
 
-将以下配置片段添加到 `~/.claude/settings.json` 的 `hooks` 字段中（如不存在则创建）。
+Add the following configuration snippets to the `hooks` field of `~/.claude/settings.json` (create the file if it does not exist).
 
-## 推荐配置
+## Recommended Configurations
 
-### 会话启动时自动触发项目启动与发现
+### Auto-trigger on Session Start
 
-每次打开项目时自动运行一次项目启动检查与能力发现：
+Runs project kickoff and capability discovery once each time a project is opened:
 
 ```json
 {
@@ -30,9 +30,9 @@
 }
 ```
 
-### 检测到新项目类型时触发
+### Trigger on New Project Type Detection
 
-当 Glob/Read 发现新的配置文件时触发：
+Fires when Glob/Read discovers new configuration files:
 
 ```json
 {
@@ -52,9 +52,9 @@
 }
 ```
 
-### 合并配置
+### Combined Configuration
 
-两个 hook 可以共存：
+Both hooks can coexist:
 
 ```json
 {
@@ -85,35 +85,35 @@
 }
 ```
 
-## 自然语言触发词
+## Natural Language Triggers
 
-本技能支持以下自然语言触发（无需 hook 配置，直接在对话中使用）：
+This skill supports the following natural language triggers (no hook configuration needed -- use directly in conversation):
 
-- "我要开始一个新项目"、"帮我规划一个新功能"、"想启动一个 AI Agent"
-- "有哪些可用的技能/插件"、"推荐什么工具"、"/discover"
-- "帮我审查代码"、"帮我修 Bug"、"我要开发一个新功能"
-- "检查一下我的项目计划"、"帮我理一理思路"、"新项目怎么开始"
+- "I want to start a new project", "Help me plan a new feature", "I want to kick off an AI Agent"
+- "What skills/plugins are available", "Recommend some tools", "/discover"
+- "Help me review code", "Help me fix a bug", "I need to develop a new feature"
+- "Check my project plan", "Help me organize my thoughts", "How to start a new project"
 
-使用自然语言触发更为灵活，推荐在日常使用中优先采用。
+Natural language triggers are more flexible and recommended for everyday use.
 
-## 注意事项
+## Notes
 
-- `[MAGIC KEYWORD: project-kickoff]` 是触发 `universal-project-kickoff` 技能的关键词
-- Hook 配置需要重启 Claude Code 后生效
-- 如果发现频率过高，可移除 `PostToolUse` hook，仅保留 `SessionStart`
-- 技能内置了上下文记忆机制，相同项目不会在短期内重复推荐
+- `[MAGIC KEYWORD: project-kickoff]` is the keyword that triggers the `universal-project-kickoff` skill
+- Hook configuration takes effect after restarting Claude Code
+- If triggers fire too frequently, remove the `PostToolUse` hook and keep only `SessionStart`
+- The skill has built-in context awareness -- it will not repeat recommendations for the same project in a short period
 
-## 验证
+## Verification
 
-配置完成后：
-1. 重启 Claude Code
-2. 打开一个项目
-3. 观察是否自动触发项目启动与能力发现
-4. 如未触发，检查 `settings.json` 格式是否正确（注意 JSON 语法）
+After configuration:
+1. Restart Claude Code
+2. Open a project
+3. Observe whether project kickoff and capability discovery trigger automatically
+4. If not triggered, check `settings.json` for correct JSON syntax
 
-## 从旧版 proactive-skill-discovery 迁移
+## Migration from Legacy proactive-skill-discovery
 
-如果你之前配置了 `proactive-skill-discovery` 的 hook（使用 `[MAGIC KEYWORD: discover]`），请更新为：
-- 关键词：`[MAGIC KEYWORD: discover]` → `[MAGIC KEYWORD: project-kickoff]`
-- 技能名称：所有引用 `proactive-skill-discovery` 的地方改为 `universal-project-kickoff`
-- ⚠️ `proactive-skill-discovery` 技能已于 v4.0.0 删除，请立即迁移你的 hook 配置。
+If you previously configured hooks for `proactive-skill-discovery` (using `[MAGIC KEYWORD: discover]`), update as follows:
+- Keyword: `[MAGIC KEYWORD: discover]` → `[MAGIC KEYWORD: project-kickoff]`
+- Skill name: Replace all references to `proactive-skill-discovery` with `universal-project-kickoff`
+- ⚠️ `proactive-skill-discovery` was removed in v4.0.0 -- migrate your hook configuration immediately.

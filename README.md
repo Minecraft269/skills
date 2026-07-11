@@ -1,72 +1,72 @@
 # Minecraft269 Skills
 
-Minecraft269 的 Claude Code 技能合集，想到什么就创建什么，也欢迎社区贡献。
+A collection of Claude Code skills by Minecraft269 — create whatever comes to mind, community contributions welcome.
 
-## 技能联动
+## Skill Linkage
 
-完整安装本插件包后，六个技能会自动发现彼此并在关键工作流节点联动：
+When the full plugin package is installed, the six skills automatically discover each other and link at key workflow nodes:
 
-- **Git 提交助手** — 提交完成后有 GitHub remote 时提示 PR 管理，涉及代码时提示审查
-- **环境自检** — 发现缺失工具时引导安装，环境就绪后触发能力发现
-- **项目启动与发现** — 关键词预判用户意图（启动/开发/审查/修复/探索/Fork），意图不明确时询问；审查代码支持本地/远程 PR、在线快速审查或 clone 本地深度审查，审查前确认模型；Fork 模式支持 fork → clone → 分析 → 贡献引导五步流程；新项目执行六步启动检查流程（MVP/风险/路线图/CLAUDE.md）；已吸收原 proactive-skill-discovery 能力
-- **PR 管理器** — 克隆 PR 后提醒新贡献者使用项目启动流程，检测新项目类型时触发能力发现
-- **PR 审查器** — 与 PR 管理器共享上下文，审查完成后提示相关操作
-- **插件安装器** — 安装完成后自动提示运行项目启动与能力发现
+- **Git Commit Helper** — after committing, suggests PR management when a GitHub remote exists; suggests code review when code changes are involved
+- **Environment Health Check** — guides installation when missing tools are found; triggers capability discovery when environment is ready
+- **Project Kickoff & Discovery** — pre-detects user intent via keywords (start/develop/review/fix/explore/Fork); asks when intent is ambiguous; code review supports local/remote PR, quick online review or clone-local deep review, with model confirmation before review; Fork mode supports fork → clone → analyze → contribution guide 5-step flow; new projects execute 6-step mandatory kickoff (MVP/risk/roadmap/CLAUDE.md); has absorbed former proactive-skill-discovery capabilities
+- **PR Manager** — reminds new contributors to use project kickoff flow after cloning a PR; triggers capability discovery when detecting new project types
+- **PR Reviewer** — shares context with PR Manager; suggests related actions after review completion
+- **Plugin Installer** — after installation, automatically suggests running project kickoff and capability discovery
 
-> 💡 如果你单独安装了某个技能（而非完整插件包），联动功能会自动静默关闭，核心功能不受影响。
+> 💡 If you installed a skill individually (not the full plugin package), linkage features are silently disabled; core functionality is unaffected.
 
 ---
 
-## 安装
+## Installation
 
-### 方式一：Marketplace 安装（推荐）
+### Method 1: Marketplace Install (Recommended)
 
 ```bash
-# 1. 注册 marketplace
+# 1. Register marketplace
 claude plugins marketplace add Minecraft269/skills
 
-# 2. 安装插件
+# 2. Install plugin
 claude plugins install minecraft269-skills
 ```
 
-安装完成后重启 Claude Code 即可。
+Restart Claude Code after installation.
 
-重启后，输入以下命令确认安装成功：
+After restart, run these commands to confirm successful installation:
 
 ```bash
-claude plugins list                 # 确认 minecraft269-skills 在列表中
-/discover                            # 运行技能发现（已合并至 universal-project-kickoff，自动扫描项目并推荐匹配技能）
+claude plugins list                 # Confirm minecraft269-skills is in the list
+/discover                            # Run skill discovery (merged into universal-project-kickoff, auto-scans project and recommends matching skills)
 ```
 
-### 方式二：手动安装
+### Method 2: Manual Install
 
-适合离线环境或希望直接管理的用户。
+For offline environments or users who prefer direct management.
 
 ```bash
-# 1. 克隆仓库
+# 1. Clone the repository
 git clone https://github.com/Minecraft269/skills.git
 
-# 2. 复制到 Claude Code plugins 目录
+# 2. Copy to Claude Code plugins directory
 cp -r skills ~/.claude/plugins/minecraft269-skills
 ```
 
-然后重启 Claude Code，插件即会自动加载。
+Restart Claude Code and the plugin will be auto-loaded.
 
 ---
 
-## 技能列表
+## Skill List
 
-| 技能 | 简介 |
-|------|------|
-| [`universal-project-kickoff`](docs/universal-project-kickoff.md) | 通用项目启动与能力发现：意图探测 + 目标确认 + Fork 模式（参与开源贡献）+ 7 步能力发现（深度探索/优先推荐/指令发现/全量导出/持久化）+ 六步启动流程 |
-| [`github-pr-manager`](docs/github-pr-manager.md) | GitHub PR 全功能管理器：列出、查看、克隆、分析 PR |
-| [`quick-plugin-installer`](docs/quick-plugin-installer.md) | 快速安装插件：MCP Server 和 SKILL 的统一安装入口 |
-| [`github-pr-reviewer`](docs/github-pr-reviewer.md) | GitHub PR 代码审查器：逐行 inline 评论，完整 pending review 工作流 |
-| [`git-commit-helper`](docs/git-commit-helper.md) | Git 提交规范化助手：基于 staged diff 自动生成 Conventional Commits 消息 |
-| [`env-health-check`](docs/env-health-check.md) | 跨平台环境自检：检测 git/gh/jq/claude 可用性，输出健康报告 |
+| Skill | Description |
+|-------|-------------|
+| [`universal-project-kickoff`](docs/universal-project-kickoff.md) | Universal project kickoff & capability discovery: intent detection + target confirmation + Fork mode (contribute to open source) + 7-step capability discovery + 6-step mandatory kickoff |
+| [`github-pr-manager`](docs/github-pr-manager.md) | GitHub PR full-featured manager: list, view, clone, analyze PRs |
+| [`quick-plugin-installer`](docs/quick-plugin-installer.md) | Quick plugin installer: unified entry point for MCP Server and SKILL plugins |
+| [`github-pr-reviewer`](docs/github-pr-reviewer.md) | GitHub PR code reviewer: line-by-line inline comments, full pending review workflow |
+| [`git-commit-helper`](docs/git-commit-helper.md) | Git commit standardization helper: auto-generates Conventional Commits messages based on staged diff |
+| [`env-health-check`](docs/env-health-check.md) | Cross-platform environment health check: detects git/gh/jq/claude availability, outputs health report |
 
 ---
 
-## 许可证
+## License
 
-MIT License — 详见 [LICENSE](LICENSE)
+MIT License — see [LICENSE](LICENSE)

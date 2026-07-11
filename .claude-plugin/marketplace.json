@@ -1,13 +1,13 @@
 {
   "name": "Minecraft269-skills",
-  "description": "Minecraft269 的 Claude Code 技能合集：GitHub PR 管理器、主动技能发现、通用项目启动工作流",
+  "description": "Minecraft269's Claude Code skill collection: GitHub PR Manager, Proactive Skill Discovery, Universal Project Kickoff Workflow",
   "owner": {
     "name": "Minecraft269"
   },
   "plugins": [
     {
       "name": "minecraft269-skills",
-      "description": "Minecraft269 的技能合集：GitHub PR 管理器、通用项目启动与能力发现（含 Fork 模式）、快速插件安装器、PR 代码审查器",
+      "description": "Minecraft269's skill collection: GitHub PR Manager, Universal Project Kickoff & Capability Discovery (with Fork mode), Quick Plugin Installer, PR Code Reviewer",
       "author": {
         "name": "Minecraft269"
       },

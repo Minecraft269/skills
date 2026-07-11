@@ -1,16 +1,16 @@
-# Diff 行号映射指南
+# Diff Line Number Mapping Guide
 
-## 为什么行号很重要
+## Why Line Numbers Matter
 
-`add_comment_to_pending_review` 的 `line` 参数使用 **PR diff 中的行号**，这是最容易出错的地方。如果使用源文件行号，GitHub API 会返回错误：
+The `line` parameter of `add_comment_to_pending_review` uses the **line number from the PR diff**, which is the most error-prone part. If you use source file line numbers instead, the GitHub API returns an error:
 
 ```
 The line number doesn't exist in the pull request diff
 ```
 
-## Unified Diff 格式
+## Unified Diff Format
 
-GitHub PR diff 使用 unified diff 格式：
+GitHub PR diffs use the unified diff format:
 
 ```diff
 diff --git a/src/auth/login.ts b/src/auth/login.ts
@@ -30,112 +30,112 @@ index abc123..def456 100644
  }
 ```
 
-### 关键组成
+### Key Components
 
-| 部分 | 含义 |
-|------|------|
-| `diff --git a/... b/...` | 文件标识 |
-| `--- a/path` / `+++ b/path` | 旧/新文件路径 |
-| `@@ -10,7 +10,9 @@` | **Hunk 头部** — `-<起始>,<行数> +<起始>,<行数> @@ <函数上下文>` |
-| `-` 开头的行 | 被删除的代码（左侧/旧版本） |
-| `+` 开头的行 | 新增的代码（右侧/新版本） |
-| (空格)开头的行 | 上下文行（未变更，用于定位） |
+| Part | Meaning |
+|------|---------|
+| `diff --git a/... b/...` | File identifier |
+| `--- a/path` / `+++ b/path` | Old / new file path |
+| `@@ -10,7 +10,9 @@` | **Hunk header** — `-<start>,<count> +<start>,<count> @@ <function context>` |
+| Lines starting with `-` | Deleted code (left / old version) |
+| Lines starting with `+` | Added code (right / new version) |
+| Lines starting with (space) | Context lines (unchanged, for orientation) |
 
-### Hunk 头部解读
+### Hunk Header Breakdown
 
 `@@ -10,7 +10,9 @@ import { hashPassword } from '../crypto';`
 
-- `-10,7`：旧文件中从第 10 行开始，显示 7 行
-- `+10,9`：新文件中从第 10 行开始，显示 9 行
-- 末尾是函数/类名上下文
+- `-10,7`: In the old file, starts at line 10, shows 7 lines
+- `+10,9`: In the new file, starts at line 10, shows 9 lines
+- The trailing part is the function/class name context
 
-## Diff 行号 vs 源文件行号
+## Diff Line Numbers vs Source File Line Numbers
 
-**关键区别：** `add_comment_to_pending_review` 需要的是 **diff 中该行的位置**，不是源文件行号。
+**Key difference:** `add_comment_to_pending_review` requires the **position within the diff**, not the source file line number.
 
-### 计算 diff 行号
+### Calculating Diff Line Numbers
 
-从 GitHub API 返回的 diff 文本中，行号从 diff 文本的第 1 行开始计数。
+In the diff text returned by the GitHub API, line numbers start counting from line 1 of the diff text itself.
 
 ```
-第 1 行:  diff --git a/src/auth/login.ts b/src/auth/login.ts
-第 2 行:  index abc123..def456 100644
-第 3 行:  --- a/src/auth/login.ts
-第 4 行:  +++ b/src/auth/login.ts
-第 5 行:  @@ -10,7 +10,9 @@ import { hashPassword } from '../crypto';
-第 6 行:   
-第 7 行:   export async function login(username: string, password: string) {
-第 8 行:  -  const user = await db.findUser(username);
-第 9 行:  -  return user;
-第 10 行: +  if (!username || !password) {
-第 11 行: +    throw new Error('Missing credentials');
+Line 1:   diff --git a/src/auth/login.ts b/src/auth/login.ts
+Line 2:   index abc123..def456 100644
+Line 3:   --- a/src/auth/login.ts
+Line 4:   +++ b/src/auth/login.ts
+Line 5:   @@ -10,7 +10,9 @@ import { hashPassword } from '../crypto';
+Line 6:    
+Line 7:    export async function login(username: string, password: string) {
+Line 8:   -  const user = await db.findUser(username);
+Line 9:   -  return user;
+Line 10:  +  if (!username || !password) {
+Line 11:  +  throw new Error('Missing credentials');
 ...
 ```
 
-如果要对新增的空值检查（第 10 行）发表评论：
-- `line`: 10（diff 中的行号）
+To comment on the added null check (line 10):
+- `line`: 10 (line number in the diff)
 - `side`: "RIGHT"
 - `path`: "src/auth/login.ts"
 
-### 不是用 `@@` 中的源文件行号！
+### Do NOT Use the Source Line Number from `@@`!
 
-❌ **错误**：「第 10 行有新增代码」→ 使用 `line: 10` — 但这可能是正确的…
+Incorrect: "There's added code at line 10 → use `line: 10`" — but this could coincidentally be correct...
 
-关键陷阱：`@@` 中 `+10,9` 表示**新文件中**这些行从源文件第 10 行开始，**但 diff 行号完全不同**。你要用的是 diff 行号。
+Key pitfall: `+10,9` in the `@@` header means **in the new file** these lines start at source file line 10, **but the diff line number is completely different**. You must use the diff line number.
 
-## 多行评论（范围评论）
+## Multi-Line Comments (Range Comments)
 
-要评论一个代码段，使用 `startLine` + `startSide` + `line` + `side`：
+To comment on a range of code, use `startLine` + `startSide` + `line` + `side`:
 
 ```
-该 diff 中第 10-14 行是新增的 try-catch 块：
+Lines 10-14 in this diff are the newly added try-catch block:
 add_comment_to_pending_review(
   path="src/auth/login.ts",
-  body="这个 try-catch 块...",
-  line=14,        # 范围的最后一行
+  body="This try-catch block...",
+  line=14,        # Last line of the range
   side="RIGHT",
-  startLine=10,   # 范围的第一行
+  startLine=10,   # First line of the range
   startSide="RIGHT",
   subjectType="LINE"
 )
 ```
 
-## 文件级评论（降级方案）
+## File-Level Comments (Fallback)
 
-当无法确定 diff 行号时，降级为文件级评论：
+When the diff line number cannot be determined, fall back to a file-level comment:
 
 ```
 add_comment_to_pending_review(
   path="src/auth/login.ts",
-  body="在 `login` 函数中，建议增加输入验证...",
-  subjectType="FILE"   # 不指定行号，评论附加到整个文件
+  body="In the `login` function, consider adding input validation...",
+  subjectType="FILE"   # No line number specified; comment attaches to the entire file
 )
 ```
 
-文件级评论不需要 `line`、`side`、`startLine` 参数。
+File-level comments do not require the `line`, `side`, or `startLine` parameters.
 
-## 使用 parse_diff_lines.sh 脚本
+## Using the parse_diff_lines.sh Script
 
-脚本 `scripts/parse_diff_lines.sh` 可以帮助从 diff 中提取文件路径和行号：
+The script `scripts/parse_diff_lines.sh` helps extract file paths and line numbers from a diff:
 
 ```bash
-# 将 diff 内容传入脚本
+# Pipe diff content into the script
 cat pr_diff.txt | bash scripts/parse_diff_lines.sh
 
-# 输出格式：
+# Output format:
 # file:src/auth/login.ts line:10 side:RIGHT
 # file:src/auth/login.ts line:11 side:RIGHT
 # file:src/auth/login.ts line:14 side:RIGHT
 ```
 
-脚本依赖：`bash`（最低 4.0）、`grep`、`sed`（Windows Git Bash 兼容）。
+Script dependencies: `bash` (minimum 4.0), `grep`, `sed` (Windows Git Bash compatible).
 
-## 常见错误速查
+## Common Errors Quick Reference
 
-| 错误 | 症状 | 修复 |
-|------|------|------|
-| 使用源文件行号 | `line doesn't exist in diff` | 用 diff 行号（从 diff 文本第 1 行开始数） |
-| 使用 `@@ +c,d` 中的 `c` 作为行号 | 评论位置偏移 | 从 diff 第 1 行重新计算 |
-| 未指定 `side` | 评论不在预期位置 | 新增代码用 RIGHT，删除代码用 LEFT |
-| `side` 与代码类型不匹配 | 评论不显示 | 新增用 RIGHT，删除用 LEFT，上下文随意 |
-| 多行范围未用 startLine | 评论显示在单行 | 添加 startLine + startSide |
+| Error | Symptom | Fix |
+|-------|---------|-----|
+| Using source file line numbers | `line doesn't exist in diff` | Use diff line numbers (count from line 1 of the diff text) |
+| Using the `c` value from `@@ +c,d` as the line number | Comment position is off | Re-count from diff line 1 |
+| Not specifying `side` | Comment not in the expected location | Use RIGHT for added code, LEFT for deleted code |
+| `side` does not match code type | Comment does not appear | Use RIGHT for additions, LEFT for deletions, either for context |
+| Multi-line range without startLine | Comment appears on a single line | Add startLine + startSide |

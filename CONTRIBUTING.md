@@ -1,174 +1,156 @@
-# 贡献指南
+# Contribution Guide
 
-感谢你对 Minecraft269 Skills 的关注！本文件帮助你了解如何参与贡献。
+Thank you for your interest in Minecraft269 Skills! This document helps you understand how to contribute.
 
-## 快速开始
+## Quick Start
 
-1. **Fork** 本仓库
-2. 创建功能分支：`git checkout -b feat/your-skill-name`
-3. 完成开发后提交 PR 到 `main` 分支
-4. 等待维护者审核
+1. **Fork** this repository
+2. Create a feature branch: `git checkout -b feat/your-skill-name`
+3. Submit a PR to the `main` branch after development
+4. Wait for maintainer review
 
-## 创建新技能
+## Creating New Skills
 
-**推荐方式：使用 `skill-creator` 技能创建。**
+**Recommended approach: Use the `skill-creator` skill to create.**
 
-> ⚠️ 使用前请确认已安装 `skill-creator` 插件。如未安装，先在 Claude Code 中安装该插件。
+> ⚠️ Confirm the `skill-creator` plugin is installed before use. If not installed, install it in Claude Code first.
 
-确认安装后，在 Claude Code 中运行 `/skill-creator`，它会引导你完成技能创建的标准流程。创建完成后，将生成的技能目录放入 `skills/<skill-name>/`。
+After confirming installation, run `/skill-creator` in Claude Code. It will guide you through the standard skill creation process. After creation, place the generated skill directory into `skills/<skill-name>/`.
 
-### 技能目录结构
+### Skill Directory Structure
 
 ```
 skills/
-├── _shared/               # 包级共享资源（检测协议、通用模板等）
-│   ├── package-context.md # 包上下文检测协议
+├── _shared/               # Package-level shared resources
+│   ├── package-context.md # Package context detection protocol
+│   ├── i18n-glossary.md   # EN↔CN terminology glossary
 │   └── ...
-├── <skill-name>/          # 单个技能目录
-│   ├── SKILL.md           # 技能入口文件（必需）
-│   ├── references/        # 参考资料（可选）
+├── <skill-name>/          # Single skill directory
+│   ├── SKILL.md           # Skill entry file (required)
+│   ├── locale/            # Chinese translations (reference only)
+│   │   └── SKILL.cn.md
+│   ├── references/        # Reference materials (optional)
 │   │   └── *.md
-│   ├── scripts/           # 可执行脚本（可选）
+│   ├── scripts/           # Executable scripts (optional)
 │   │   └── *.sh
-│   └── README.md          # 技能说明（可选）
+│   └── README.md          # Skill description (optional)
 └── ...
 ```
 
-### SKILL.md 格式
+### SKILL.md Format
 
-- 使用 YAML frontmatter（`---` 包裹），包含 `name`、`description` 字段
-- 可选字段：`version`（技能版本号，推荐使用 SemVer）、`capabilities`（本技能提供的能力标签）、`integrates_with`（本技能需要配合的能力标签）
-- 正文使用 Markdown，中文为主
-- 代码块标注语言类型
-- 缩进使用 2 空格
+- Use YAML frontmatter (wrapped in `---`), containing `name` and `description` fields
+- Optional fields: `version`, `capabilities`, `integrates_with`
+- Body uses Markdown, primarily in English
+- Code blocks annotated with language type
+- Indentation uses 2 spaces
 
-### 命名规范
+### Naming Conventions
 
-- 技能目录：`kebab-case`（如 `github-pr-manager`）
-- frontmatter `name`：与目录名一致
-- 脚本文件：`snake_case.sh`
+- Skill directory: `kebab-case` (e.g. `github-pr-manager`)
+- frontmatter `name`: matches directory name
+- Script files: `snake_case.sh`
 
-### 技能联动规范
+### Skill Linkage Specification
 
-本插件包支持技能间互相配合。为确保独立安装用户不受影响，所有跨技能引用必须遵循以下规范。
+This plugin package supports inter-skill coordination. All cross-skill references must follow these specifications.
 
-#### 包上下文检测
+#### Package Context Detection
 
-每个技能在执行前需检测是否处于完整插件包环境：
+Each skill must detect whether it is in a full plugin package environment:
 
-1. Glob 搜索 `~/.claude/plugins/minecraft269-skills/.claude-plugin/plugin.json`
-2. 找到 → **高联系模式**（`PACKAGE_MODE = true`），可引用兄弟技能
-3. 未找到 → **独立模式**（`PACKAGE_MODE = false`），静默跳过所有跨技能引用
+1. Glob search for `~/.claude/plugins/minecraft269-skills/.claude-plugin/plugin.json`
+2. Found → **High-Contact Mode** (`PACKAGE_MODE = true`), can reference sibling skills
+3. Not found → **Standalone Mode** (`PACKAGE_MODE = false`), silently skip all cross-skill references
 
-详见 `skills/_shared/package-context.md`。
+See `skills/_shared/package-context.md` for details.
 
-#### Frontmatter 联动字段
+#### Frontmatter Linkage Fields
 
-在 SKILL.md 的 YAML frontmatter 中声明联动意愿：
+Declare linkage intent in the SKILL.md YAML frontmatter:
 
 ```yaml
-capabilities: ["<能力标签>", ...]     # 本技能提供的能力
-integrates_with: ["<需求标签>", ...]  # 本技能需要配合的能力类型
+capabilities: ["<capability tag>", ...]     # Capabilities this skill provides
+integrates_with: ["<required tag>", ...]     # Capability types needed for coordination
 ```
 
-- `capabilities`：声明本技能能做什么，供其他技能发现
-- `integrates_with`：声明本技能在工作流中需要什么类型的配合
-- 两个字段均为可选 — 不声明则跳过联动
-- 标签应优先使用已有标签（见下方注册表），避免重复定义
+- `capabilities`: declares what this skill can do, for discovery by other skills
+- `integrates_with`: declares what type of coordination this skill needs in its workflow
+- Both fields are optional — skip linkage if not declared
+- Tags should prioritize using existing tags (see registry below)
 
-#### 条件性联动写法
+#### Conditional Linkage Writing
 
-在 SKILL.md 中添加"包联动"章节，描述 PACKAGE_MODE 检测逻辑。联动钩子放在关键工作流步骤末尾：
+Add a "Package Linking" section in SKILL.md describing the PACKAGE_MODE detection logic. Linkage hooks are placed at the end of key workflow steps. If PACKAGE_MODE = false, skip linkage sections entirely.
 
-```
-**联动钩子（仅 PACKAGE_MODE = true 时执行）：**
-扫描兄弟技能的 capabilities，匹配本技能的 integrates_with 标签...
-```
+#### Capability Tag Registry
 
-如果 PACKAGE_MODE = false，完全跳过联动段落 — 不显示任何跨技能提示。
+New skills should prioritize using existing tags. If a new tag is needed, register it here.
 
-#### 能力标签注册表
-
-新技能应优先使用已有标签。如需新标签，请在此注册并说明语义。
-
-**新标签创建决策树：**
+**New Tag Creation Decision Tree:**
 
 ```
-需要声明新能力？
-  ├─ 搜索已有标签是否覆盖该语义 → 是 → 直接复用已有标签
-  ├─ 已有标签相近但不完全匹配 → 优先使用已有标签，在 description 中说明
-  └─ 语义完全不重叠 → 创建新标签，在本表末尾注册
+Need to declare a new capability?
+  ├─ Search existing tags → semantic overlap → Reuse existing tag
+  ├─ Existing tag is close → Prefer existing tag, clarify in description
+  └─ No overlap → Create new tag, register at end of this table
 ```
 
-**新标签注册要求：**
-1. 标签名使用 `kebab-case`（如 `mobile-development`）
-2. 提供明确的语义说明（一句话）
-3. 至少有一个已有技能或即将创建的技能使用该标签
-4. 同步更新 CI 验证规则（`.github/workflows/skill-health.yml` 中的标签列表）
+| Tag | Semantics | Used By |
+|------|----------|---------|
+| `pr-management` | PR viewing/cloning/review/CI management | github-pr-manager |
+| `ci-analysis` | CI status checking and failure analysis | github-pr-manager |
+| `code-cloning` | Clone remote code locally and initialize environment | github-pr-manager |
+| `skill-discovery` | Scan projects, discover and recommend matching capabilities | universal-project-kickoff |
+| `capability-scanning` | Scan installed skills/plugins/MCP | universal-project-kickoff |
+| `project-analysis` | Analyze project tech stack and structure | universal-project-kickoff |
+| `plugin-installation` | Install MCP/SKILL plugins | quick-plugin-installer |
+| `mcp-setup` | MCP Server configuration and verification | quick-plugin-installer |
+| `project-setup` | Six-step decision process for project kickoff | universal-project-kickoff |
+| `risk-assessment` | Project risk identification and contingency planning | universal-project-kickoff |
+| `mvp-planning` | MVP scope definition and roadmap | universal-project-kickoff |
+| `pr-review` | PR code review and inline comment workflow | github-pr-reviewer |
+| `code-review` | Code quality review (general) | github-pr-reviewer |
+| `inline-comments` | Line-by-line inline PR comment publishing | github-pr-reviewer |
+| `git-commit` | Git commit standardization and commit message generation | git-commit-helper |
+| `env-check` | Cross-platform environment health check and dependency diagnostics | env-health-check |
+| `testing` | Test strategy, test frameworks, E2E testing (reserved) | — |
+| `mobile-development` | Mobile development (reserved) | — |
+| `security-audit` | Security review and vulnerability detection (reserved) | — |
+| `debugging` | Debugging, root cause analysis, and error tracing (reserved) | — |
+| `fork-workflow` | Complete contribution workflow: fork → local dev → submit PR | universal-project-kickoff |
 
-| 标签 | 语义 | 已有使用者 |
-|------|------|-----------|
-| `pr-management` | PR 的查看/克隆/审查/CI 管理 | github-pr-manager |
-| `ci-analysis` | CI 状态检查与失败分析 | github-pr-manager |
-| `code-cloning` | 将远程代码克隆到本地并初始化环境 | github-pr-manager |
-| `skill-discovery` | 扫描项目、发现并推荐匹配能力 | universal-project-kickoff |
-| `capability-scanning` | 扫描已安装的技能/插件/MCP | universal-project-kickoff |
-| `project-analysis` | 分析项目技术栈和结构 | universal-project-kickoff |
-| `plugin-installation` | 安装 MCP/SKILL 插件 | quick-plugin-installer |
-| `mcp-setup` | MCP Server 配置与验证 | quick-plugin-installer |
-| `project-setup` | 项目启动的六步决策流程 | universal-project-kickoff |
-| `risk-assessment` | 项目风险识别与预案 | universal-project-kickoff |
-| `mvp-planning` | MVP 范围圈定与路线图 | universal-project-kickoff |
-| `pr-review` | PR 代码审查与 inline 评论工作流 | github-pr-reviewer |
-| `code-review` | 代码质量审查（通用） | github-pr-reviewer |
-| `inline-comments` | 逐行 inline PR 评论发布 | github-pr-reviewer |
-| `git-commit` | Git 提交规范化与 commit message 生成 | git-commit-helper |
-| `env-check` | 跨平台环境自检与依赖可用性诊断 | env-health-check |
-| `testing` | 测试策略、测试框架、E2E 测试（预留） | — |
-| `mobile-development` | 移动端开发（React Native/Flutter/Swift/Kotlin）（预留） | — |
-| `security-audit` | 安全审查与漏洞检测（预留） | — |
-| `debugging` | 调试、根因分析与错误追踪（预留） | — |
-| `fork-workflow` | Fork 开源仓库、本地开发、提交 PR 的完整贡献工作流 | universal-project-kickoff |
+### Commit Messages
 
-#### 共享资源
-
-`skills/_shared/` 目录存放包级公共资源：
-- `package-context.md` — 包上下文检测协议
-- 未来可扩展：通用模板、共享脚本、公共常量等
-
-各技能可通过相对路径引用 `_shared/` 中的资源。新增共享资源时需在本文件中说明用途。
-
-### 提交信息
-
-使用约定式提交格式：
+Use conventional commit format:
 
 ```
-feat: 添加 xxx 技能
-fix: 修复 xxx 问题
-docs: 更新 xxx 文档
-refactor: 重构 xxx
+feat: add xxx skill
+fix: fix xxx issue
+docs: update xxx documentation
+refactor: refactor xxx
 ```
 
-## 技能审核标准
+## Skill Review Standards
 
-提交 PR 前请确认：
+Before submitting a PR, confirm:
 
-- [ ] SKILL.md 包含完整的 frontmatter（name、description）
-- [ ] 如技能属于本插件包，已声明 `capabilities` 和 `integrates_with`（如适用）
-- [ ] 跨技能引用使用 PACKAGE_MODE 门控，独立安装时静默降级
-- [ ] 技能可通过 `/` 命令正常触发
-- [ ] 引用的外部工具/依赖在 frontmatter 中声明
-- [ ] 无侵犯他人 License 的内容
-- [ ] 已在本地实际测试过核心路径
+- [ ] SKILL.md includes complete frontmatter (name, description)
+- [ ] `capabilities` and `integrates_with` declared (if applicable)
+- [ ] Cross-skill references use PACKAGE_MODE gating, silently degrading standalone
+- [ ] Skill can be triggered via `/` command
+- [ ] External tools/dependencies declared in frontmatter
+- [ ] No license-infringing content
+- [ ] Core paths tested locally
 
-## 报告问题
+## Reporting Issues
 
-通过 [GitHub Issues](https://github.com/Minecraft269/skills/issues) 提交：
+Submit via [GitHub Issues](https://github.com/Minecraft269/skills/issues):
 
-- **Bug 报告**：描述遇到的问题、复现步骤、预期行为
-- **功能建议**：描述使用场景、期望的效果
-- **技能请求**：说明你需要的技能及使用场景
+- **Bug Reports**: Problem, reproduction steps, expected behavior
+- **Feature Suggestions**: Use case and desired outcome
+- **Skill Requests**: Skill needed and use case
 
 ## License
 
-本项目的所有贡献均遵循 [MIT License](LICENSE)。
+All contributions are under the [MIT License](LICENSE).

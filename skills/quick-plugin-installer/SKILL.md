@@ -1,164 +1,166 @@
 ---
 name: quick-plugin-installer
 description: >
-  快速安装插件（MCP Server 与 SKILL 插件）— 统一入口，自动识别类型，完成注册、安装、自动升级配置、
-  MCP 接入验证。当你需要安装任何 Claude Code 插件、MCP Server、SKILL 技能、或 Marketplace 来源
-  的扩展时使用此技能。支持 GitHub repo、Marketplace 名称、本地路径、MCP Registry 等多种来源。
+  Quick plugin installer (MCP Server and SKILL plugins) — unified entry point,
+  automatic type detection, registration, installation, auto-update configuration,
+  and MCP connection verification. Use this skill when you need to install any
+  Claude Code plugin, MCP Server, SKILL skill, or Marketplace extension. Supports
+  GitHub repo, Marketplace name, local path, MCP Registry, and other sources.
 capabilities: ["plugin-installation", "mcp-setup"]
 integrates_with: ["skill-discovery"]
 metadata:
-  compatibility: "需要 gh (GitHub CLI)、jq、claude CLI"
+  compatibility: "Requires gh (GitHub CLI), jq, claude CLI"
   risk: safe
 ---
 
-# 快速安装插件
+# Quick Plugin Installer
 
-一键完成 Claude Code 插件（MCP Server 和 SKILL 插件）的发现、注册、安装、自动升级配置。
+One-click discovery, registration, installation, and auto-update configuration for Claude Code plugins (MCP Server and SKILL plugins).
 
-## 包联动
+## Package Linking
 
-本技能支持与 minecraft269-skills 插件包内其他技能自动联动。执行以下检测：
+This skill supports automatic linking with other skills in the minecraft269-skills plugin package. The following detection is performed:
 
-1. Glob 搜索 `~/.claude/plugins/minecraft269-skills/.claude-plugin/plugin.json`
-2. 若找到 → `PACKAGE_MODE = true`，可发现并联动兄弟技能
-3. 若未找到 → `PACKAGE_MODE = false`，跳过所有跨技能逻辑（静默降级）
+1. Glob search for `~/.claude/plugins/minecraft269-skills/.claude-plugin/plugin.json`
+2. If found → `PACKAGE_MODE = true`, enabling discovery and linking of sibling skills
+3. If not found → `PACKAGE_MODE = false`, skipping all cross-skill logic (silent degradation)
 
-当 `PACKAGE_MODE = true` 时：
-- 安装完成后可联动 `integrates_with: skill-discovery`（技能发现）
-- 扫描兄弟 SKILL.md 的 `capabilities` 字段，匹配本技能的 `integrates_with` 标签
-- 仅在匹配成功时显示联动提示
+When `PACKAGE_MODE = true`:
+- After installation, can link with `integrates_with: skill-discovery`
+- Scans sibling SKILL.md `capabilities` fields for matches against this skill's `integrates_with` tags
+- Only displays linking hints when a match is found
 
-详见 `_shared/package-context.md`。
+See `_shared/package-context.md` for details.
 
-## 核心工作流
+## Core Workflow
 
-### 1. 识别插件类型
+### 1. Identify Plugin Type
 
-用户只需提供一个标识符，技能自动判断目标类型。
+The user only needs to provide an identifier; the skill automatically determines the target type.
 
-**触发方式：**
-- 用户直接输入来源：`/install-plugin <来源>`
-- 或自然语言：「安装 GitHub MCP」「帮我装 Minecraft269/skills」
+**Trigger Methods:**
+- User directly inputs a source: `/install-plugin <source>`
+- Or natural language: "Install GitHub MCP", "Help me install Minecraft269/skills"
 
-**判断逻辑：**
+**Detection Logic:**
 
-| 特征 | 类型 |
+| Characteristic | Type |
 |------|------|
-| 来源包含 `mcp`、`server`、`MCP Server` 等关键字 | **MCP Server** |
-| 来源是 GitHub 仓库格式（`owner/repo`）且描述为技能/插件集市 | **SKILL 插件（Marketplace）** |
-| 来源是本地路径（`./xxx`、`/xxx`、`D:\xxx`） | **SKILL 插件（本地）** |
-| 无法自动判断 | 交互式询问用户 |
+| Source contains `mcp`, `server`, `MCP Server` or similar keywords | **MCP Server** |
+| Source is a GitHub repo format (`owner/repo`) described as a skill/plugin marketplace | **SKILL Plugin (Marketplace)** |
+| Source is a local path (`./xxx`, `/xxx`, `D:\xxx`) | **SKILL Plugin (Local)** |
+| Cannot determine automatically | Ask the user interactively |
 
-**交互式询问模板：**
-> "无法自动判断 `{来源}` 的类型。请选择：
-> 1. SKILL 插件（来自 Marketplace 或本地目录）
-> 2. MCP Server（需要在 settings.json 中配置）
-> 3. 查看详情后再决定"
+**Interactive Prompt Template:**
+> "Cannot automatically determine the type of `{source}`. Please select:
+> 1. SKILL Plugin (from Marketplace or local directory)
+> 2. MCP Server (requires configuration in settings.json)
+> 3. View details and decide later"
 
-### 2. 已有安装检测（安装前必须执行）
+### 2. Existing Installation Detection (Must Perform Before Installation)
 
-在正式安装前，先检查目标是否已存在：
+Before installing, check whether the target already exists:
 
-- **SKILL 插件**：检查 `~/.claude/plugins/<插件名>/` 目录或 `claude plugins list` 输出
-- **MCP Server**：检查 `~/.claude/settings.json` 中 `mcpServers.<server-name>` 是否已存在
+- **SKILL Plugin**: Check `~/.claude/plugins/<plugin-name>/` directory or `claude plugins list` output
+- **MCP Server**: Check whether `mcpServers.<server-name>` already exists in `~/.claude/settings.json`
 
-如果已安装，必须交互式询问用户下一步操作：
+If already installed, prompt the user interactively for the next action:
 
 ```markdown
-⚠️ {插件名} 已经安装。
+⚠️ {plugin-name} is already installed.
 
-当前状态：
-- 📛 名称: {name}
-- 📂 位置: {安装路径}
-- 🔢 版本: {version}（如可获取）
+Current Status:
+- 📛 Name: {name}
+- 📂 Location: {install path}
+- 🔢 Version: {version} (if available)
 
-请选择操作：
-1. 🔄 重新安装（覆盖当前版本）
-2. ⬆️ 更新到最新版本
-3. 🗑️ 卸载此插件
-4. 📋 查看详情（安装路径、配置、依赖）
-5. ✅ 跳过，保持现状
+Please choose an action:
+1. 🔄 Reinstall (overwrite current version)
+2. ⬆️ Update to latest version
+3. 🗑️ Uninstall this plugin
+4. 📋 View details (install path, config, dependencies)
+5. ✅ Skip, keep as is
 ```
 
-**执行对应操作：**
+**Execute the Corresponding Action:**
 
-| 用户选择 | 执行 |
+| User Choice | Action |
 |---------|------|
-| 重新安装 | 先卸载 → 再安装（保留配置） |
-| 更新 | SKILL：`claude plugins update <name>`；MCP：运行更新检查脚本 |
-| 卸载 | SKILL：`claude plugins uninstall <name>`；MCP：从 `settings.json` 移除配置 |
-| 查看详情 | 展示安装路径、配置文件内容、最近更新时间 |
-| 跳过 | 结束流程，不做任何更改 |
+| Reinstall | Uninstall first, then install (preserve config) |
+| Update | SKILL: `claude plugins update <name>`; MCP: run update check script |
+| Uninstall | SKILL: `claude plugins uninstall <name>`; MCP: remove config from `settings.json` |
+| View Details | Show install path, config file content, last updated time |
+| Skip | End the flow, make no changes |
 
-### 3. SKILL 插件安装流程
+### 3. SKILL Plugin Installation Flow
 
-#### 3a. 注册 Marketplace
+#### 3a. Register Marketplace
 
-如果不是本地路径，先注册来源 Marketplace：
-
-```bash
-claude plugins marketplace add <来源>
-```
-
-- 如果 Marketplace 已注册，检测 `known_marketplaces.json` 跳过此步
-- 注册成功后展示 Marketplace 信息
-
-#### 3b. 安装插件
+If not a local path, first register the source Marketplace:
 
 ```bash
-claude plugins install <插件名>
+claude plugins marketplace add <source>
 ```
 
-常见映射（从来源提取插件名）：
+- If the Marketplace is already registered, detect via `known_marketplaces.json` and skip this step
+- Display Marketplace information after successful registration
 
-| 来源 | 插件名 |
+#### 3b. Install Plugin
+
+```bash
+claude plugins install <plugin-name>
+```
+
+Common mappings (extract plugin name from source):
+
+| Source | Plugin Name |
 |------|--------|
 | `Minecraft269/skills` | `minecraft269-skills` |
 | `Minecraft269/skills.git` | `minecraft269-skills` |
-| 本地 `./my-skill/` | 从 `plugin.json` → `name` 字段提取 |
+| Local `./my-skill/` | Extract from `plugin.json` → `name` field |
 
-插件名优先从 `plugin.json` 的 `name` 字段提取，其次从目录名推断。
+The plugin name is extracted first from the `name` field in `plugin.json`, and secondarily inferred from the directory name.
 
-#### 3c. 自动升级配置
+#### 3c. Auto-Update Configuration
 
-检查并启用自动升级：
+Check and enable auto-update:
 
-`known_marketplaces.json` 位置：`~/.claude/known_marketplaces.json`
+`known_marketplaces.json` location: `~/.claude/known_marketplaces.json`
 
-处理逻辑：
-1. 读取 `known_marketplaces.json`
-2. 查找匹配的 source URL
-3. 设置 `"autoUpdate": true`（如不存在则添加）
-4. 写回文件
+Processing logic:
+1. Read `known_marketplaces.json`
+2. Find the matching source URL
+3. Set `"autoUpdate": true` (add if not present)
+4. Write back to the file
 
-**如果 Marketplace 不支持自动升级**（本地安装或未知来源），提示用户：
-- 「此来源不支持自动升级，需要手动执行 `claude plugins update <name>` 来更新」
-- 建议用户设置定期提醒或 cron 任务
+**If the Marketplace does not support auto-update** (local install or unknown source), notify the user:
+- "This source does not support auto-update. You will need to manually run `claude plugins update <name>` to update."
+- Suggest setting up periodic reminders or a cron task
 
-### 4. MCP Server 安装流程
+### 4. MCP Server Installation Flow
 
-#### 4a. 收集 MCP 配置信息
+#### 4a. Collect MCP Configuration Information
 
-向用户收集必要信息（如未在来源中自动检测到）：
+Collect necessary information from the user (if not automatically detected from the source):
 
 ```
-请提供以下 MCP Server 配置信息：
+Please provide the following MCP Server configuration information:
 
-1. 传输协议 (默认: stdio)：
-   - stdio（本地命令行）
-   - sse（Server-Sent Events）
+1. Transport protocol (default: stdio):
+   - stdio (local command line)
+   - sse (Server-Sent Events)
    - streamable-http
 
-2. 启动命令（如 npx、uvx、node 等）
+2. Start command (e.g., npx, uvx, node, etc.)
 
-3. 命令参数（如有）
+3. Command arguments (if any)
 
-4. 环境变量（如 API keys）
+4. Environment variables (e.g., API keys)
 ```
 
-#### 4b. 生成并写入 MCP 配置
+#### 4b. Generate and Write MCP Configuration
 
-根据收集的信息，在 `~/.claude/settings.json` 的 `mcpServers` 中添加配置：
+Based on the collected information, add the configuration to the `mcpServers` section in `~/.claude/settings.json`:
 
 ```json
 {
@@ -175,68 +177,68 @@ claude plugins install <插件名>
 }
 ```
 
-**重要：** 先读取现有 `settings.json`，合并新配置后再写回，不要覆盖已有的其他 MCP Server 配置。
+**Important:** Read the existing `settings.json` first, merge the new configuration, then write back. Do not overwrite existing MCP Server configurations.
 
-#### 4c. MCP 接入验证
+#### 4c. MCP Connection Verification
 
-配置写入后：
+After writing the configuration:
 
-1. **检查必要环境变量**是否已设置（如 `GITHUB_TOKEN`、`ANTHROPIC_API_KEY` 等）
-2. **提示用户重启 Claude Code** 或重新加载 MCP 连接
-3. **提供快速测试命令**：告诉用户如何验证 MCP 是否正常工作
+1. **Check whether required environment variables** are set (e.g., `GITHUB_TOKEN`, `ANTHROPIC_API_KEY`, etc.)
+2. **Prompt the user to restart Claude Code** or reload the MCP connection
+3. **Provide a quick test command**: Tell the user how to verify whether the MCP is working
 
 ```markdown
-> ✅ MCP 配置已写入。请重启 Claude Code 以加载新的 MCP Server。
+> ✅ MCP configuration has been written. Please restart Claude Code to load the new MCP Server.
 >
-> 重启后，可以通过以下方式验证：
-> - 查看 MCP 工具是否出现在可用工具列表中
-> - 尝试调用 MCP 工具（如 `mcp__<server>__<tool>`）
+> After restart, you can verify by:
+> - Checking whether the MCP tools appear in the available tools list
+> - Attempting to call an MCP tool (e.g., `mcp__<server>__<tool>`)
 ```
 
-#### 4d. MCP 更新检查
+#### 4d. MCP Update Check
 
-由于 MCP Server 没有内置的自动升级机制，本技能提供更新检查能力：
+Since MCP Server does not have a built-in auto-update mechanism, this skill provides update check capability:
 
-**内置脚本 `scripts/check-mcp-updates.sh`**：
-- 检查 GitHub releases、npm registry、或 pip 上的最新版本
-- 与本地配置中记录的版本比较
-- 输出更新建议
+**Built-in script `scripts/check-mcp-updates.sh`:**
+- Checks the latest version on GitHub releases, npm registry, or pip
+- Compares with the version recorded in the local configuration
+- Outputs update suggestions
 
-用户可手动运行或设置 cron 定期执行。
+Users can run it manually or set up a cron task for periodic execution.
 
-### 5. 输出确认摘要
+### 5. Output Confirmation Summary
 
-每次安装完成后，输出格式化摘要：
+After each installation, output a formatted summary:
 
 ```markdown
-✅ 安装完成
+✅ Installation Complete
 
-| 项目 | 详情 |
+| Item | Details |
 |------|------|
-| 📦 类型 | {MCP Server / SKILL 插件} |
-| 📛 名称 | {插件名或 MCP Server 名} |
-| 🔗 来源 | {GitHub repo / 本地路径 / Registry URL} |
-| 🔄 自动升级 | {已启用 / 未启用 + 原因 / 需手动检查（MCP 脚本）} |
-| ⚠️ 注意事项 | {环境变量 / 认证 / 兼容性提醒} |
-| 📝 下一步 | {重启 Claude Code / 运行验证命令 / 配置 API Key} |
+| 📦 Type | {MCP Server / SKILL Plugin} |
+| 📛 Name | {plugin name or MCP Server name} |
+| 🔗 Source | {GitHub repo / local path / Registry URL} |
+| 🔄 Auto-Update | {Enabled / Not enabled + reason / Manual check required (MCP script)} |
+| ⚠️ Notes | {env vars / authentication / compatibility reminders} |
+| 📝 Next Steps | {restart Claude Code / run verification command / configure API Key} |
 ```
 
-安装完成后建议用户运行以下命令验证：
+After installation, recommend that the user run the following command to verify:
 
 ```bash
-claude plugins list    # 确认插件在列表中
-/discover              # 运行技能发现（已合并至 universal-project-kickoff）
+claude plugins list    # Confirm the plugin is in the list
+/discover              # Run skill discovery (merged into universal-project-kickoff)
 ```
 
-**联动钩子（仅 PACKAGE_MODE = true 时执行）：**
+**Linking Hook (executed only when PACKAGE_MODE = true):**
 
-安装完成后，扫描兄弟技能的 `capabilities`，匹配 `integrates_with: skill-discovery`：
-- 匹配成功 → 提示用户："💡 安装完成。是否需要运行 **项目启动与能力发现** 来扫描当前项目，查看新安装的能力如何匹配你的技术栈？"
-- 用户同意 → 触发技能发现流程
+After installation, scan sibling skills' `capabilities` for matches against `integrates_with: skill-discovery`:
+- Match found → Prompt the user: "Installation complete. Would you like to run **Project Kickoff and Capability Discovery** to scan the current project and see how the newly installed capabilities match your tech stack?"
+- User agrees → Trigger the skill discovery flow
 
-### 6. 常见 MCP Server 快速安装模板
+### 6. Common MCP Server Quick Install Templates
 
-内置几个常用 MCP Server 的配置模板，简化安装：
+Built-in configuration templates for several commonly used MCP Servers, simplifying installation:
 
 #### GitHub MCP Server
 
@@ -283,25 +285,25 @@ claude plugins list    # 确认插件在列表中
 }
 ```
 
-更多模板参见 `references/mcp-templates.md`。
+More templates can be found in `references/mcp-templates.md`.
 
-## 错误处理
+## Error Handling
 
-| 场景 | 处理方式 |
+| Scenario | Handling Method |
 |------|---------|
-| Marketplace 已注册 | 跳过注册步骤，直接安装 |
-| 插件已安装 | 提示用户并询问是否重新安装/更新 |
-| `claude` CLI 不可用 | 引导用户先安装 Claude Code CLI |
-| `settings.json` 不存在 | 自动创建基础结构 |
-| `settings.json` 格式损坏 | 备份原文件并重建 |
-| MCP Server 启动失败 | 检查命令是否存在、网络是否可达、环境变量是否设置 |
-| 权限不足 | 提示需要管理员权限或使用 `sudo` |
+| Marketplace already registered | Skip registration step, install directly |
+| Plugin already installed | Prompt the user and ask whether to reinstall/update |
+| `claude` CLI not available | Guide the user to install Claude Code CLI first |
+| `settings.json` does not exist | Automatically create the basic structure |
+| `settings.json` format is corrupted | Back up the original file and rebuild |
+| MCP Server fails to start | Check whether the command exists, network is reachable, and environment variables are set |
+| Insufficient permissions | Prompt for admin privileges or use `sudo` |
 
-## 脚本
+## Scripts
 
-- `scripts/check-mcp-updates.sh` — MCP Server 更新检查脚本（检查 GitHub/npm/pip 新版本）
-- `scripts/toggle-autoupdate.sh` — 切换 `known_marketplaces.json` 中指定来源的 `autoUpdate` 状态
+- `scripts/check-mcp-updates.sh` — MCP Server update check script (checks GitHub/npm/pip for new versions)
+- `scripts/toggle-autoupdate.sh` — Toggles the `autoUpdate` status for a specified source in `known_marketplaces.json`
 
-## 参考
+## References
 
-- `references/mcp-templates.md` — 常见 MCP Server 的完整配置模板库
+- `references/mcp-templates.md` — Complete configuration template library for common MCP Servers

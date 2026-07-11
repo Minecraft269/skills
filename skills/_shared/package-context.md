@@ -1,172 +1,172 @@
-# 包上下文检测协议
+# Package Context Detection Protocol
 
-本文件定义 minecraft269-skills 插件包内所有技能的通用包检测和联动发现协议。
-每个技能在启动时引用本协议，无需修改即可适配未来新增的技能。
+This document defines the common package detection and Package Linking discovery protocol shared by all skills within the minecraft269-skills plugin bundle.
+Every skill references this protocol at startup and adapts to newly added skills without modification.
 
-## 一、PACKAGE_MODE 检测
+## 1. PACKAGE_MODE Detection
 
-### 检测步骤
-
-```
-1. 搜索 ~/.claude/plugins/ 下是否存在含 .claude-plugin/plugin.json 的子目录
-2. 使用 Glob 查找 ~/.claude/plugins/*/.claude-plugin/plugin.json
-3. 若找到，Read 该 plugin.json，检查 name 字段
-4. 若 name 为 "minecraft269-skills" → PACKAGE_MODE = true（高联系模式）
-5. 否则 → PACKAGE_MODE = false（独立模式）
-```
-
-### 模式行为差异
-
-| 行为 | 高联系模式 (PACKAGE_MODE = true) | 独立模式 (PACKAGE_MODE = false) |
-|------|--------------------------------|-------------------------------|
-| 技能间引用 | 主动发现并建议兄弟技能联动 | 完全不提及任何兄弟技能 |
-| 跨技能命令提示 | 可用 | 静默隐藏 |
-| 包级共享资源 | 可加载 `_shared/` 中的资源 | 仅使用本技能内置资源 |
-| 动态能力发现 | 扫描兄弟 SKILL.md 的 capabilities 字段 | 跳过扫描 |
-
-### 安全默认值
-
-**独立模式是安全默认值。** 任何检测失败（文件不存在、权限错误、解析失败）都应降级为 PACKAGE_MODE = false，不得报错或中断。
-
-## 二、运行时联动发现
-
-### 算法
-
-当 PACKAGE_MODE = true 且技能执行到关键节点时：
+### Detection Steps
 
 ```
-1. 确定本技能所在的插件包根目录
-2. Glob 扫描 `skills/*/SKILL.md`（**排除自身 SKILL.md**，通过对比 `name` frontmatter 字段实现）
-3. 对每个兄弟 SKILL.md，解析 frontmatter 中的 `capabilities` 字段
-4. 将本技能的 `integrates_with` 与兄弟技能的 `capabilities` 做交集匹配
-5. 对匹配到的每个兄弟技能，提取其 `name` 和 `description`
-6. 在当前工作流节点生成条件性推荐
-
-**自我过滤规则**：技能绝不应通过联动发现推荐自身。在步骤 2 的 Glob 结果中，必须排除 `name` 字段与当前技能 `name` 完全相同的 SKILL.md。
+1. Search ~/.claude/plugins/ for subdirectories containing .claude-plugin/plugin.json
+2. Use Glob to lookup ~/.claude/plugins/*/.claude-plugin/plugin.json
+3. If found, Read that plugin.json and inspect the name field
+4. If name is "minecraft269-skills" → PACKAGE_MODE = true (High-Contact Mode)
+5. Otherwise → PACKAGE_MODE = false (Standalone Mode)
 ```
 
-### 标签匹配示例
+### Behavioral Differences by Mode
+
+| Behavior | High-Contact Mode (PACKAGE_MODE = true) | Standalone Mode (PACKAGE_MODE = false) |
+|----------|----------------------------------------|----------------------------------------|
+| Cross-skill references | Actively discovers and suggests sibling skill linking | Never mentions any sibling skill |
+| Cross-skill command hints | Available | Silently hidden |
+| Package-level shared resources | May load resources from `_shared/` | Uses only built-in skill resources |
+| Dynamic capability discovery | Scans sibling SKILL.md `capabilities` fields | Skips scanning |
+
+### Safe Default
+
+**Standalone Mode is the safe default.** Any detection failure (file not found, permission error, parse failure) must degrade to PACKAGE_MODE = false without error or interruption.
+
+## 2. Runtime Package Linking Discovery
+
+### Algorithm
+
+When PACKAGE_MODE = true and a skill reaches a key decision point:
 
 ```
-本技能 integrates_with: ["skill-discovery", "plugin-installation"]
+1. Determine the current skill's plugin bundle root directory
+2. Glob scan `skills/*/SKILL.md` (**excluding the skill's own SKILL.md** by comparing the `name` frontmatter field)
+3. For each sibling SKILL.md, parse the `capabilities` field from its frontmatter
+4. Compute the intersection of the current skill's `integrates_with` with each sibling's `capabilities`
+5. For every matched sibling skill, extract its `name` and `description`
+6. Generate conditional recommendations at the current workflow node
 
-兄弟技能 A: capabilities: ["skill-discovery", "project-analysis"]  → 匹配 "skill-discovery" ✅
-兄弟技能 B: capabilities: ["pr-management", "ci-analysis"]         → 无匹配 ❌
-兄弟技能 C: capabilities: ["plugin-installation", "mcp-setup"]      → 匹配 "plugin-installation" ✅
+**Self-filtering rule**: A skill must never recommend itself through Package Linking discovery. In step 2's Glob results, any SKILL.md whose `name` field exactly matches the current skill's `name` must be excluded.
 ```
 
-结果：推荐兄弟技能 A 和 C。
+### Tag Matching Example
 
-## 三、Frontmatter 扩展规范
+```
+Current skill integrates_with: ["skill-discovery", "plugin-installation"]
 
-每个技能可在 SKILL.md frontmatter 中声明以下字段以参与联动：
+Sibling A: capabilities: ["skill-discovery", "project-analysis"]  → matches "skill-discovery" ✅
+Sibling B: capabilities: ["pr-management", "ci-analysis"]          → no match ❌
+Sibling C: capabilities: ["plugin-installation", "mcp-setup"]       → matches "plugin-installation" ✅
+```
+
+Result: recommend sibling skills A and C.
+
+## 3. Frontmatter Extension Specification
+
+Each skill may declare the following fields in its SKILL.md frontmatter to participate in Package Linking:
 
 ```yaml
-capabilities: ["<标签>", ...]     # 本技能提供的能力
-integrates_with: ["<标签>", ...]  # 本技能需要配合的能力类型
+capabilities: ["<tag>", ...]     # Abilities this skill provides
+integrates_with: ["<tag>", ...]  # Types of capabilities this skill needs to pair with
 ```
 
-两个字段均为可选。未声明 `integrates_with` 的技能不会主动发起联动；未声明 `capabilities` 的技能不会被其他技能发现。
+Both fields are optional. Skills that do not declare `integrates_with` will not initiate Package Linking. Skills that do not declare `capabilities` will not be discovered by other skills.
 
-标签命名约定：
-- 使用 `kebab-case`（如 `pr-management`、`skill-discovery`）
-- 语义明确，不分词过细
-- 优先复用已有标签（参见 CONTRIBUTING.md 中的标签注册表）
+Tag naming conventions:
+- Use `kebab-case` (e.g., `pr-management`, `skill-discovery`)
+- Keep semantics clear without over-splitting terms
+- Prefer reusing existing tags (see the tag registry in CONTRIBUTING.md)
 
-## 四、联动触发时机指南
+## 4. Package Linking Trigger Timing Guide
 
-| integrates_with 标签 | 建议触发时机 |
-|----------------------|-------------|
-| `skill-discovery` | 当前技能完成主要操作后（安装完成、初始化完成、克隆完成） |
-| `project-setup` | 检测到用户首次接触项目（克隆陌生仓库、进入新目录） |
-| `plugin-installation` | 发现用户缺少工具/插件/MCP Server |
-| `pr-management` | 检测到 GitHub remote 且有活跃开发活动 |
-| `code-review` | 完成代码修改后 |
-| `testing` | 完成功能实现后 |
+| integrates_with tag | Suggested trigger timing |
+|--------------------|--------------------------|
+| `skill-discovery` | After the current skill completes its main operation (installation done, initialization done, clone done) |
+| `project-setup` | When the user first interacts with a project (cloning an unfamiliar repository, entering a new directory) |
+| `plugin-installation` | When the user is found to be missing a tool, plugin, or MCP Server |
+| `pr-management` | When a GitHub remote is detected with active development activity |
+| `code-review` | After completing code modifications |
+| `testing` | After completing feature implementation |
 
-## 五、扩展性
+## 5. Extensibility
 
-当新技能加入包时：
-1. 在 SKILL.md frontmatter 声明 `capabilities` 和 `integrates_with`
-2. 在 CONTRIBUTING.md 标签注册表中注册新标签（如使用新标签）
-3. 在合适的工作流节点插入联动发现步骤
+When a new skill joins the bundle:
+1. Declare `capabilities` and `integrates_with` in the SKILL.md frontmatter
+2. Register new tags in the CONTRIBUTING.md tag registry (if using new tags)
+3. Insert Package Linking discovery steps at appropriate workflow nodes
 
-**无需修改本文件或其他已有技能。** 运行时发现机制会自动识别新技能。
+**No modifications to this file or other existing skills are required.** The runtime discovery mechanism automatically recognizes new skills.
 
-## 六、循环触发防护
+## 6. Loop Trigger Protection
 
-为防止技能联动形成无限循环，所有技能必须遵循以下规则：
+To prevent Package Linking from forming infinite loops, all skills must follow these rules:
 
-### 防护规则
+### Protection Rules
 
-1. **上下文标记**：每次触发联动后，在对话上下文中记录 `_LINKED_FROM: ["<触发技能名>"]` 标记
-2. **循环检测**：执行联动前检查标记 — 如果标记中存在当前技能名，跳过该次联动
-3. **深度限制**：联动链深度不超过 2 层（直接联动 + 二级联动），超过则截断
-4. **频次限制**：同一技能在单次会话中最多触发 3 次联动，达到上限后静默跳过
+1. **Context marker**: After each Package Linking trigger, record a `_LINKED_FROM: ["<triggering_skill_name>"]` marker in the conversation context
+2. **Loop detection**: Before executing a Package Linking, check the marker -- if the current skill name is already present, skip that linkage
+3. **Depth limit**: Package Linking chain depth must not exceed 2 levels (direct + one level of indirection); anything beyond is truncated
+4. **Frequency limit**: The same skill may trigger Package Linking at most 3 times in a single session; once the limit is reached, silently skip
 
-### 实现提示
-
-```
-触发联动前:
-  1. 检查 _LINKED_CHAIN 深度计数器 (初始 0)
-  2. 若深度 >= 2 → 跳过，不触发联动
-  3. 检查 _TRIGGERED_SKILLS 频次记录
-  4. 若本技能已触发 >= 3 次 → 跳过
-  5. 执行联动，深度 +1，频次 +1
-  
-完成后:
-  6. 深度 -1（退出当前联动层级）
-```
-
-### 示例
+### Implementation Hints
 
 ```
-github-pr-manager 克隆 PR → 触发联动 → universal-project-kickoff (深度 1)
-  → 初始化 + 能力推荐完成 → 触发联动 → quick-plugin-installer (深度 2)
-    → 安装完成 → 触发联动 → 深度已达上限，跳过
+Before triggering Package Linking:
+  1. Check the _LINKED_CHAIN depth counter (initial 0)
+  2. If depth >= 2 → skip, do not trigger Package Linking
+  3. Check _TRIGGERED_SKILLS frequency record
+  4. If this skill has already triggered >= 3 times → skip
+  5. Execute Package Linking, depth +1, frequency +1
+
+After completion:
+  6. depth -1 (exit current Package Linking level)
 ```
 
-## 七、依赖健康检查
-
-为确保 PACKAGE_MODE 联动发现能正常工作，建议在首次加载 package-context.md 时执行轻量级健康检查：
-
-### 检查步骤
-
-1. Glob 扫描 `skills/*/SKILL.md` 获取所有技能
-2. 验证每个 SKILL.md 的 frontmatter 可解析（至少包含 `name` 字段）
-3. 若任何 SKILL.md 的 frontmatter 格式错误，记录警告但不中断
-4. 对比 `capabilities` 标签与 CONTRIBUTING.md 中的标签注册表
-5. 若发现未注册标签，提示开发者更新注册表
-
-### 降级策略
-
-如果健康检查发现任何声明 `capabilities: ["skill-discovery"]` 的技能的 SKILL.md 格式异常（该能力被多个技能依赖），其他技能应：
-- 静默跳过 `skill-discovery` 联动（不报错）
-- 继续执行自身核心功能
-- 在首次遇到需要联动的节点时给出一次性提示："部分技能联动暂不可用"
-
-## 八、联动链扩展
-
-联动可以链式传播，但遵循层级限制：
-
-| 联动层级 | 描述 | 是否允许 |
-|---------|------|---------|
-| 一级联动 | 技能 A 完成 → 推荐技能 B | ✅ 允许 |
-| 二级联动 | 技能 B 完成 → 推荐技能 C | ✅ 允许 |
-| 三级及以上 | 技能 C 完成 → 推荐技能 D | ❌ 禁止（截断） |
-
-### 典型联动链示例
+### Example
 
 ```
-1. github-pr-manager 克隆陌生项目 PR
-   → 一级联动: 推荐 universal-project-kickoff 初始化项目
-
-2. universal-project-kickoff 完成 CLAUDE.md 生成 + 能力推荐
-   → 二级联动: 推荐 quick-plugin-installer 安装缺失工具
-
-3. quick-plugin-installer 安装完成后
-   → 三级联动: 应再次推荐能力发现 → ❌ 截断
-   → 替代方案: 在二级联动结果中一次性列出所有后续建议
+github-pr-manager clones a PR → triggers Package Linking → universal-project-kickoff (depth 1)
+  → Initialization + capability recommendation complete → triggers Package Linking → quick-plugin-installer (depth 2)
+    → Installation complete → triggers Package Linking → depth limit reached, skip
 ```
 
-三级及以上联动应被替换为"一次性建议列表"：在二级联动的结果中，将所有可能需要的后续操作以列表形式呈现，而非链式触发。
+## 7. Dependency Health Check
+
+To ensure PACKAGE_MODE Package Linking discovery works correctly, a lightweight health check should be performed on first load of package-context.md:
+
+### Check Steps
+
+1. Glob scan `skills/*/SKILL.md` to list all skills
+2. Verify each SKILL.md's frontmatter is parseable (at minimum contains a `name` field)
+3. If any SKILL.md has malformed frontmatter, log a warning but do not abort
+4. Compare `capabilities` tags against the tag registry in CONTRIBUTING.md
+5. If unregistered tags are found, prompt the developer to update the registry
+
+### Degradation Strategy
+
+If the health check finds a malformed SKILL.md for any skill declaring `capabilities: ["skill-discovery"]` (a capability relied upon by multiple skills), other skills should:
+- Silently skip `skill-discovery` Package Linking (no error)
+- Continue executing their own core functionality
+- Issue a one-time hint on first encountering a node that needs linking: "Some skill linking is temporarily unavailable"
+
+## 8. Package Linking Chain Extension
+
+Package Linking may propagate in chains, but respects the following depth limits:
+
+| Linking level | Description | Allowed? |
+|---------------|-------------|----------|
+| First level   | Skill A completes → recommends skill B | ✅ Allowed |
+| Second level  | Skill B completes → recommends skill C | ✅ Allowed |
+| Third level+  | Skill C completes → recommends skill D | ❌ Forbidden (truncated) |
+
+### Typical Linking Chain Example
+
+```
+1. github-pr-manager clones an unfamiliar project PR
+   → First-level linking: recommend universal-project-kickoff to initialize project
+
+2. universal-project-kickoff completes CLAUDE.md generation + capability recommendation
+   → Second-level linking: recommend quick-plugin-installer to install missing tools
+
+3. quick-plugin-installer completes installation
+   → Third-level linking: would recommend capability discovery again → ❌ truncated
+   → Alternative: present all follow-up suggestions as a single list within the second-level linking result
+```
+
+Third-level linking and beyond should be replaced with a "single-shot suggestion list": within the second-level linking result, present all possible follow-up operations as a list rather than triggering chained recommendations.

@@ -1,99 +1,99 @@
-# 项目启动前终极检查清单（参考文档）
+# Ultimate Pre-Project Checklist (Reference)
 
-> 本文档是通用项目启动检查清单的完整展开版。当 SKILL 需要对某个步骤提供更详细的解释，或用户希望看到完整的开工 Checklist 原文时加载此文件。
+> This document is the full expanded version of the universal pre-project checklist. Load this file when the SKILL needs to provide a more detailed explanation of a particular step, or when the user wants to see the complete original Checklist text.
 >
-> **章节映射**：
-> - 第一章 → 五步流程第一步（澄清"为什么"与"是什么"）
-> - 第二章 → 五步流程第二步（圈定边界）
-> - 第三章 → 五步流程第三步（风险摸底）
-> - 第四章 → 五步流程第四步（利益相关者）
-> - 第五章 → 五步流程第五步（路线图）
+> **Section mapping:**
+> - Chapter 1 -> Five-step process step 1 (clarify the "why" and "what")
+> - Chapter 2 -> Five-step process step 2 (define boundaries)
+> - Chapter 3 -> Five-step process step 3 (risk assessment)
+> - Chapter 4 -> Five-step process step 4 (stakeholders)
+> - Chapter 5 -> Five-step process step 5 (roadmap)
 >
-> 以下为完整原文。
+> The full original text follows.
 
 ---
 
-# 项目启动前终极检查清单
+# Ultimate Pre-Project Checklist
 
-开始一个项目之前，最怕的就是"凭着热情直接冲"。花点时间做好前期思考，能帮你避开大部分弯路。你可以把下面这几点当作一个通用框架来用，无论项目大小皆适用。
-
----
-
-## 1. 先别想"怎么做"，想清楚"为什么"和"是什么"
-
-这是地基。如果这几句话说不清楚，后面很容易迷失。
-
-- **为什么要做？**
-  - 解决了谁的什么痛点？
-  - 不做会有什么损失？做了会带来什么价值（钱、效率、名声、学习）？
-  - *引导问题：如果这个项目明天就消失了，有人会在意吗？*
-
-- **成功的标准是什么？**
-  - 是赚到第一个100万？是日活用户过万？还是证明一个技术可行？
-  - 标准必须可衡量，避免"做出来看看"的模糊状态。
-  - *引导问题：当项目结束时，你怎么判断自己是赢了还是败了？*
-
-- **一句话说清项目**
-  - 试着用"我们要为（谁）解决（什么问题），通过（什么方式），达到（什么效果）"的格式来概括。如果写不出，说明你还不够清晰。
-
-## 2. 圈定边界，明确"不做什么"
-
-限制是创造力的催化剂。一开始就划定边界，能防止范围无限蔓延。
-
-- **范围：第一版到底包含什么？**
-  - 列出所有你想要的功能/特性，然后残忍地砍掉80%，只留下那个**能验证核心假设的最小集合（MVP）**。
-  - *牢记：一个五脏俱全的麻雀，远好过一个永远拼不完的凤凰。*
-
-- **约束条件（三重约束）**
-  - **时间：** 最后期限是哪天？是强制的还是灵活的？
-  - **成本/资源：** 有多少预算？谁能投入时间？有哪些现成工具或人脉？
-  - **质量/范围：** 在时间和成本锁死的情况下，哪些质量要求是可以商榷的？
-  - *现实是：这三者你最多只能同时保住两个。想又快又好还省钱，几乎不可能。*
-
-## 3. 探路：可行性分析与风险摸底
-
-在开干前，先找出最大的"拦路虎"。
-
-- **可行性自查**
-  - **技术：** 这事用现有技术能实现吗？需要多少时间学习/开发？
-  - **人力：** 你和团队有能力做吗？需要找外援吗？
-  - **市场/环境：** 有没有人已经在做了？他们做得怎么样？你的差异化在哪里？
-  - **合规：** 需要牌照、许可吗？会踩法律红线吗？
-
-- **风险清单（只盯前三）**
-  - 写下可能让项目彻底失败的三件事（如核心成员离开、关键技术瓶颈、政策突变）。
-  - 为每个风险简单想一个"B计划"，比如"如果A方案不行，我们换B方案，只是速度会慢30%"。
-
-## 4. 找人：识别利益相关者
-
-没有任何项目是孤岛。早期就搞清楚"谁能影响你，你影响谁"。
-
-- **画一个简单的图**
-  - **核心圈：** 谁直接参与干活？他们的期望是什么？
-  - **影响圈：** 谁能拍板给资源（老板、投资人）？谁需要配合你（兄弟部门）？
-  - **外围圈：** 谁会使用最终成果（客户、用户）？谁会挑剔结果（监管、竞品）？
-
-- **对齐期望**
-  - 在动手前，拿着第一步里写的"项目定义"和"成功标准"，去跟关键人物口头确认一次。避免"我以为你懂了"带来的后期灾难。
-
-## 5. 画出最粗糙的路线图
-
-现在才该进入最初步的规划，保持粗糙但有用。
-
-- **里程碑而非任务清单**
-  - 别急着拆解到每天干什么，先定几个关键节点：
-    - 比如：第1周，完成原型草图并找5个用户聊完；第2周，核心功能跑通能演示；第3周，首个付费用户诞生……
-  - 每个里程碑都要有明确的**产出物**和**验收标准**。
-
-- **启动前的最后一个仪式：开工Checklist**
-  - ☑ 项目定义与目标，已和关键人书面/口头确认。
-  - ☑ 范围（尤其是第一版不做什么）已明确。
-  - ☑ 关键资源（时间、钱、人）已到位或得到承诺。
-  - ☑ 最高风险已有应对预案。
-  - ☑ 项目文件夹、沟通群组、文档协作工具已就绪。
+The biggest risk before starting a project is charging in on enthusiasm alone. Taking time to think things through upfront will help you avoid most detours. Use the following as a universal framework, applicable to projects of any size.
 
 ---
 
-最后，一个简单粗暴的口头禅：**先开枪，后瞄准，但开枪前得先知道靶子大概在哪个方向。** 你的前期思考，就是为了找到那个"大概方向"，然后勇敢打出第一颗子弹，用真实反馈去校正。
+## 1. Don't Think "How" Yet -- Clarify the "Why" and "What"
 
-*现在，可以自信地开始你的项目了。*
+This is your foundation. If you can't articulate these clearly, you'll get lost later.
+
+- **Why are you doing this?**
+  - Whose problem does it solve, and what is that problem?
+  - What's the cost of not doing it? What value (money, efficiency, reputation, learning) will it bring?
+  - *Guiding question: If this project disappeared tomorrow, would anyone care?*
+
+- **What does success look like?**
+  - Is it earning the first million? Reaching 10,000 daily active users? Proving a technology is viable?
+  - The criteria must be measurable -- avoid the vague "let's just build it and see" mindset.
+  - *Guiding question: When the project ends, how will you know whether you won or lost?*
+
+- **Describe the project in one sentence**
+  - Try the format: "We will solve (what problem) for (whom), by (what means), achieving (what outcome)." If you can't write this, you're not clear enough.
+
+## 2. Define Boundaries -- Make Clear What You WON'T Do
+
+Constraints are catalysts for creativity. Setting boundaries early prevents scope from spiraling.
+
+- **Scope: What exactly goes into the first version?**
+  - List every feature you want, then ruthlessly cut 80%, leaving only the **minimum set that validates your core hypothesis (MVP)**.
+  - *Remember: A sparrow with all its organs is far better than a phoenix you'll never finish assembling.*
+
+- **Constraints (the triple constraint)**
+  - **Time:** What's the deadline? Is it hard or flexible?
+  - **Cost/Resources:** What's the budget? Who can commit time? What existing tools or connections can you leverage?
+  - **Quality/Scope:** With time and cost locked, which quality requirements are negotiable?
+  - *Reality: You can only reliably keep two of the three. Fast, good, and cheap -- all three is nearly impossible.*
+
+## 3. Scout Ahead: Feasibility Analysis and Risk Assessment
+
+Before you start building, identify the biggest obstacles.
+
+- **Feasibility self-check**
+  - **Technical:** Can this be done with existing technology? How much time is needed to learn/develop?
+  - **People:** Do you and your team have the capability? Do you need external help?
+  - **Market/Environment:** Is anyone already doing this? How well? What's your differentiator?
+  - **Compliance:** Do you need licenses or permits? Are there legal red lines?
+
+- **Risk list (focus on the top three)**
+  - Write down the three things that could completely kill the project (e.g., core member leaves, key technical bottleneck, policy change).
+  - For each risk, sketch a simple "Plan B" -- for example, "If Plan A fails, we switch to Plan B, but it will be 30% slower."
+
+## 4. Find the People: Identify Stakeholders
+
+No project is an island. Figure out early "who can influence you, and who you influence."
+
+- **Draw a simple diagram**
+  - **Core circle:** Who is directly doing the work? What are their expectations?
+  - **Influence circle:** Who decides on resources (boss, investors)? Who needs to cooperate with you (sister departments)?
+  - **Periphery circle:** Who will use the final result (customers, users)? Who will scrutinize the outcome (regulators, competitors)?
+
+- **Align expectations**
+  - Before starting, verbally confirm the "project definition" and "success criteria" from step 1 with key people. Avoid the disaster of "I thought you understood."
+
+## 5. Draw the Roughest Roadmap
+
+Now, and only now, enter the most preliminary planning phase -- keep it rough but useful.
+
+- **Milestones, not task lists**
+  - Don't rush to break things down by day. Set a few key milestones first:
+    - Example: Week 1 -- complete prototype sketch and talk to 5 users; Week 2 -- core functionality working and demoable; Week 3 -- first paying customer onboarded...
+  - Each milestone must have a clear **deliverable** and **acceptance criteria**.
+
+- **The final ritual before starting: the Launch Checklist**
+  - ☑ Project definition and goals confirmed in writing/orally with key stakeholders.
+  - ☑ Scope (especially what the first version will NOT do) is clear.
+  - ☑ Key resources (time, money, people) are secured or promised.
+  - ☑ Contingency plans exist for the highest risks.
+  - ☑ Project folder, communication channels, and documentation tools are ready.
+
+---
+
+Finally, a straightforward motto: **Fire first, aim later -- but know roughly where the target is before you pull the trigger.** Your upfront thinking is about finding that "rough direction," then bravely firing the first shot and correcting course with real feedback.
+
+*Now go start your project with confidence.*

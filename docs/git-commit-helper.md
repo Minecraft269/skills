@@ -1,33 +1,33 @@
 # git-commit-helper
 
-基于 `git diff --staged` 分析变更，自动生成符合 [Conventional Commits](https://www.conventionalcommits.org/) 规范的提交信息。
+Analyzes `git diff --staged` changes and automatically generates commit messages conforming to [Conventional Commits](https://www.conventionalcommits.org/).
 
-## 前置条件
+## Prerequisites
 
 - `git`
 
-## 触发方式
+## Trigger
 
-直接说「帮我提交代码」「生成 commit message」「提交变更」即可触发。
+Say "help me commit", "generate commit message", or "commit changes" to trigger.
 
-## 工作流
+## Workflow
 
-1. 检测暂存区（`git status --short`）
-2. 分析 `git diff --staged` 推断类型（feat/fix/docs 等）和 scope
-3. 预览生成的 commit message，等待确认
-4. 执行 `git commit` 并联动 PR 管理/审查
+1. Detect staging area (`git status --short`)
+2. Analyze `git diff --staged` to infer type (feat/fix/docs etc.) and scope
+3. Preview the generated commit message and wait for confirmation
+4. Execute `git commit` and link to PR management/review
 
-## 交互选项
+## Interactive Options
 
-| 选项 | 动作 |
-|------|------|
-| ✅ 确认 | 直接提交 |
-| ✏️ 编辑 | 修改 type/scope/描述 |
-| 🔄 重试 | 重新分析 |
-| 📝 手写 | 完全手写 |
-| ❌ 取消 | 不提交 |
+| Option | Action |
+|--------|--------|
+| ✅ Confirm | Commit directly |
+| ✏️ Edit | Modify type/scope/description |
+| 🔄 Retry | Re-analyze |
+| 📝 Manual | Write manually |
+| ❌ Cancel | Do not commit |
 
-## 联动
+## Linkage
 
-- 提交完成后，有 GitHub remote 时提示 **PR 管理**
-- 涉及代码变更时提示 **代码审查**
+- After commit, if a GitHub remote exists → suggest **PR Manager**
+- When code changes are involved → suggest **Code Review**

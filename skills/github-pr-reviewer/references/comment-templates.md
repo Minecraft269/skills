@@ -1,50 +1,50 @@
-# 审查评论模板
+# Review Comment Templates
 
-## 评论正文结构
+## Comment Body Structure
 
 ```
-**🔒 [安全] 密码验证缺少空值检查**
+**🔒 [Security] Password validation missing null check**
 
-当前代码在 `password` 为 `null` 或 `undefined` 时会直接传递给 `hashPassword()`，
-可能导致运行时异常或不安全的哈希结果。
+The current code passes `password` directly to `hashPassword()` when it is `null` or `undefined`,
+which may cause a runtime exception or produce insecure hash results.
 
-**建议修复：**
+**Suggested Fix:**
 ```typescript
 if (!password) {
-  throw new BadRequestError('密码不能为空');
+  throw new BadRequestError('Password cannot be empty');
 }
 const hashed = await hashPassword(password);
 ```
 ```
 
-1. **粗体标题**：`**[图标] [类别中文名] 简短问题描述**`
-2. **问题描述**：1-3 句话说明当前代码的问题和潜在影响
-3. **建议修复**（可选）：带代码示例的具体修复方案
+1. **Bold title**: `**[Icon] [Category] Short problem description**`
+2. **Problem description**: 1-3 sentences explaining the current code issue and its potential impact
+3. **Suggested fix** (optional): Specific fix with code example
 
-## 类别图标映射
+## Category Icon Mapping
 
-| 类别 | 图标 | 中文名 |
-|------|------|--------|
+| Category | Icon | Name |
+|----------|------|------|
 | bug | 🐛 | Bug |
-| security | 🔒 | 安全 |
-| performance | ⚡ | 性能 |
-| design | 🏗️ | 设计 |
-| best-practice | 📐 | 最佳实践 |
-| nitpick | 💭 | 建议 |
-| praise | 👍 | 表扬 |
+| security | 🔒 | Security |
+| performance | ⚡ | Performance |
+| design | 🏗️ | Design |
+| best-practice | 📐 | Best Practice |
+| nitpick | 💭 | Suggestion |
+| praise | 👍 | Praise |
 
-## 严重程度说明
+## Severity Levels
 
-| 严重程度 | 说明 | 是否阻塞合并 |
-|---------|------|-------------|
-| critical | 必须修复的严重缺陷或安全漏洞 | 是 |
-| warning | 可能导致问题的代码 | 建议修复 |
-| suggestion | 改进建议 | 否 |
-| praise | 写得好的代码 | 否 |
+| Severity | Description | Blocks Merge |
+|----------|-------------|-------------|
+| critical | Critical defect or security vulnerability that must be fixed | Yes |
+| warning | Code that may cause issues | Recommended to fix |
+| suggestion | Improvement suggestion | No |
+| praise | Well-written code | No |
 
-## 添加策略
+## Addition Strategy
 
-- 按严重程度排序：critical → warning → suggestion → praise
-- 每条之间适当间隔，避免触发 GitHub API rate limit
-- 添加失败时记录条目并继续下一条
-- 已有评论的位置跳过重复
+- Sort by severity: critical → warning → suggestion → praise
+- Space out comments appropriately to avoid triggering GitHub API rate limits
+- Log the entry on failure and continue with the next one
+- Skip positions where a comment already exists to avoid duplicates
