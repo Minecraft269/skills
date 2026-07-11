@@ -1,5 +1,7 @@
 # Contribution Guide
 
+
+> 🌐 [中文版本](CONTRIBUTING.cn.md)
 Thank you for your interest in Minecraft269 Skills! This document helps you understand how to contribute.
 
 ## Quick Start

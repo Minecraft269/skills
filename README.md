@@ -1,5 +1,7 @@
 # Minecraft269 Skills
 
+
+> 🌐 [中文版本](README.cn.md)
 A collection of Claude Code skills by Minecraft269 — create whatever comes to mind, community contributions welcome.
 
 ## Skill Linkage
