@@ -24,7 +24,7 @@ skills/                          # 所有技能（每个子目录一个技能）
 │   ├── i18n-glossary.md          # 中英术语映射表
 │   └── locale/                   # 共享文档的中文副本
 ├── universal-project-kickoff/   # 通用项目启动与能力发现（已吸收原 proactive-skill-discovery，含 Fork 模式）
-│   ├── references/               # 参考文件（中文副本为 *.cn.md）
+│   ├── references/               # 参考文件（英文规范 + 中文副本 *.cn.md）
 │   └── locale/                   # 中文副本（SKILL.cn.md）
 ├── github-pr-manager/           # GitHub PR 全功能管理器
 ├── github-pr-reviewer/          # GitHub PR 审查器（逐行 inline 评论）

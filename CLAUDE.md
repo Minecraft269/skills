@@ -24,7 +24,7 @@ skills/                          # All skills (one subdirectory per skill)
 │   ├── i18n-glossary.md          # EN↔CN terminology glossary
 │   └── locale/                   # Chinese copies of shared docs
 ├── universal-project-kickoff/   # Universal project kickoff & capability discovery (absorbed proactive-skill-discovery, includes Fork mode)
-│   ├── references/               # Reference files (+ CN copies at *.cn.md)
+│   ├── references/               # Reference files (EN canonical + CN copies at *.cn.md)
 │   └── locale/                   # Chinese copy (SKILL.cn.md)
 ├── github-pr-manager/           # GitHub PR full-featured manager
 ├── github-pr-reviewer/          # GitHub PR reviewer (line-by-line inline comments)
