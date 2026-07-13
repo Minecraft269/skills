@@ -93,10 +93,17 @@ Match the following patterns in the user's message (case-insensitive):
 | "fork" / "participate" / "contribute" / "submit PR" / "upstream" **+** "project" / "repo" / "open source" / "code" / "repository" | 🍴 Fork Project | → Step 0a Fork Branch |
 
 **Matching Rules:**
-- If a **unique intent** matches → route directly, skip `AskUserQuestion`, confirm with one sentence before routing (e.g., "I see you want to [intent], let's get started…")
-- If **multiple intents match** or **no match** → use `AskUserQuestion`
+- If a **unique intent** matches → **⚠️ must confirm with the user before routing.** Use `AskUserQuestion`:
+  > "I detected you want to [intent]. Is that correct?"
 
-#### 0.2 Interactive Prompt (Only When Intent Is Unclear)
+  | Option | Description |
+  |--------|-------------|
+  | ✅ **Yes, proceed** | Continue with the detected intent workflow |
+  | ❌ **No, let me choose** | Fall through to 0.2 Interactive Prompt to let the user pick manually |
+
+- If **multiple intents match** or **no match** → use `AskUserQuestion` (see 0.2 Interactive Prompt)
+
+#### 0.2 Interactive Prompt
 
 > "What would you like to do?"
 
@@ -212,10 +219,19 @@ The "Fork Project" intent requires executing five steps in order: Get Repository
 
 1. First check if a fork already exists:
    - Use `gh repo list <username> --json name --jq '.[].name'` or `mcp__plugin_github_github__list_commits` to check
-2. If not exists → execute fork:
+2. **⚠️ Always confirm with the user before forking.** Use `AskUserQuestion`:
+   > "I'm about to fork `owner/repo` to your GitHub account. Proceed?"
+
+   | Option | Description |
+   |--------|-------------|
+   | ✅ **Fork this repo** | Fork `owner/repo` to your account |
+   | ❌ **Cancel** | Abort the Fork operation |
+
+   If user confirms → execute fork:
    - Prefer `gh repo fork <owner/repo> --clone=false` (more reliable)
    - Fallback: GitHub MCP `mcp__plugin_github_github__fork_repository`
-3. If exists → `AskUserQuestion`:
+   If user cancels → stop the Fork sub-process and return to intent selection.
+3. If a fork already exists → `AskUserQuestion`:
    > "I found you already forked `<owner/repo>`. Would you like to use the existing fork?"
 
    | Option | Description |
@@ -228,22 +244,46 @@ The "Fork Project" intent requires executing five steps in order: Get Repository
 4. After successful fork, record variables:
    - `_FORK_UPSTREAM = "owner/repo"` (upstream repository)
    - `_FORK_REPO = "your-username/repo"` (your fork)
+6. **⚠️ Confirm transition to clone.** Use `AskUserQuestion`:
+   > "✅ Forked successfully! Would you like to clone it to your local machine now?"
+
+   | Option | Description |
+   |--------|-------------|
+   | ✅ **Clone now** | Proceed to Step 0a-fork-3 (Clone to Local) |
+   | ⏭️ **Stop here** | Keep the fork on GitHub; you can clone it later manually |
 
 **Step 0a-fork-3: Clone to Local**
 
 1. Ask the user for the clone target directory (default: `<repo-name>` under the current workspace)
-2. Check if the directory already exists locally:
-   - Not exists → execute `gh repo clone <your-username/repo>` or `git clone https://github.com/<your-username/repo>.git`
-   - Exists → `AskUserQuestion`:
-     > "A directory with the same name already exists locally. How would you like to proceed?"
-     - ✅ Reuse existing directory / 🔄 Re-clone / ❌ Cancel
-3. After cloning, set up upstream:
+2. **⚠️ Always confirm with the user before cloning.** Use `AskUserQuestion`:
+   > "I'll clone `your-username/repo` to `<path>`. Proceed?"
+
+   | Option | Description |
+   |--------|-------------|
+   | ✅ **Clone to this directory** | Clone the repository to the specified path |
+   | 📁 **Choose a different directory** | Let the user specify a different target directory |
+   | ❌ **Cancel** | Abort the Clone operation |
+
+3. If user confirms:
+   - Check if the directory already exists locally:
+     - Not exists → execute `gh repo clone <your-username/repo>` or `git clone https://github.com/<your-username/repo>.git`
+     - Exists → `AskUserQuestion`:
+       > "A directory with the same name already exists locally. How would you like to proceed?"
+       - ✅ Reuse existing directory / 🔄 Re-clone / ❌ Cancel
+4. After cloning, set up upstream:
    ```bash
    cd <repo-name>
    git remote add upstream https://github.com/<owner/repo>.git  # If not already added
    git fetch upstream
    ```
-4. Record `_FORK_LOCAL_PATH = "<clone-path>"`
+5. Record `_FORK_LOCAL_PATH = "<clone-path>"`
+6. **⚠️ Confirm transition to project analysis.** Use `AskUserQuestion`:
+   > "✅ Cloned successfully! Would you like to scan the project tech stack now?"
+
+   | Option | Description |
+   |--------|-------------|
+   | ✅ **Start Analysis** | Proceed to Step 0a-fork-4 (Project Analysis) |
+   | ⏭️ **Skip Analysis** | Go directly to Step 0a-fork-5 (Contribution Workflow Guide) |
 
 **Step 0a-fork-4: Project Analysis**
 
@@ -263,8 +303,13 @@ The "Fork Project" intent requires executing five steps in order: Get Repository
 4. Display project overview summary (tech stack + contribution guide highlights + license type)
 
 **Linkage Hooks (only when PACKAGE_MODE = true):**
-After project analysis completes, match `integrates_with: pr-management`:
-- If sibling skill `github-pr-manager` is detected as available → prompt: "💡 After making changes, you can use the **GitHub PR Manager** to create and manage your Pull Request."
+
+⚠️ Before showing linkage suggestions, ask the user:
+> "I can suggest related tools that may help with your contribution workflow. Would you like to see recommendations?"
+
+- If user agrees → match `integrates_with: pr-management`:
+  - If sibling skill `github-pr-manager` is detected as available → prompt: "💡 After making changes, you can use the **GitHub PR Manager** to create and manage your Pull Request."
+- If user declines → skip linkage hooks, proceed directly to Step 0a-fork-5.
 
 **Step 0a-fork-5: Contribution Workflow Guide**
 
@@ -285,8 +330,12 @@ After project analysis completes, match `integrates_with: pr-management`:
    - Let the user enter a branch name, or auto-suggest based on description
 
 3. **Linkage Hooks (only when PACKAGE_MODE = true):**
-   - Match `integrates_with: pr-management` → prompt: "💡 After making changes, you can use the **GitHub PR Manager** to create and manage your Pull Request."
-   - Match `git-commit` within `integrates_with: plugin-installation` → prompt: "💡 When committing code, you can use the **Git Commit Helper** to auto-generate Conventional Commits messages."
+
+   ⚠️ Before showing tool suggestions, ask the user:
+   > "I can recommend related tools (PR Manager, Commit Helper) for your contribution workflow. Would you like to see them?"
+
+   - If user agrees → match sibling skills and show recommendations (PR Manager, Git Commit Helper)
+   - If user declines → skip directly to step 4 (summarize next steps)
 
 4. Summarize next steps:
    > "Your project is ready. Next steps: make changes → `git add` + `git commit` → `git push origin <branch>` → create PR. Let me know if you need any help."
@@ -382,7 +431,7 @@ Scan existing projects. Use `Glob` to check for the following files (extended de
 
 **Output:** Project fingerprint (comma-separated tags, e.g., `java, spring-boot, maven, postgresql`).
 
-**Linkage Hooks (only when PACKAGE_MODE = true):** Check `.git/config` for a GitHub remote. If found, match `integrates_with: pr-management`, prompt "💡 GitHub project detected. It is recommended to use the **GitHub PR Manager** to manage Pull Requests for this repository."
+**Linkage Hooks (only when PACKAGE_MODE = true):** If a GitHub remote is detected in `.git/config`, do NOT prompt immediately. Instead, note the finding silently and defer the recommendation to Step 0c-4 (Interactive Recommendation), where all linkage suggestions are presented together with user opt-in.
 
 ---
 
@@ -491,8 +540,10 @@ Provide the following options:
 
 **Linkage Hooks (only when PACKAGE_MODE = true):**
 
-Mark uninstalled plugins in the recommendation list with 🆕. After user selection, match `integrates_with: plugin-installation`:
-- If the user selected an uninstalled capability → prompt: "💡 It looks like [name] is not yet installed. Would you like to use the **Quick Plugin Installer** to install it?"
+Mark uninstalled plugins in the recommendation list with 🆕. After user selection in 0c-4, if any selected item is uninstalled:
+- First ask: "💡 Some of your selections are not yet installed. Would you like help installing them?"
+- If user agrees → match `integrates_with: plugin-installation` and provide specific installation prompts (e.g., "Would you like to use the **Quick Plugin Installer** to install [name]?")
+- If user declines → note the uninstalled items but proceed without further prompts
 
 ---
 
@@ -631,8 +682,12 @@ Ask the user to list all desired features for the first version, then:
 
 **Linkage Hooks (only when PACKAGE_MODE = true):**
 
-After confirming the project tech stack, scan sibling skills' `capabilities`, match `integrates_with: plugin-installation`:
-- Match succeeds → prompt user: "💡 I see your project uses [tech stack]. Would you like to install related MCP Servers (such as GitHub MCP, Playwright, Context7) to enhance the development experience?"
+After confirming the project tech stack, **⚠️ first ask the user if they want plugin recommendations** before scanning:
+> "I can check if there are related MCP Servers (such as GitHub MCP, Playwright, Context7) that would help with your [tech stack] project. Would you like me to check?"
+
+- If user agrees → scan sibling skills' `capabilities`, match `integrates_with: plugin-installation`, show recommendations
+- If user declines → skip linkage hooks for this step, continue to Step 3
+- Do NOT show recommendations without prior opt-in.
 
 ### Step 3: Quick Risk Assessment
 Have the user respond to:
@@ -685,11 +740,17 @@ After `/init` completes:
 
 **Linkage Hooks (only when PACKAGE_MODE = true, after 6c succeeds):**
 
-After CLAUDE.md is generated, this skill already has built-in complete skill discovery capability (Step 0c), so it can directly prompt the user:
-> "✅ CLAUDE.md has been generated. Would you like to scan the current project's tech stack and recommend matching skills and plugins?"
+⚠️ Before showing any post-init suggestions, ask the user once:
+> "✅ CLAUDE.md has been generated. I can also scan your project's tech stack and recommend matching skills and plugins. Would you like me to do that?"
 
-(No need for cross-skill linkage via `integrates_with: skill-discovery` — this capability is built into this skill.)
-- Also check other sibling skills' `integrates_with`, and prompt if matches are found
+| Option | Description |
+|--------|-------------|
+| ✅ **Yes, scan and recommend** | Execute Step 0c capability discovery for this project |
+| ❌ **No, I'm done** | Skip all further suggestions; end the kickoff workflow here |
+
+This skill already has built-in complete skill discovery capability (Step 0c). Do NOT separately trigger cross-skill linkage via `integrates_with: skill-discovery` — it's redundant. If user agrees, execute Step 0c directly.
+
+If the user chose "Yes, scan and recommend", after Step 0c completes, do NOT trigger additional linkage hooks — the user has already received recommendations.
 
 #### 6d. Fallback Plan
 If the user chooses not to run `/init`, output the complete startup summary (see template below) and inform:
@@ -819,6 +880,67 @@ Minimal mode content:
 | GitHub MCP and `gh` CLI both unavailable (Fork mode) | Prompt user to manually Fork in browser, guide them to provide clone URL to continue |
 | User-specified repository not on GitHub (Fork mode) | Prompt that only GitHub repositories are supported, ask whether to continue or cancel |
 | Clone target directory conflict (Fork mode) | Ask the user: reuse existing directory / re-clone / choose another directory |
+
+---
+
+## Examples
+
+### Example 1: Java Spring Boot Project
+
+**Input:** User opens project with `pom.xml`, Spring Boot starter dependencies.
+
+**Project fingerprint:** `java, spring-boot, maven`
+
+**Recommended Skills (top 5):**
+| # | Name | Description | Match Reason | Source |
+|---|------|-------------|-------------|--------|
+| 1 | `springboot-patterns` | Spring Boot development patterns | Direct Spring Boot framework match | community |
+| 2 | `java-pro` | Java professional development | Java language match | community |
+| 3 | `springboot-tdd` | TDD development workflow | Spring Boot + testing match | community |
+| 4 | `springboot-security` | Spring Boot security | Spring Boot framework match | community |
+| 5 | `git-workflow` | Git workflow | General development skill | community |
+
+**Recommended Plugins:**
+| # | Name | Description | Match Reason | Type |
+|---|------|-------------|-------------|------|
+| 1 | `plugin:github:github` | GitHub PR/Issue management | General development plugin | MCP |
+| 2 | `plugin:context7:context7` | Documentation lookup | Referencing Spring Boot docs | MCP |
+
+*After user selects both plugins, Step 0c-5 would show their available commands (e.g., `mcp__github__create_pull_request`, `mcp__context7__query-docs`) plus relevant slash commands (`/commit`, `/code-review`, `/create-pr`).*
+
+### Example 2: React + Vite Frontend Project
+
+**Input:** User opens project with `package.json` (react, vite deps) and `vite.config.ts`.
+
+**Project fingerprint:** `javascript/typescript, react, vite, nodejs`
+
+**Recommended Skills (top 5):**
+| # | Name | Description | Match Reason | Source |
+|---|------|-------------|-------------|--------|
+| 1 | `react-best-practices` | React best practices | Direct React framework match | community |
+| 2 | `frontend-patterns` | Frontend development patterns | Frontend domain match | community |
+| 3 | `javascript-pro` | JS professional development | JavaScript language match | community |
+| 4 | `vite-patterns` | Vite build patterns | Vite tool match | community |
+| 5 | `ui-ux-designer` | UI/UX design | Frontend domain related | community |
+
+**Recommended Plugins:**
+| # | Name | Description | Match Reason | Type |
+|---|------|-------------|-------------|------|
+| 1 | `plugin:playwright:playwright` | Browser automation testing | Frontend E2E testing | MCP |
+| 2 | `plugin:github:github` | PR management | General development plugin | MCP |
+
+*After user selects, Step 0c-5 shows: `mcp__github__search_code`, `mcp__github__create_pull_request` plus slash commands `/frontend-design`, `/code-review`, `/commit`.*
+
+### Example 3: Unknown/Empty Project
+
+**Input:** Empty or unrecognized directory structure.
+
+**Behavior:**
+- Display: "\u{1F195} No known project type detected. Here are general recommendations:"
+- Skills: `git-workflow`, `code-review`, `commit`, `file-organizer`
+- Plugins: `plugin:github:github` (PR/Issue), `plugin:longhand:longhand` (session memory)
+- Selected commands (Step 0c-5): `/commit` (when committing code), `/code-review` (when reviewing code), `/discover` (when re-discovering)
+- Offer: "If you'd like to see a full list of all installed capabilities, I can export the complete catalog for you."
 
 ---
 

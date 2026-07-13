@@ -34,4 +34,4 @@
 
 ### 移除
 - 删除已废弃的 `proactive-skill-discovery` 技能目录及文档
-- 清理所有残留引用（CLAUDE.md 项目结构树、scanner-patterns.md、hook-config.md）
+- 将残留引用转为历史说明和迁移指南（CLAUDE.md 项目结构树标注"已吸收"、scanner-patterns.md/hook-config.md 保留合并迁移说明）

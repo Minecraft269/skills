@@ -94,10 +94,17 @@ locale: zh-CN
 | "fork" / "参与" / "贡献" / "提 PR" / "contribute" / "上游" **+** "项目" / "仓库" / "开源" / "代码" / "repo" | 🍴 Fork 项目 | → Step 0a Fork 分支 |
 
 **匹配规则：**
-- 若匹配到**唯一意图** → 直接分流，跳过 AskUserQuestion，在分流前用一句话确认（如"识别到你想要[意图]，直接开始…"）
-- 若**多个意图匹配**或**无匹配** → 使用 `AskUserQuestion` 询问
+- 若匹配到**唯一意图** → **⚠️ 必须先向用户确认再分流。** 使用 `AskUserQuestion`：
+  > "识别到你想要[意图]。是否正确？"
 
-#### 0.2 交互式询问（仅在意图不明确时使用）
+  | 选项 | 说明 |
+  |------|------|
+  | ✅ **是的，继续** | 进入对应意图的工作流 |
+  | ❌ **不对，让我自己选** | 回退到 0.2 交互式询问，让用户手动选择 |
+
+- 若**多个意图匹配**或**无匹配** → 使用 `AskUserQuestion` 询问（参见 0.2 交互式询问）
+
+#### 0.2 交互式询问
 
 > "你想要做什么？"
 
@@ -213,10 +220,19 @@ locale: zh-CN
 
 1. 先检查是否已存在 fork：
    - 使用 `gh repo list <username> --json name --jq '.[].name'` 或 `mcp__plugin_github_github__list_commits` 检查
-2. 若不存在 → 执行 fork：
+2. **⚠️ 无论是否存在 fork，都先向用户确认。** 使用 `AskUserQuestion`：
+   > "我将在你的 GitHub 账户中 fork `owner/repo`。是否继续？"
+
+   | 选项 | 说明 |
+   |------|------|
+   | ✅ **Fork 此仓库** | 将 `owner/repo` fork 到你的账户 |
+   | ❌ **取消** | 放弃 Fork 操作 |
+
+   若用户确认 → 执行 fork：
    - 优先使用 `gh repo fork <owner/repo> --clone=false`（更可靠）
    - 备用：GitHub MCP `mcp__plugin_github_github__fork_repository`
-3. 若已存在 → `AskUserQuestion`：
+   若用户取消 → 停止 Fork 子流程，返回意图选择。
+3. 若已存在 fork → `AskUserQuestion`：
    > "检测到你已 fork 过 `<owner/repo>`。是否使用已有 fork？"
 
    | 选项 | 说明 |
@@ -229,22 +245,46 @@ locale: zh-CN
 4. Fork 成功后记录变量：
    - `_FORK_UPSTREAM = "owner/repo"`（上游仓库）
    - `_FORK_REPO = "your-username/repo"`（你的 fork）
+5. **⚠️ 确认是否继续 clone。** 使用 `AskUserQuestion`：
+   > "✅ Fork 成功！是否要 clone 到本地？"
+
+   | 选项 | 说明 |
+   |------|------|
+   | ✅ **立即 clone** | 进入 Step 0a-fork-3（Clone 到本地） |
+   | ⏭️ **到此为止** | 保留 GitHub 上的 fork；以后可以手动 clone |
 
 **Step 0a-fork-3：Clone 到本地**
 
 1. 询问用户 clone 目标目录（默认当前工作区下的 `<repo-name>`）
-2. 检查本地是否已存在该目录：
-   - 不存在 → 执行 `gh repo clone <your-username/repo>` 或 `git clone https://github.com/<your-username/repo>.git`
-   - 已存在 → `AskUserQuestion`：
-     > "本地已存在同名目录。怎么处理？"
-     - ✅ 复用现有目录 / 🔄 重新 clone / ❌ 取消
-3. Clone 后设置 upstream：
+2. **⚠️ 无论目录是否存在，都先向用户确认 clone。** 使用 `AskUserQuestion`：
+   > "我将 clone `your-username/repo` 到 `<path>`。是否继续？"
+
+   | 选项 | 说明 |
+   |------|------|
+   | ✅ **Clone 到此目录** | 将仓库 clone 到指定路径 |
+   | 📁 **选择其他目录** | 让用户指定不同的目标目录 |
+   | ❌ **取消** | 放弃 Clone 操作 |
+
+3. 若用户确认：
+   - 检查本地是否已存在该目录：
+     - 不存在 → 执行 `gh repo clone <your-username/repo>` 或 `git clone https://github.com/<your-username/repo>.git`
+     - 已存在 → `AskUserQuestion`：
+       > "本地已存在同名目录。怎么处理？"
+       - ✅ 复用现有目录 / 🔄 重新 clone / ❌ 取消
+4. Clone 后设置 upstream：
    ```bash
    cd <repo-name>
    git remote add upstream https://github.com/<owner/repo>.git  # 如尚未添加
    git fetch upstream
    ```
-4. 记录 `_FORK_LOCAL_PATH = "<clone-path>"`
+5. 记录 `_FORK_LOCAL_PATH = "<clone-path>"`
+6. **⚠️ 确认是否继续项目分析。** 使用 `AskUserQuestion`：
+   > "✅ Clone 成功！是否扫描项目技术栈？"
+
+   | 选项 | 说明 |
+   |------|------|
+   | ✅ **开始分析** | 进入 Step 0a-fork-4（项目分析） |
+   | ⏭️ **跳过分析** | 直接进入 Step 0a-fork-5（贡献工作流引导） |
 
 **Step 0a-fork-4：项目分析**
 
@@ -264,8 +304,13 @@ locale: zh-CN
 4. 展示项目概览摘要（技术栈 + 贡献指南要点 + 许可证类型）
 
 **联动钩子（仅 PACKAGE_MODE = true 时执行）：**
-在项目分析完成后，匹配 `integrates_with: pr-management`：
-- 若检测到兄弟技能 `github-pr-manager` 可用 → 提示："💡 完成改动后，可以使用 **GitHub PR 管理器** 来创建和管理你的 Pull Request。"
+
+⚠️ 在显示联动建议前，先询问用户：
+> "我可以推荐一些与贡献工作流相关的工具。是否查看推荐？"
+
+- 若用户同意 → 匹配 `integrates_with: pr-management`：
+  - 若检测到兄弟技能 `github-pr-manager` 可用 → 提示："💡 完成改动后，可以使用 **GitHub PR 管理器** 来创建和管理你的 Pull Request。"
+- 若用户拒绝 → 跳过联动钩子，直接进入 Step 0a-fork-5。
 
 **Step 0a-fork-5：贡献工作流引导**
 
@@ -286,8 +331,12 @@ locale: zh-CN
    - 让用户输入分支名，或根据描述自动建议
 
 3. **联动钩子（仅 PACKAGE_MODE = true）**：
-   - 匹配 `integrates_with: pr-management` → 提示："💡 改动完成后，可使用 **GitHub PR 管理器** 创建和管理你的 Pull Request。"
-   - 匹配 `integrates_with: plugin-installation` 中的 `git-commit` → 提示："💡 提交代码时，可使用 **Git 提交助手** 自动生成 Conventional Commits 消息。"
+
+   ⚠️ 在显示工具建议前，先询问用户：
+   > "我可以推荐贡献工作流相关的工具（PR 管理器、提交助手）。是否查看？"
+
+   - 若用户同意 → 匹配兄弟技能并展示推荐（PR 管理器、Git 提交助手）
+   - 若用户拒绝 → 直接跳到步骤 4（总结下一步）
 
 4. 总结下一步：
    > "项目已就绪。接下来的流程：做改动 → `git add` + `git commit` → `git push origin <branch>` → 创建 PR。如需帮助，随时告诉我。"
@@ -383,7 +432,7 @@ locale: zh-CN
 
 **输出：** 项目指纹（逗号分隔标签，如 `java, spring-boot, maven, postgresql`）。
 
-**联动钩子（仅 PACKAGE_MODE = true）：** 检测 `.git/config` 中 GitHub remote，若存在则匹配 `integrates_with: pr-management`，提示 "💡 检测到 GitHub 项目。推荐使用 **GitHub PR 管理器** 来管理此仓库的 Pull Request。"
+**联动钩子（仅 PACKAGE_MODE = true）：** 若检测到 `.git/config` 中有 GitHub remote，不立即提示。静默记录此发现，将推荐延迟到 Step 0c-4（交互式推荐），与其他联动建议统一展示并获取用户 opt-in。
 
 ---
 
@@ -492,8 +541,10 @@ locale: zh-CN
 
 **联动钩子（仅 PACKAGE_MODE = true）：**
 
-对推荐列表中未安装的插件标记 🆕。用户选择后，匹配 `integrates_with: plugin-installation`：
-- 若用户选择了未安装的能力 → 提示："💡 检测到你尚未安装 [name]。是否需要使用 **快速插件安装器** 来安装它？"
+对推荐列表中未安装的插件标记 🆕。在 0c-4 用户选择后，若所选项目包含未安装插件：
+- 先询问："💡 你选择的部分项目尚未安装。是否需要帮助安装？"
+- 若用户同意 → 匹配 `integrates_with: plugin-installation` 并提供具体安装指引（如"是否需要使用 **快速插件安装器** 来安装 [name]？"）
+- 若用户拒绝 → 记录未安装项但不继续提示
 
 ---
 
@@ -632,8 +683,12 @@ locale: zh-CN
 
 **联动钩子（仅 PACKAGE_MODE = true 时执行）：**
 
-确认项目技术栈后，扫描兄弟技能的 `capabilities`，匹配 `integrates_with: plugin-installation`：
-- 匹配成功 → 提示用户："💡 检测到你的项目使用 [技术栈]。是否需要安装相关的 MCP Server（如 GitHub MCP、Playwright、Context7）来增强开发体验？"
+确认项目技术栈后，**⚠️ 先询问用户是否需要插件推荐**：
+> "我可以检查是否有适合你的 [技术栈] 项目的 MCP Server（如 GitHub MCP、Playwright、Context7）。是否需要我检查？"
+
+- 若用户同意 → 扫描兄弟技能的 `capabilities`，匹配 `integrates_with: plugin-installation`，展示推荐
+- 若用户拒绝 → 跳过此步联动钩子，继续第三步
+- 禁止在未获得 opt-in 前展示推荐。
 
 ### 第三步：快速风险摸底
 让用户回答：
@@ -686,11 +741,17 @@ locale: zh-CN
 
 **联动钩子（仅 PACKAGE_MODE = true 时执行，在 6c 成功后）：**
 
-CLAUDE.md 生成成功后，本技能已内置完整的技能发现能力（Step 0c），可直接提示用户：
-> "✅ CLAUDE.md 已生成。是否需要扫描当前项目技术栈，推荐匹配的技能和插件？"
+⚠️ 在显示任何后续建议前，仅询问一次：
+> "✅ CLAUDE.md 已生成。我还可以扫描你的项目技术栈，推荐匹配的技能和插件。是否需要我执行？"
 
-（无需通过 `integrates_with: skill-discovery` 跨技能联动——此能力内置于本技能中。）
-- 同时检查其他兄弟技能的 `integrates_with`，如发现匹配则一并提示
+| 选项 | 说明 |
+|------|------|
+| ✅ **是，扫描并推荐** | 对此项目执行 Step 0c 能力发现 |
+| ❌ **不需要，结束了** | 跳过所有后续建议；结束 kickoff 工作流 |
+
+本技能已内置完整的技能发现能力（Step 0c）。不要单独触发 `integrates_with: skill-discovery` 跨技能联动——是冗余操作。若用户同意，直接执行 Step 0c。
+
+若用户选择「是，扫描并推荐」，Step 0c 完成后不要再触发额外的联动钩子——用户已收到推荐。
 
 #### 6d. 后备方案
 如果用户选择不执行 `/init`，输出完整的启动摘要（见下方模板），并告知：
@@ -820,6 +881,67 @@ CLAUDE.md 生成成功后，本技能已内置完整的技能发现能力（Step
 | GitHub MCP 和 `gh` CLI 均不可用（Fork 模式） | 提示用户手动在浏览器中 Fork，引导用户提供 clone URL 继续 |
 | 用户指定的仓库非 GitHub（Fork 模式） | 提示仅支持 GitHub 仓库，询问是否继续或取消 |
 | Clone 目标目录冲突（Fork 模式） | 询问用户：复用现有目录 / 重新 clone / 选择其他目录 |
+
+---
+
+## 示例
+
+### 示例 1：Java Spring Boot 项目
+
+**输入：** 用户打开包含 `pom.xml` 的项目，Spring Boot starter 依赖。
+
+**项目指纹：** `java, spring-boot, maven`
+
+**推荐技能（top 5）：**
+| # | 名称 | 描述 | 匹配理由 | 来源 |
+|---|------|------|---------|------|
+| 1 | `springboot-patterns` | Spring Boot 开发模式 | Spring Boot 框架直接匹配 | community |
+| 2 | `java-pro` | Java 专业开发 | Java 语言匹配 | community |
+| 3 | `springboot-tdd` | TDD 开发流程 | Spring Boot + 测试匹配 | community |
+| 4 | `springboot-security` | Spring Boot 安全 | Spring Boot 框架匹配 | community |
+| 5 | `git-workflow` | Git 工作流 | 通用开发技能 | community |
+
+**推荐插件：**
+| # | 名称 | 描述 | 匹配理由 | 类型 |
+|---|------|------|---------|------|
+| 1 | `plugin:github:github` | GitHub PR/Issue 管理 | 通用开发插件 | MCP |
+| 2 | `plugin:context7:context7` | 文档查询 | 查阅 Spring Boot 文档 | MCP |
+
+*用户选择两个插件后，Step 0c-5 会展示其可用命令（如 `mcp__github__create_pull_request`、`mcp__context7__query-docs`）以及相关斜杠命令（`/commit`、`/code-review`、`/create-pr`）。*
+
+### 示例 2：React + Vite 前端项目
+
+**输入：** 用户打开包含 `package.json`（react、vite 依赖）和 `vite.config.ts` 的项目。
+
+**项目指纹：** `javascript/typescript, react, vite, nodejs`
+
+**推荐技能（top 5）：**
+| # | 名称 | 描述 | 匹配理由 | 来源 |
+|---|------|------|---------|------|
+| 1 | `react-best-practices` | React 最佳实践 | React 框架直接匹配 | community |
+| 2 | `frontend-patterns` | 前端开发模式 | 前端领域匹配 | community |
+| 3 | `javascript-pro` | JS 专业开发 | JavaScript 语言匹配 | community |
+| 4 | `vite-patterns` | Vite 构建模式 | Vite 工具匹配 | community |
+| 5 | `ui-ux-designer` | UI/UX 设计 | 前端领域相关 | community |
+
+**推荐插件：**
+| # | 名称 | 描述 | 匹配理由 | 类型 |
+|---|------|------|---------|------|
+| 1 | `plugin:playwright:playwright` | 浏览器自动化测试 | 前端 E2E 测试 | MCP |
+| 2 | `plugin:github:github` | PR 管理 | 通用开发插件 | MCP |
+
+*用户选择后，Step 0c-5 展示：`mcp__github__search_code`、`mcp__github__create_pull_request` 以及斜杠命令 `/frontend-design`、`/code-review`、`/commit`。*
+
+### 示例 3：未知/空项目
+
+**输入：** 空目录或无法识别的目录结构。
+
+**行为：**
+- 显示："🆕 未检测到已知项目类型。以下是通用推荐："
+- 技能：`git-workflow`、`code-review`、`commit`、`file-organizer`
+- 插件：`plugin:github:github`（PR/Issue）、`plugin:longhand:longhand`（会话记忆）
+- 已选命令（Step 0c-5）：`/commit`（提交代码时）、`/code-review`（审查代码时）、`/discover`（重新发现时）
+- 提示："如需查看所有已安装的能力，我可以为您导出完整列表。"
 
 ---
 
