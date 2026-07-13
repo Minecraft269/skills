@@ -34,6 +34,15 @@ skills/                          # 所有技能（每个子目录一个技能）
 CONTRIBUTING.md                  # 贡献指南（含能力标签注册表 + 标签决策树）
 ```
 
+## 快速开始
+
+```bash
+git clone https://github.com/Minecraft269/skills.git
+cd skills
+find skills/ -name "*.sh" -exec bash -n {} \;   # Shell 语法检查
+grep -oP 'capabilities:\s*\[\K[^\]]+' skills/*/SKILL.md | tr '"' '\n' | sort -u   # 标签一致性
+```
+
 ## 创建新技能
 
 **必须使用 `/skill-creator` 创建新技能。** 使用前确认已安装 skill-creator 插件。
