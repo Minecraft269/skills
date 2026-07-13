@@ -110,7 +110,7 @@ Match the following patterns in the user's message (case-insensitive):
 | Option | Description | Subsequent Routing |
 |--------|-------------|--------------------|
 | 🚀 **Start New Project** | Start a project from scratch | → Ask for language/framework → Step 0b Language Confirmation → Enter mandatory six-step process |
-| 💻 **Develop New Feature** | Add a feature to an existing project | → Enter Step 0c Tech Stack Confirmation + Capability Recommendation |
+| 💻 **Develop New Feature** | Add a feature to an existing project | → Step 0a-dev Task Clarification → ask opt-in → Step 0c (if yes) or proceed directly |
 | 🔍 **Review Code** | Review a PR or code changes | → Step 0a Target Confirmation → Step 0c Tech Stack Confirmation + Review Tool Recommendation |
 | 🐛 **Fix Bug** | Troubleshoot and fix issues | → Step 0a Target Confirmation → Step 0c Tech Stack Confirmation + Debugging Tool Recommendation |
 | 🔧 **Explore Tools** | See what skills/plugins/commands are available | → Enter Step 0c Full Capability Scan |
@@ -178,7 +178,22 @@ Before starting the review, confirm the AI model to use. Different models differ
    > "Please enter the model name you'd like to use (e.g., `sonnet`, `opus`, `haiku`, `fable`, or a specific model ID)"
    - Record the user's choice in the review context; use that model for subsequent Agent calls
 
-4. **Enter review** → Execute Step 0c tech stack scan → Prioritize matching `pr-review`, `code-review` capabilities when recommending skills.
+4. **Enter review** → Proceed to Layer 6.
+
+**Layer 6 (All review paths) — Tool Recommendation Opt-in:**
+
+⚠️ Before scanning for review tools, ask the user:
+
+Use `AskUserQuestion`:
+> "I can scan the project tech stack and recommend code review tools. Would you like that?"
+
+| Option | Description |
+|--------|-------------|
+| ✅ **Yes, scan and recommend** | Execute Step 0c with "Review Code" intent filter |
+| ⏭️ **Skip** | Proceed directly to the review with confirmed target/scope/model |
+
+- If user agrees → Execute Step 0c tech stack scan → Prioritize matching `pr-review`, `code-review` capabilities when recommending skills.
+- If user declines → Proceed directly to the review.
 
 ##### Fix Bug Branch
 
@@ -189,16 +204,32 @@ The "Fix Bug" intent needs to first confirm the target project.
 Use `AskUserQuestion`:
 > "Which project are you fixing a bug in? Is it the current workspace project, or another project?"
 
-**2. Check local status:**
+**2. Ask for bug details:**
+
+Use `AskUserQuestion`:
+> "Describe the bug — error messages, reproduction steps, what's the impact?"
+
+- Record bug context (error info, impact, repro steps)
+- This context informs Step 0c filtering if the user opts into tool discovery
+
+**3. Check local status:**
 
 - Compare the user's project info against the current workspace git remote
 - If the target project is not local → guide cloning
 - After cloning, switch to the target project directory
 
-**3. Enter Step 0c:**
+**4. ⚠️ Confirmation gate — Before entering Step 0c:**
 
-- Execute tech stack scan in the correct project directory
-- Prioritize matching debugging tools + general code analysis skills when recommending
+Use `AskUserQuestion`:
+> "Would you like me to scan the project and recommend debugging/diagnostic tools?"
+
+| Option | Description |
+|--------|-------------|
+| ✅ **Yes, scan and recommend** | Execute Step 0c with "Fix Bug" intent filter |
+| ⏭️ **Skip** | Proceed directly to bug fixing with bug context recorded |
+
+- If user agrees → Enter Step 0c: execute tech stack scan in the correct project directory, prioritize matching debugging tools + general code analysis skills when recommending
+- If user declines → skip Step 0c, proceed with recorded bug context
 
 ##### 🍴 Fork Project Branch (5-Step Sub-Process)
 
@@ -339,6 +370,34 @@ The "Fork Project" intent requires executing five steps in order: Get Repository
 
 4. Summarize next steps:
    > "Your project is ready. Next steps: make changes → `git add` + `git commit` → `git push origin <branch>` → create PR. Let me know if you need any help."
+
+#### Step 0a-dev: Task Clarification (Only for "Develop New Feature")
+
+Before jumping to tool discovery, clarify the actual task first:
+
+1. **Ask for feature description:**
+
+   Use `AskUserQuestion`:
+   > "What feature do you want to develop? Briefly describe it."
+
+   - Record the feature description for use as task context.
+
+2. **Confirm the target project:**
+
+   > "Which project are you working in?" (confirm or switch the working directory)
+
+3. **⚠️ Confirmation gate — Before entering Step 0c:**
+
+   Use `AskUserQuestion`:
+   > "Before you start, would you like me to scan your project and recommend matching development tools and skills?"
+
+   | Option | Description |
+   |--------|-------------|
+   | ✅ **Yes, scan and recommend** | Execute Step 0c with "Develop Feature" intent filter |
+   | ⏭️ **Skip** | Proceed directly to feature development with task context recorded |
+
+   - If user agrees → Enter Step 0c
+   - If user declines → skip Step 0c, proceed with recorded task context
 
 #### Step 0b: Language/Framework Confirmation (Only for "Start New Project")
 
@@ -550,6 +609,16 @@ Mark uninstalled plugins in the recommendation list with 🆕. After user select
 **0c-5. Command Discovery (Only Runs After User Completes 0c-4 Selection)**
 
 ⚠️ If the user chooses "Skip" → jump to 0c-6
+
+⚠️ **Confirmation gate — Before displaying commands:**
+
+Use `AskUserQuestion`:
+> "I can show the available commands and shortcuts for your selected tools. Would you like to see them now?"
+
+| Option | Description |
+|--------|-------------|
+| ✅ **Yes, show commands** | Continue to 0c-5 command discovery |
+| ⏭️ **Skip for now** | Jump to 0c-6 |
 
 Load `references/scanner-patterns.md` §Command Discovery Reference.
 
