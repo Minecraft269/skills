@@ -75,7 +75,16 @@ After creation, place the skill directory into `skills/<skill-name>/`. Each skil
 
 ## Roadmap
 
-M1–M7 all completed ✅ — through Marketplace availability, extension hardening, skill linkage, capability merging, quality review, logic fixes, review enhancement. M8 completed ✅ — v4.0.0 Fork mode + bilingual EN/CN refactor + "recommend don't execute" constraint hardening (7 confirmation gates). Current phase: continuous quality iteration.
+| Milestone | Status | Deliverables |
+|-----------|--------|--------------|
+| M1 — Marketplace availability | ✅ Done | 3 skills installable & triggerable |
+| M2 — Extension hardening | ✅ Done | +quick-plugin-installer, CONTRIBUTING.md, docs/ |
+| M3 — Skill linkage | ✅ Done | Universal linkage framework (capabilities/integrates_with), package-level gating, inter-skill dynamic discovery |
+| M4 — Capability merging | ✅ Done | proactive-skill-discovery merged into universal-project-kickoff (unified entry, 7→6 skills) |
+| M5 — Quality review | ✅ Done | universal-project-kickoff 12 enhancements: migration cleanup, config system, architecture fixes, detection extension, quality system |
+| M6 — Logic fixes | ✅ Done | 6 fixes: intent pre-detection, 5-layer code review, deep exploration config, minimal mode quantification, session cache, re-trigger quantification |
+| M7 — Review enhancement | ✅ Done | Code review Layer 5 model confirmation: display default model + tier alias / model ID switching |
+| M8 — Fork + Bilingual + Constraints | ✅ Done | v4.0.0 Fork mode + EN/CN bilingual refactor + "recommend don't execute" constraint hardening (7+4 confirmation gates). Current phase: continuous quality iteration. |
 
 ## Local Verification
 
