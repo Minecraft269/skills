@@ -75,7 +75,7 @@ After creation, place the skill directory into `skills/<skill-name>/`. Each skil
 
 ## Roadmap
 
-M1–M7 all completed ✅ — through Marketplace availability, extension hardening, skill linkage, capability merging, quality review, logic fixes, review enhancement. Current phase: ongoing feature expansion (e.g. v4.0.0 Fork mode).
+M1–M7 all completed ✅ — through Marketplace availability, extension hardening, skill linkage, capability merging, quality review, logic fixes, review enhancement. M8 completed ✅ — v4.0.0 Fork mode + bilingual EN/CN refactor + "recommend don't execute" constraint hardening (7 confirmation gates). Current phase: continuous quality iteration.
 
 ## Local Verification
 
